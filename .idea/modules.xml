@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright Bryan Carroll. All rights reserved. -->
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Trek Long Island.iml" filepath="$PROJECT_DIR$/.idea/Trek Long Island.iml" />
+    </modules>
+  </component>
+</project>

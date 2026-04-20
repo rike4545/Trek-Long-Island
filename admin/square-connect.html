@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trek Long Island Square Connect</title>
+  <style>
+    :root {
+      --bg: #08111b;
+      --panel: rgba(13, 24, 38, 0.88);
+      --line: rgba(119, 164, 221, 0.28);
+      --text: #edf4ff;
+      --muted: #aac0db;
+      --accent: #f1b24a;
+      --accent-2: #65b8ff;
+      --danger: #ff8f8f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top left, rgba(101,184,255,0.18), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(241,178,74,0.16), transparent 30%),
+        linear-gradient(145deg, #04080e, var(--bg));
+      color: var(--text);
+      font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 24px;
+    }
+    .card {
+      width: min(720px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+      backdrop-filter: blur(16px);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.1;
+    }
+    p { margin: 0 0 14px; color: var(--muted); }
+    .grid {
+      display: grid;
+      gap: 14px;
+      margin: 22px 0;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    input, select, button {
+      font: inherit;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      color: var(--text);
+      background: rgba(3, 10, 18, 0.74);
+    }
+    button {
+      padding: 13px 18px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #06111d;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+    .status {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(2, 9, 17, 0.68);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+    .status.error {
+      border-color: rgba(255, 143, 143, 0.45);
+      color: var(--danger);
+    }
+    code {
+      color: var(--text);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Square Seller Connect</h1>
+    <p>Use this page to launch the Square OAuth flow for Trek Long Island operations.</p>
+    <p>The Firestore integration document must already contain the correct redirect URI, scopes, and environment.</p>
+
+    <div class="grid">
+      <label>
+        Firebase project
+        <input id="projectId" value="trek-long-island">
+      </label>
+
+      <label>
+        Functions region
+        <input id="region" value="us-central1">
+      </label>
+
+      <label>
+        Convention ID
+        <input id="conventionId" value="trekli-2026">
+      </label>
+    </div>
+
+    <button id="connectButton">Launch Square OAuth</button>
+
+    <div id="status" class="status">Ready.
+Function root will resolve to:
+<code>https://us-central1-trek-long-island.cloudfunctions.net/squareAuthorizeURL?conventionID=trekli-2026</code></div>
+  </main>
+
+  <script>
+    const projectIdInput = document.getElementById("projectId");
+    const regionInput = document.getElementById("region");
+    const conventionIdInput = document.getElementById("conventionId");
+    const connectButton = document.getElementById("connectButton");
+    const statusBox = document.getElementById("status");
+
+    function authorizeUrl() {
+      const projectId = projectIdInput.value.trim();
+      const region = regionInput.value.trim();
+      const conventionId = conventionIdInput.value.trim();
+      return `https://${region}-${projectId}.cloudfunctions.net/squareAuthorizeURL?conventionID=${encodeURIComponent(conventionId)}`;
+    }
+
+    function refreshPreview() {
+      statusBox.className = "status";
+      statusBox.innerHTML = `Ready.\nFunction URL:\n<code>${authorizeUrl()}</code>`;
+    }
+
+    projectIdInput.addEventListener("input", refreshPreview);
+    regionInput.addEventListener("input", refreshPreview);
+    conventionIdInput.addEventListener("input", refreshPreview);
+
+    connectButton.addEventListener("click", async () => {
+      connectButton.disabled = true;
+      statusBox.className = "status";
+      statusBox.textContent = "Requesting Square authorization URL...";
+
+      try {
+        const response = await fetch(authorizeUrl(), { method: "GET" });
+        const payload = await response.json();
+
+        if (!response.ok || !payload.authorizeURL) {
+          throw new Error(payload.error || "Square authorization URL was not returned.");
+        }
+
+        statusBox.textContent = "Authorization URL received. Redirecting to Square...";
+        window.location.assign(payload.authorizeURL);
+      } catch (error) {
+        statusBox.className = "status error";
+        statusBox.textContent = `Failed to launch Square OAuth.\n${error.message}`;
+        connectButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright Bryan Carroll. All rights reserved. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCBbj5PG9IT_gcbpvJ9jyb4w53Ju1LdJEk</string>
+	<key>GCM_SENDER_ID</key>
+	<string>709450904041</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>Me.Trek-Long-Island</string>
+	<key>PROJECT_ID</key>
+	<string>trek-long-island</string>
+	<key>STORAGE_BUCKET</key>
+	<string>trek-long-island.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:709450904041:ios:ea6385f229aa30f84c1b78</string>
+</dict>
+</plist>

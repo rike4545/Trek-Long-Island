@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "TREKATECTURE-AD-BOARD-TREK-LONG-ISLAND-768x470.jpg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

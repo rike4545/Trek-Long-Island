@@ -1,0 +1,802 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		931A07A42F2ECADD000E374C /* quiet_roomtone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 931A07A12F2ECADD000E374C /* quiet_roomtone.wav */; };
+		931A07A62F2ECADD000E374C /* lcars_tap_soft.wav in Resources */ = {isa = PBXBuildFile; fileRef = 931A07A32F2ECADD000E374C /* lcars_tap_soft.wav */; };
+		931A07FD2F2EE37F000E374C /* bridge_hum_soft.wav in Resources */ = {isa = PBXBuildFile; fileRef = 931A07FC2F2EE37F000E374C /* bridge_hum_soft.wav */; };
+		9333CB4E2E0AFDA3008D88EB /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB4D2E0AFDA3008D88EB /* FirebaseAnalytics */; };
+		9333CB502E0AFDA3008D88EB /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB4F2E0AFDA3008D88EB /* FirebaseCore */; };
+		9333CB522E0AFDA3008D88EB /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB512E0AFDA3008D88EB /* FirebaseMessaging */; };
+		9333CB552E0AFDCE008D88EB /* iCalendarParser in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB542E0AFDCE008D88EB /* iCalendarParser */; };
+		9333CB582E0C1588008D88EB /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB572E0C1588008D88EB /* SwiftSoup */; };
+		9358A5292ECFE8D000C2E2F4 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5282ECFE8D000C2E2F4 /* FirebaseAnalyticsCore */; };
+		9358A52B2ECFE8D000C2E2F4 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A52A2ECFE8D000C2E2F4 /* FirebaseFirestore */; };
+		9358A52D2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A52C2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community */; };
+		9358A52F2ECFE8D000C2E2F4 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A52E2ECFE8D000C2E2F4 /* FirebaseFunctions */; };
+		9358A5312ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5302ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community */; };
+		9358A5332ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5322ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta */; };
+		9358A5352ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5342ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community */; };
+		93F1A0012FABCDE100AAA001 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 93F1A0022FABCDE100AAA001 /* GoogleMobileAds */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		933A10FD2DE8AEE70087F598 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 933A10E62DE8AEE60087F598 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 933A10ED2DE8AEE60087F598;
+			remoteInfo = "Trek Long Island";
+		};
+		933A11072DE8AEE70087F598 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 933A10E62DE8AEE60087F598 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 933A10ED2DE8AEE60087F598;
+			remoteInfo = "Trek Long Island";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		931A07A12F2ECADD000E374C /* quiet_roomtone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = quiet_roomtone.wav; sourceTree = "<group>"; };
+		931A07A32F2ECADD000E374C /* lcars_tap_soft.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = lcars_tap_soft.wav; sourceTree = "<group>"; };
+		931A07FC2F2EE37F000E374C /* bridge_hum_soft.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bridge_hum_soft.wav; sourceTree = "<group>"; };
+		933A10EE2DE8AEE60087F598 /* Trek Long Island.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Trek Long Island.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		933A10FC2DE8AEE70087F598 /* Trek Long IslandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Trek Long IslandTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		933A11062DE8AEE70087F598 /* Trek Long IslandUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Trek Long IslandUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		933A10F02DE8AEE60087F598 /* Trek Long Island */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Trek Long Island";
+			sourceTree = "<group>";
+		};
+		933A10FF2DE8AEE70087F598 /* Trek Long IslandTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Trek Long IslandTests";
+			sourceTree = "<group>";
+		};
+		933A11092DE8AEE70087F598 /* Trek Long IslandUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Trek Long IslandUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		933A10EB2DE8AEE60087F598 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				93F1A0012FABCDE100AAA001 /* GoogleMobileAds in Frameworks */,
+				9333CB522E0AFDA3008D88EB /* FirebaseMessaging in Frameworks */,
+				9358A52D2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community in Frameworks */,
+				9358A5292ECFE8D000C2E2F4 /* FirebaseAnalyticsCore in Frameworks */,
+				9358A5312ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community in Frameworks */,
+				9358A52F2ECFE8D000C2E2F4 /* FirebaseFunctions in Frameworks */,
+				9333CB502E0AFDA3008D88EB /* FirebaseCore in Frameworks */,
+				9358A5332ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta in Frameworks */,
+				9333CB4E2E0AFDA3008D88EB /* FirebaseAnalytics in Frameworks */,
+				9333CB552E0AFDCE008D88EB /* iCalendarParser in Frameworks */,
+				9333CB582E0C1588008D88EB /* SwiftSoup in Frameworks */,
+				9358A5352ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community in Frameworks */,
+				9358A52B2ECFE8D000C2E2F4 /* FirebaseFirestore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		933A10F92DE8AEE70087F598 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		933A11032DE8AEE70087F598 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		933A10E52DE8AEE60087F598 = {
+			isa = PBXGroup;
+			children = (
+				931A07FC2F2EE37F000E374C /* bridge_hum_soft.wav */,
+				931A07A32F2ECADD000E374C /* lcars_tap_soft.wav */,
+				931A07A12F2ECADD000E374C /* quiet_roomtone.wav */,
+				933A10F02DE8AEE60087F598 /* Trek Long Island */,
+				933A10FF2DE8AEE70087F598 /* Trek Long IslandTests */,
+				933A11092DE8AEE70087F598 /* Trek Long IslandUITests */,
+				933A10EF2DE8AEE60087F598 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		933A10EF2DE8AEE60087F598 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				933A10EE2DE8AEE60087F598 /* Trek Long Island.app */,
+				933A10FC2DE8AEE70087F598 /* Trek Long IslandTests.xctest */,
+				933A11062DE8AEE70087F598 /* Trek Long IslandUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		933A10ED2DE8AEE60087F598 /* Trek Long Island */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 933A11102DE8AEE70087F598 /* Build configuration list for PBXNativeTarget "Trek Long Island" */;
+			buildPhases = (
+				933A10EA2DE8AEE60087F598 /* Sources */,
+				933A10EB2DE8AEE60087F598 /* Frameworks */,
+				933A10EC2DE8AEE60087F598 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				933A10F02DE8AEE60087F598 /* Trek Long Island */,
+			);
+			name = "Trek Long Island";
+			packageProductDependencies = (
+				93F1A0022FABCDE100AAA001 /* GoogleMobileAds */,
+				9333CB4D2E0AFDA3008D88EB /* FirebaseAnalytics */,
+				9333CB4F2E0AFDA3008D88EB /* FirebaseCore */,
+				9333CB512E0AFDA3008D88EB /* FirebaseMessaging */,
+				9333CB542E0AFDCE008D88EB /* iCalendarParser */,
+				9333CB572E0C1588008D88EB /* SwiftSoup */,
+				9358A5282ECFE8D000C2E2F4 /* FirebaseAnalyticsCore */,
+				9358A52A2ECFE8D000C2E2F4 /* FirebaseFirestore */,
+				9358A52C2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community */,
+				9358A52E2ECFE8D000C2E2F4 /* FirebaseFunctions */,
+				9358A5302ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community */,
+				9358A5322ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta */,
+				9358A5342ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community */,
+			);
+			productName = "Trek Long Island";
+			productReference = 933A10EE2DE8AEE60087F598 /* Trek Long Island.app */;
+			productType = "com.apple.product-type.application";
+		};
+		933A10FB2DE8AEE70087F598 /* Trek Long IslandTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 933A11132DE8AEE70087F598 /* Build configuration list for PBXNativeTarget "Trek Long IslandTests" */;
+			buildPhases = (
+				933A10F82DE8AEE70087F598 /* Sources */,
+				933A10F92DE8AEE70087F598 /* Frameworks */,
+				933A10FA2DE8AEE70087F598 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				933A10FE2DE8AEE70087F598 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				933A10FF2DE8AEE70087F598 /* Trek Long IslandTests */,
+			);
+			name = "Trek Long IslandTests";
+			packageProductDependencies = (
+			);
+			productName = "Trek Long IslandTests";
+			productReference = 933A10FC2DE8AEE70087F598 /* Trek Long IslandTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		933A11052DE8AEE70087F598 /* Trek Long IslandUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 933A11162DE8AEE70087F598 /* Build configuration list for PBXNativeTarget "Trek Long IslandUITests" */;
+			buildPhases = (
+				933A11022DE8AEE70087F598 /* Sources */,
+				933A11032DE8AEE70087F598 /* Frameworks */,
+				933A11042DE8AEE70087F598 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				933A11082DE8AEE70087F598 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				933A11092DE8AEE70087F598 /* Trek Long IslandUITests */,
+			);
+			name = "Trek Long IslandUITests";
+			packageProductDependencies = (
+			);
+			productName = "Trek Long IslandUITests";
+			productReference = 933A11062DE8AEE70087F598 /* Trek Long IslandUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		933A10E62DE8AEE60087F598 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					933A10ED2DE8AEE60087F598 = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					933A10FB2DE8AEE70087F598 = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 933A10ED2DE8AEE60087F598;
+					};
+					933A11052DE8AEE70087F598 = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 933A10ED2DE8AEE60087F598;
+					};
+				};
+			};
+			buildConfigurationList = 933A10E92DE8AEE60087F598 /* Build configuration list for PBXProject "Trek Long Island" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 933A10E52DE8AEE60087F598;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				93F1A0032FABCDE100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				9333CB532E0AFDCE008D88EB /* XCRemoteSwiftPackageReference "iCalendarParser" */,
+				9333CB562E0C1588008D88EB /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 933A10EF2DE8AEE60087F598 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				933A10ED2DE8AEE60087F598 /* Trek Long Island */,
+				933A10FB2DE8AEE70087F598 /* Trek Long IslandTests */,
+				933A11052DE8AEE70087F598 /* Trek Long IslandUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		933A10EC2DE8AEE60087F598 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				931A07A42F2ECADD000E374C /* quiet_roomtone.wav in Resources */,
+				931A07FD2F2EE37F000E374C /* bridge_hum_soft.wav in Resources */,
+				931A07A62F2ECADD000E374C /* lcars_tap_soft.wav in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		933A10FA2DE8AEE70087F598 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		933A11042DE8AEE70087F598 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		933A10EA2DE8AEE60087F598 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		933A10F82DE8AEE70087F598 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		933A11022DE8AEE70087F598 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		933A10FE2DE8AEE70087F598 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 933A10ED2DE8AEE60087F598 /* Trek Long Island */;
+			targetProxy = 933A10FD2DE8AEE70087F598 /* PBXContainerItemProxy */;
+		};
+		933A11082DE8AEE70087F598 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 933A10ED2DE8AEE60087F598 /* Trek Long Island */;
+			targetProxy = 933A11072DE8AEE70087F598 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		933A110E2DE8AEE70087F598 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		933A110F2DE8AEE70087F598 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEPLOYMENT_POSTPROCESSING = YES;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-Osize";
+			};
+			name = Release;
+		};
+		933A11112DE8AEE70087F598 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = "Trek Long Island/Trek_Long_Island.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 47;
+				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTABILITY = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Trek-Long-Island-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Trek Long Island";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Trek Long Island uses the camera for ticket QR scanning and immersive bridge viewscreen experiences.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Trek Long Island uses the local network to estimate active app counts for nearby rooms.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voice input lets you speak to Hello Computer.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition converts your voice commands into text.";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = NO;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_UIApplicationSupportsMultipleScenes = NO;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = NO;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 2026.4.19;
+				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-Island";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Osize";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Debug;
+		};
+		933A11122DE8AEE70087F598 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = "Trek Long Island/Trek_Long_Island.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 47;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Trek-Long-Island-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Trek Long Island";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Trek Long Island uses the camera for ticket QR scanning and immersive bridge viewscreen experiences.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Trek Long Island uses the local network to estimate active app counts for nearby rooms.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voice input lets you speak to Hello Computer.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition converts your voice commands into text.";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = NO;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_UIApplicationSupportsMultipleScenes = NO;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = NO;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 2026.4.19;
+				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-Island";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Release;
+		};
+		933A11142DE8AEE70087F598 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-IslandTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Trek Long Island.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Trek Long Island";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Debug;
+		};
+		933A11152DE8AEE70087F598 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-IslandTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Trek Long Island.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Trek Long Island";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Release;
+		};
+		933A11172DE8AEE70087F598 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-IslandUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = "Trek Long Island";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Debug;
+		};
+		933A11182DE8AEE70087F598 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = RT25WXR9M5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-IslandUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = "Trek Long Island";
+				XROS_DEPLOYMENT_TARGET = 2.4;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		933A10E92DE8AEE60087F598 /* Build configuration list for PBXProject "Trek Long Island" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				933A110E2DE8AEE70087F598 /* Debug */,
+				933A110F2DE8AEE70087F598 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		933A11102DE8AEE70087F598 /* Build configuration list for PBXNativeTarget "Trek Long Island" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				933A11112DE8AEE70087F598 /* Debug */,
+				933A11122DE8AEE70087F598 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		933A11132DE8AEE70087F598 /* Build configuration list for PBXNativeTarget "Trek Long IslandTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				933A11142DE8AEE70087F598 /* Debug */,
+				933A11152DE8AEE70087F598 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		933A11162DE8AEE70087F598 /* Build configuration list for PBXNativeTarget "Trek Long IslandUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				933A11172DE8AEE70087F598 /* Debug */,
+				933A11182DE8AEE70087F598 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 12.10.0;
+			};
+		};
+		9333CB532E0AFDCE008D88EB /* XCRemoteSwiftPackageReference "iCalendarParser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dmail-me/iCalendarParser";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.0;
+			};
+		};
+		9333CB562E0C1588008D88EB /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.8;
+			};
+		};
+		93F1A0032FABCDE100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9333CB4D2E0AFDA3008D88EB /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		9333CB4F2E0AFDA3008D88EB /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		9333CB512E0AFDA3008D88EB /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		9333CB542E0AFDCE008D88EB /* iCalendarParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB532E0AFDCE008D88EB /* XCRemoteSwiftPackageReference "iCalendarParser" */;
+			productName = iCalendarParser;
+		};
+		9333CB572E0C1588008D88EB /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB562E0C1588008D88EB /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
+		9358A5282ECFE8D000C2E2F4 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		9358A52A2ECFE8D000C2E2F4 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		9358A52C2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseFirestoreCombine-Community";
+		};
+		9358A52E2ECFE8D000C2E2F4 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		9358A5302ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseFunctionsCombine-Community";
+		};
+		9358A5322ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseInAppMessaging-Beta";
+		};
+		9358A5342ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseStorageCombine-Community";
+		};
+		93F1A0022FABCDE100AAA001 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 93F1A0032FABCDE100AAA001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 933A10E62DE8AEE60087F598 /* Project object */;
+}

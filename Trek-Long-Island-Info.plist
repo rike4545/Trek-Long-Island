@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-9917450718827221~7251531255</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_tlircounter._tcp</string>
+		<string>_tlircounter._udp</string>
+	</array>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
+	<key>TLI_SQUARE_ACCESS_TOKEN</key>
+	<string></string>
+	<key>TLI_SQUARE_API_VERSION</key>
+	<string>2026-01-21</string>
+	<key>TLI_SQUARE_BACKEND_BASE_URL</key>
+	<string></string>
+	<key>TLI_SQUARE_DIRECT_ACCESS_ENABLED</key>
+	<false/>
+	<key>TLI_SQUARE_ENABLED</key>
+	<false/>
+	<key>TLI_SQUARE_ENVIRONMENT</key>
+	<string>sandbox</string>
+	<key>TLI_ADS_DISABLED</key>
+	<true/>
+	<key>TLI_DISABLE_CUSTOM_SPLASH</key>
+	<true/>
+	<key>TLI_DISABLE_WELCOME_POPUP</key>
+	<true/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/AtkinsonHyperlegible-Regular.ttf</string>
+		<string>Fonts/AtkinsonHyperlegible-Bold.ttf</string>
+	</array>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+</dict>
+</plist>
