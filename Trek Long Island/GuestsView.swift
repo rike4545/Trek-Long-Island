@@ -100,6 +100,72 @@ enum GuestStatus: String, CaseIterable, Codable, Hashable {
     }
 }
 
+enum TLIAutographPricing2026 {
+    struct Entry: Identifiable, Hashable {
+        let name: String
+        let autographPrice: Int
+
+        var id: String { name }
+        var priceLabel: String { "$\(autographPrice)" }
+        var detailNote: String {
+            "Autograph: \(priceLabel). Combo prices available at table."
+        }
+    }
+
+    static let sourceURL = URL(string: "https://treklongisland.com/autograph-pricing-2026/")!
+    static let sourceDescription = "Official autograph pricing posted June 12, 2026. Combo prices will be available at table."
+
+    static let entries: [Entry] = [
+        .init(name: "Nana Visitor", autographPrice: 50),
+        .init(name: "Jeffrey Combs", autographPrice: 50),
+        .init(name: "Celia Rose Gooding", autographPrice: 50),
+        .init(name: "Karim Diane", autographPrice: 40),
+        .init(name: "Nicole de Boer", autographPrice: 50),
+        .init(name: "Dan Jeannotte", autographPrice: 40),
+        .init(name: "Chris Myers", autographPrice: 40),
+        .init(name: "Jennifer Hetrick", autographPrice: 30),
+        .init(name: "Stephanie Czajkowski", autographPrice: 40),
+        .init(name: "Carolyn McCormick", autographPrice: 30),
+        .init(name: "Sachi Parker", autographPrice: 30),
+        .init(name: "Musetta Vander", autographPrice: 30),
+        .init(name: "Deirdre (Imershein) Haj", autographPrice: 30),
+        .init(name: "Tracee Cocco", autographPrice: 40),
+        .init(name: "Jesse James Keitel", autographPrice: 40),
+        .init(name: "Jackie Cox", autographPrice: 20)
+    ]
+
+    static func entry(for guestName: String) -> Entry? {
+        let normalized = normalize(guestName)
+        return entries.first { entry in
+            normalize(entry.name) == normalized || aliases(for: entry.name).contains(normalized)
+        }
+    }
+
+    static func note(for guestName: String) -> String? {
+        entry(for: guestName)?.detailNote
+    }
+
+    private static func aliases(for name: String) -> Set<String> {
+        switch name {
+        case "Deirdre (Imershein) Haj":
+            return ["deirdre imershein", "deirdre haj", "deirdre imershein haj"]
+        default:
+            return []
+        }
+    }
+
+    private static func normalize(_ value: String) -> String {
+        value
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .replacingOccurrences(of: "(", with: " ")
+            .replacingOccurrences(of: ")", with: " ")
+            .replacingOccurrences(of: "'", with: "")
+            .split { !$0.isLetter && !$0.isNumber }
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 struct Guest: Identifiable, Hashable, Codable {
     let id: UUID
     let name: String
@@ -230,6 +296,10 @@ struct Guest: Identifiable, Hashable, Codable {
             return tablePricingNote
         }
 
+        if let pricingNote = TLIAutographPricing2026.note(for: name) {
+            return pricingNote
+        }
+
         guard category == .celebrity else { return nil }
         return "Autograph signings and selfie pricing are available at the guest's table."
     }
@@ -275,9 +345,8 @@ struct Guest: Identifiable, Hashable, Codable {
     }
 
     var availabilityDetail: String? {
-        if let cancellationLabel {
-            return cancellationLabel
-        }
+        // Cancellation/replacement messaging is rendered by the status banner,
+        // so the availability row only carries real appearance days.
         guard let availabilityLabel else { return nil }
         return "Guest appearance: \(availabilityLabel)"
     }
@@ -297,19 +366,45 @@ struct Guest: Identifiable, Hashable, Codable {
         }
     }
 
-    var cancellationLabel: String? {
-        guard isCancelled else { return nil }
+    /// Attendee-facing status banner text for both cancelled and replaced guests.
+    /// Returns nil for active guests.
+    var statusMessage: String? {
+        let trimmedReplacement = replacementGuestName?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNote = statusNote?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        var parts = ["Guest appearance cancelled"]
-        if let replacementGuestName,
-           !replacementGuestName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            parts.append("Replacement: \(replacementGuestName)")
+        switch status {
+        case .active:
+            return nil
+
+        case .cancelled:
+            var parts = ["Guest appearance cancelled"]
+            if let trimmedReplacement, !trimmedReplacement.isEmpty {
+                parts.append("Replacement: \(trimmedReplacement)")
+            }
+            if let trimmedNote, !trimmedNote.isEmpty {
+                parts.append(trimmedNote)
+            }
+            return parts.joined(separator: " • ")
+
+        case .replaced:
+            var parts: [String]
+            if let trimmedReplacement, !trimmedReplacement.isEmpty {
+                parts = ["\(name) replaced by \(trimmedReplacement)"]
+            } else {
+                parts = ["Guest schedule updated"]
+            }
+            if let trimmedNote, !trimmedNote.isEmpty {
+                parts.append(trimmedNote)
+            }
+            return parts.joined(separator: " • ")
         }
-        if let statusNote,
-           !statusNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            parts.append(statusNote)
-        }
-        return parts.joined(separator: " • ")
+    }
+
+    /// Back-compat: only non-nil when the guest is fully cancelled.
+    var cancellationLabel: String? {
+        isCancelled ? statusMessage : nil
     }
 
     func applying(statusOverride override: GuestStatusOverride) -> Guest {
@@ -564,6 +659,7 @@ struct GuestsView: View {
     @Environment(\.colorScheme) private var scheme
     @ObservedObject private var networkMonitor = TLINetworkMonitor.shared
     @ObservedObject private var guestStatusStore = GuestStatusStore.shared
+    @ObservedObject private var guestStatusSync = GuestStatusSyncService.shared
 
     // External injection (optional). If empty we load JSON or fallback.
     private let injectedGuests: [Guest]
@@ -615,6 +711,8 @@ struct GuestsView: View {
                 VStack(spacing: 20) {
                     if showsHeader {
                         header
+                        guestDisclaimerCard
+                            .padding(.horizontal)
                     }
 
                     if shouldShowOfflineStatusCard {
@@ -668,6 +766,10 @@ struct GuestsView: View {
             )
         }
         .task { reloadGuestsData() }
+        .task { guestStatusSync.start() }
+        .onChange(of: guestStatusSync.remoteOverrides) {
+            reloadGuestsData()
+        }
         .onAppear(perform: migrateLegacyFavoritesIfNeeded)
         .animation(.guestsSelection, value: searchText)
         .animation(.guestsSelection, value: selectedCategory)
@@ -684,7 +786,10 @@ struct GuestsView: View {
             .filter { showCancelledGuests || !$0.isCancelled }
             .filter { selectedCategory == nil || $0.category == selectedCategory }
             .filter { guestMatchesAppearanceFilter($0) }
-            .filter { selectedSeriesTag == nil || $0.seriesTags.contains(selectedSeriesTag!) }
+            .filter { guest in
+                guard let selectedSeriesTag else { return true }
+                return guest.seriesTags.contains(selectedSeriesTag)
+            }
     }
 
     private var availableSeriesTags: [String] {
@@ -778,18 +883,47 @@ struct GuestsView: View {
                         : "\(filteredGuests.count) guest\(filteredGuests.count == 1 ? "" : "s") showing"
                 )
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
         .padding(.horizontal)
         .tliLCARSPanelChrome(accent: RisaTheme.accent(scheme), metadata: "Personnel Database")
     }
 
+    private var guestDisclaimerCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Guest Appearance Disclaimer", systemImage: "info.circle.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(TLITheme.textPrimary(scheme))
+
+            Text("""
+            Guests subject to cancellation or schedule change, due to professional commitments.
+            Although most guests are available for the duration of the event, due to limited availability some guests are only available for a portion of the event, i.e. a single day.
+            Appearance day(s) will be posted on the website as soon as we know.
+            All events have limited seating capacities and are offered on a first come, first served basis.
+            """)
+            .font(.footnote)
+            .lineSpacing(2)
+            .foregroundStyle(TLITheme.textSecondary(scheme))
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .background(
+            TLITheme.cardBackground(scheme).opacity(scheme == .dark ? 0.86 : 0.94),
+            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(TLITheme.border(scheme).opacity(0.38), lineWidth: TLITheme.hairline)
+        )
+        .accessibilityElement(children: .combine)
+    }
+
     private var searchAndFilterBar: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                 TextField(RisaTheme.isLCARSThemeEnabled ? "Search personnel…" : "Search guests…", text: $searchText)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
@@ -798,7 +932,7 @@ struct GuestsView: View {
                         searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                     }
                     .accessibilityLabel("Clear search")
                 }
@@ -929,7 +1063,7 @@ struct GuestsView: View {
                         Image(systemName: "slider.horizontal.3")
                         Text(activeFilterCount > 0 ? "Filters (\(activeFilterCount))" : "Filters")
                         Image(systemName: "chevron.down")
-                            .font(.caption2.weight(.bold))
+                            .font(.caption.weight(.bold))
                     }
                     .font(.footnote.weight(.semibold))
                     .padding(.horizontal, 12)
@@ -1071,10 +1205,10 @@ struct GuestsView: View {
         VStack(spacing: 10) {
             Image(systemName: "person.crop.circle.badge.questionmark")
                 .imageScale(.large)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text("No guests match your filters.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
@@ -1129,13 +1263,23 @@ struct GuestsView: View {
 
     private func reloadGuestsData() {
         let result = loadGuests(injected: injectedGuests)
-        guests = result.guests.map(guestStatusStore.resolvedGuest)
+        guests = result.guests.map(resolveOverrides)
         guestsLoadedFromCache = result.loadedFromCache
         if let syncDate = result.lastSyncDate {
             guestsLastSyncDate = syncDate
         } else if guestsCacheLastSync > 0 {
             guestsLastSyncDate = Date(timeIntervalSince1970: guestsCacheLastSync)
         }
+    }
+
+    /// Resolve a guest's status using remote sync first, then the local store.
+    /// Remote and local carry identical content for any operator action, so the
+    /// displayed result is stable regardless of which one is present.
+    private func resolveOverrides(_ guest: Guest) -> Guest {
+        if let remote = guestStatusSync.override(for: guest) {
+            return guest.applying(statusOverride: remote)
+        }
+        return guestStatusStore.resolvedGuest(guest)
     }
 
     private func loadGuests(injected: [Guest]) -> GuestLoadResult {
@@ -1448,7 +1592,9 @@ struct GuestsView: View {
             category: .celebrity,
             twitterURL: URL(string: ""),
             instagramURL: URL(string: ""),
-            imdbURL: URL(string: "https://www.imdb.com/name/nm0814798/")
+            imdbURL: URL(string: "https://www.imdb.com/name/nm0814798/"),
+            status: .cancelled,
+            statusNote: "Louise Sorel will not be joining us this year due to a fur baby emergency. All the xoxo to her pup."
         ),
         Guest(
             name: "Jesse James Keitel",
@@ -1474,7 +1620,7 @@ struct GuestsView: View {
             imdbURL: URL(string: "https://www.imdb.com/name/nm1006740/")
         ),
         Guest(
-            name: "Paul Michael Adams",
+            name: "Paul Adams",
             role: "Diversity Cohost",
             imageName: "Paul Michael Adams",
             accentHex: "#FF4C99",
@@ -1520,15 +1666,6 @@ struct GuestsView: View {
             category: .panelist,
         ),
         Guest(
-            name: "Conor Heights",
-            role: "Diversity Panelist",
-            imageName: "Conor Heights",
-            accentHex: "#FF4C99",
-            bio: "",
-            sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
-            category: .panelist,
-        ),
-        Guest(
             name: "Matthew Lawrence Jennings",
             role: "Diversity Panelist",
             imageName: "Jennings",
@@ -1541,6 +1678,60 @@ struct GuestsView: View {
             name: "Janera Tiell Manno",
             role: "Diversity Panelist",
             imageName: "Manno",
+            accentHex: "#FF4C99",
+            bio: "",
+            sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
+            category: .panelist,
+        ),
+        Guest(
+            name: "Damian Effler",
+            role: "Diversity Panelist",
+            imageName: "Effler",
+            accentHex: "#FF4C99",
+            bio: "",
+            sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
+            category: .panelist,
+        ),
+        Guest(
+            name: "Aiyana-Mei Tom",
+            role: "Diversity Panelist",
+            imageName: "Tom",
+            accentHex: "#FF4C99",
+            bio: "",
+            sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
+            category: .panelist,
+        ),
+        Guest(
+            name: "Leigh Ellen Mitchell",
+            role: "Diversity Panelist",
+            imageName: "Mitchell",
+            accentHex: "#FF4C99",
+            bio: "",
+            sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
+            category: .panelist,
+        ),
+        Guest(
+            name: "Dr. Brenda Dorsh",
+            role: "Diversity Panelist",
+            imageName: "Dorsh",
+            accentHex: "#FF4C99",
+            bio: "",
+            sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
+            category: .panelist,
+        ),
+            Guest(
+                name: "Kris Otto",
+                role: "Diversity Panelist",
+                imageName: "Otto",
+                accentHex: "#FF4C99",
+                bio: "",
+                sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
+                category: .panelist,
+        ),
+        Guest(
+            name: "Chad Briggs",
+            role: "Diversity Panelist",
+            imageName: "Briggs",
             accentHex: "#FF4C99",
             bio: "",
             sponsorship: "IDIC Track Guests and Panelists Sponsored by PMA Consulting",
@@ -1608,6 +1799,17 @@ struct GuestsView: View {
             websiteURL: URL(string: "https://www.derekattico.com/")
         ),
         Guest(
+            name: "Robb Pearlman",
+            role: "Author",
+            imageName: "Attico",
+            accentHex: "#FF4C99",
+            bio: "#1 New York Times Bestselling Author. Pop Culturalist. Starfleet Officer. Rebel Alliance Droid. Fellowship of the Ring Fella.",
+            sponsorship: "",
+            category: .author,
+            instagramURL: URL(string: "https://www.instagram.com/robbpearlman/"),
+            websiteURL: URL(string: "https://linktr.ee/robbpearlman")
+        ),
+        Guest(
             name: "Keith R.A. DeCandido",
             role: "Author",
             imageName: "DeCandido",
@@ -1655,6 +1857,18 @@ struct GuestsView: View {
             imdbURL: URL(string: "https://www.imdb.com/name/nm9968215")
         ),
         Guest(
+            name: "Karim Diane",
+            role: "Jay Den Kraag",
+            series: "Star Trek: Starfleet Academy",
+            imageName: "Karimdiane",
+            accentHex: "#FF4C99",
+            bio: "Karim Diane is a West African-American actor, singer, and songwriter who plays the first gay Klingon in Star Trek history.",
+            sponsorship: "",
+            category: .celebrity,
+            instagramURL: URL(string: "vhttps://www.instagram.com/team_karim/"),
+            imdbURL: URL(string: "https://www.imdb.com/name/nm7871425/")
+        ),
+        Guest(
             name: "Glenn Hauman",
             role: "Author",
             imageName: "Hauman",
@@ -1665,6 +1879,16 @@ struct GuestsView: View {
             twitterURL: URL(string: "https://x.com/GlennHauman"),
             websiteURL: URL(string: "https://www.glennhauman.com/"),
             imdbURL: URL(string: "https://www.imdb.com/name/nm1079280/")
+        ),
+        Guest(
+            name: "Aaron Rosenberg",
+            role: "Author",
+            imageName: "Rosenberg",
+            accentHex: "#FF4C99",
+            bio: "Aaron Rosenberg is the best-selling, award-winning author of almost 60 novels, including the Twin Cities Cryptids urban fantasy/cozy series, the DuckBob SF comedy series, the Relicant Chronicles epic fantasy series, the Areyat Islands fantasy pirate mystery series, and, with David Niall Wilson, the O.C.L.T. occult thriller series. His tie-in work contains novels for Star Trek, Warhammer, World of WarCraft, Stargate: Atlantis, Shadowrun, Mutants &amp; Masterminds, and Eureka and short stories for The X-Files, World of Darkness, Crusader Kings II, Deadlands, Master of Orion, and Europa Universalis IV.",
+            sponsorship: "",
+            category: .author,
+            imdbURL: URL(string: "https://memory-alpha.fandom.com/wiki/Aaron_Rosenberg")
         ),
         Guest(
             name: "Alex Simmons",
@@ -1845,8 +2069,8 @@ private struct GuestCardRow: View {
 
                     if let series = guest.displaySeries {
                         Text(series)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                             .lineLimit(1)
                             .truncationMode(.tail)
                     }
@@ -2028,7 +2252,7 @@ private struct GuestMetadataPills: View {
             HStack(spacing: 6) {
                 ForEach(items, id: \.self) { item in
                     Text(item)
-                        .font(.caption2.weight(.semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(TLITheme.textPrimary(scheme))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
@@ -2053,6 +2277,7 @@ private struct GuestDetailSheet: View {
     @ObservedObject private var crmStore = CRMStore.shared
     @ObservedObject private var notifications = NotificationManager.shared
     @ObservedObject private var guestStatusStore = GuestStatusStore.shared
+    @ObservedObject private var guestStatusSync = GuestStatusSyncService.shared
 
     private enum DetailMode {
         case panelist
@@ -2067,16 +2292,25 @@ private struct GuestDetailSheet: View {
     let onDismissRequested: () -> Void
     @State private var showCRMSaveAlert = false
     @State private var crmAlertMessage = ""
-    @State private var showStatusActions = false
+    @State private var showStatusEditor = false
     @State private var showOpsAlert = false
     @State private var opsAlertMessage = ""
+
+    /// Always reflects the latest override so the open sheet updates live.
+    /// Remote sync wins when present, otherwise the device-local store.
+    private var resolved: Guest {
+        if let remote = guestStatusSync.override(for: guest) {
+            return guest.applying(statusOverride: remote)
+        }
+        return guestStatusStore.resolvedGuest(guest)
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 header
-                if let cancellationLabel = guest.cancellationLabel {
-                    statusSection(cancellationLabel)
+                if let statusMessage = resolved.statusMessage {
+                    statusSection(statusMessage, status: resolved.status)
                 }
 
                 switch detailMode {
@@ -2126,11 +2360,11 @@ private struct GuestDetailSheet: View {
             if notifications.isSuperAdminUnlocked {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        showStatusActions = true
+                        showStatusEditor = true
                     } label: {
-                        Image(systemName: guest.isCancelled ? "checkmark.circle" : "xmark.octagon")
+                        Image(systemName: resolved.status == .active ? "xmark.octagon" : "checkmark.circle")
                     }
-                    .accessibilityLabel(guest.isCancelled ? "Restore guest" : "Mark guest cancelled")
+                    .accessibilityLabel("Edit guest status")
                 }
             }
         }
@@ -2144,22 +2378,22 @@ private struct GuestDetailSheet: View {
         } message: {
             Text(opsAlertMessage)
         }
-        .confirmationDialog("Guest Status", isPresented: $showStatusActions, titleVisibility: .visible) {
-            if guest.isCancelled {
-                Button("Restore Guest") {
-                    restoreGuest()
-                }
-            } else {
-                Button("Cancel Guest Only", role: .destructive) {
-                    cancelGuest(sendNotification: false)
-                }
-                if notifications.canSubmitNotifications {
-                    Button("Cancel Guest + Draft Notification", role: .destructive) {
-                        cancelGuest(sendNotification: true)
-                    }
-                }
-            }
-            Button("Dismiss", role: .cancel) {}
+        .sheet(isPresented: $showStatusEditor) {
+            GuestStatusEditorSheet(
+                guest: resolved,
+                accentColor: accentColor,
+                canDraftNotification: notifications.canSubmitNotifications,
+                onApply: { status, replacementName, note, draftNotification in
+                    applyStatus(
+                        status,
+                        replacementName: replacementName,
+                        note: note,
+                        draftNotification: draftNotification
+                    )
+                    showStatusEditor = false
+                },
+                onCancel: { showStatusEditor = false }
+            )
         }
         .navigationTitle(guest.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -2227,13 +2461,13 @@ private struct GuestDetailSheet: View {
         .padding(.top, 16)
     }
 
-    private func statusSection(_ statusMessage: String) -> some View {
+    private func statusSection(_ statusMessage: String, status: GuestStatus) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Guest Update")
                 .font(.headline)
                 .foregroundStyle(TLITheme.textPrimary(scheme))
 
-            Label(statusMessage, systemImage: guest.status.systemImage)
+            Label(statusMessage, systemImage: status.systemImage)
                 .font(.body)
                 .foregroundStyle(TLITheme.textPrimary(scheme))
                 .fixedSize(horizontal: false, vertical: true)
@@ -2245,7 +2479,7 @@ private struct GuestDetailSheet: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.red.opacity(0.45), lineWidth: 1)
+                .stroke((status == .cancelled ? Color.red : Color.orange).opacity(0.45), lineWidth: 1)
         )
         .padding(.horizontal)
     }
@@ -2545,43 +2779,209 @@ private struct GuestDetailSheet: View {
         showCRMSaveAlert = true
     }
 
-    private func cancelGuest(sendNotification: Bool) {
-        guestStatusStore.setStatus(
-            for: guest,
-            status: .cancelled,
-            note: "Please check the latest schedule and alerts for replacement programming."
-        )
+    private func applyStatus(
+        _ status: GuestStatus,
+        replacementName: String?,
+        note: String?,
+        draftNotification: Bool
+    ) {
+        switch status {
+        case .active:
+            // Local first (instant on this device), then publish if master.
+            guestStatusStore.clearStatus(for: guest)
+            guestStatusSync.clearStatus(for: guest)
+        case .cancelled, .replaced:
+            guestStatusStore.setStatus(
+                for: guest,
+                status: status,
+                note: note,
+                replacementGuestName: replacementName
+            )
+            guestStatusSync.setStatus(
+                for: guest,
+                status: status,
+                note: note,
+                replacementGuestName: replacementName
+            )
+        }
 
-        let updatedGuest = guestStatusStore.resolvedGuest(guest)
+        let updatedGuest = resolved
         onGuestUpdated(updatedGuest)
 
-        if sendNotification && notifications.canSubmitNotifications {
+        let willQueueAlert = draftNotification
+            && notifications.canSubmitNotifications
+            && status != .active
+
+        if willQueueAlert {
             notifications.addNotification(
                 RisaNotification(
                     title: "\(guest.name) update",
-                    message: "\(guest.name) can no longer appear at Trek Long Island. Please check the latest schedule and guest alerts for replacement programming.",
+                    message: notificationMessage(for: status, replacementName: replacementName, note: note),
                     role: "guest",
                     category: "Schedule",
                     timestamp: .now,
                     isPriority: true
                 )
             )
-            opsAlertMessage = "Marked guest cancelled and submitted an attendee alert to the pending queue."
-        } else if sendNotification {
-            opsAlertMessage = "Marked guest cancelled locally. No alert was created because this session cannot submit notifications."
-        } else {
-            opsAlertMessage = "Marked guest cancelled without sending an attendee notification."
+        }
+
+        switch status {
+        case .active:
+            opsAlertMessage = "Restored \(guest.name) to the active roster."
+        case .cancelled:
+            opsAlertMessage = willQueueAlert
+                ? "Marked \(guest.name) cancelled and queued an attendee alert."
+                : "Marked \(guest.name) cancelled. No attendee alert was queued."
+        case .replaced:
+            opsAlertMessage = willQueueAlert
+                ? "Recorded a replacement for \(guest.name) and queued an attendee alert."
+                : "Recorded a replacement for \(guest.name). No attendee alert was queued."
         }
 
         showOpsAlert = true
     }
 
-    private func restoreGuest() {
-        guestStatusStore.clearStatus(for: guest)
-        let updatedGuest = guestStatusStore.resolvedGuest(guest)
-        onGuestUpdated(updatedGuest)
-        opsAlertMessage = "Restored guest to the active roster."
-        showOpsAlert = true
+    private func notificationMessage(
+        for status: GuestStatus,
+        replacementName: String?,
+        note: String?
+    ) -> String {
+        let trimmedReplacement = replacementName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNote = note?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        var message: String
+        switch status {
+        case .cancelled:
+            message = "\(guest.name) can no longer appear at Trek Long Island."
+            if let trimmedReplacement, !trimmedReplacement.isEmpty {
+                message += " Replacement: \(trimmedReplacement)."
+            }
+        case .replaced:
+            if let trimmedReplacement, !trimmedReplacement.isEmpty {
+                message = "Schedule update: \(guest.name) is being replaced by \(trimmedReplacement)."
+            } else {
+                message = "Schedule update for \(guest.name)."
+            }
+        case .active:
+            message = "\(guest.name) is back on the active roster."
+        }
+
+        if let trimmedNote, !trimmedNote.isEmpty {
+            message += " \(trimmedNote)"
+        } else {
+            message += " Please check the latest schedule and guest alerts for details."
+        }
+        return message
+    }
+}
+
+// MARK: - Guest Status Editor (operator-only)
+
+private struct GuestStatusEditorSheet: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let guest: Guest
+    let accentColor: Color
+    let canDraftNotification: Bool
+    let onApply: (GuestStatus, String?, String?, Bool) -> Void
+    let onCancel: () -> Void
+
+    @State private var selectedStatus: GuestStatus
+    @State private var replacementName: String
+    @State private var note: String
+    @State private var draftNotification: Bool
+
+    init(
+        guest: Guest,
+        accentColor: Color,
+        canDraftNotification: Bool,
+        onApply: @escaping (GuestStatus, String?, String?, Bool) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self.guest = guest
+        self.accentColor = accentColor
+        self.canDraftNotification = canDraftNotification
+        self.onApply = onApply
+        self.onCancel = onCancel
+        _selectedStatus = State(initialValue: guest.status)
+        _replacementName = State(initialValue: guest.replacementGuestName ?? "")
+        _note = State(initialValue: guest.statusNote ?? "")
+        _draftNotification = State(initialValue: canDraftNotification)
+    }
+
+    private var showsDetailFields: Bool {
+        selectedStatus == .cancelled || selectedStatus == .replaced
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Status") {
+                    Picker("Guest status", selection: $selectedStatus) {
+                        Text("Active").tag(GuestStatus.active)
+                        Text("Cancelled").tag(GuestStatus.cancelled)
+                        Text("Replaced").tag(GuestStatus.replaced)
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                if showsDetailFields {
+                    Section("Replacement Guest (optional)") {
+                        TextField("e.g. Jane Doe", text: $replacementName)
+                            .textInputAutocapitalization(.words)
+                            .disableAutocorrection(true)
+                    }
+
+                    Section("Note (optional)") {
+                        TextField(
+                            "Shown to attendees in the guest update",
+                            text: $note,
+                            axis: .vertical
+                        )
+                        .lineLimit(2...5)
+                    }
+
+                    Section {
+                        Toggle("Draft attendee notification", isOn: $draftNotification)
+                            .disabled(!canDraftNotification)
+                        if !canDraftNotification {
+                            Text("This session can't submit notifications, so no attendee alert will be queued.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    Section {
+                        Text("Setting status to Active restores \(guest.name) to the roster and clears any cancellation note.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle(guest.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", action: onCancel)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Save") {
+                        let trimmedReplacement = replacementName
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        let trimmedNote = note
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        onApply(
+                            selectedStatus,
+                            trimmedReplacement.isEmpty ? nil : trimmedReplacement,
+                            trimmedNote.isEmpty ? nil : trimmedNote,
+                            selectedStatus == .active ? false : draftNotification
+                        )
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .tint(accentColor)
     }
 }
 

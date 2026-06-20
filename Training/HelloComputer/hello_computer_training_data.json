@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "feature_names": [
+    "tag_overlap",
+    "question_overlap",
+    "phrase_bonus",
+    "semantic_similarity",
+    "matched_tag_phrases",
+    "contains_question_phrase",
+    "is_official_faq",
+    "query_length"
+  ],
+  "supervised_examples": [
+    {
+      "query": "where do i buy tickets",
+      "candidate_id": "tickets.buy",
+      "label": 1,
+      "features": [0.5, 0.625, 0.2778, 0.82, 0.3333, 0.0, 1.0, 0.3571]
+    },
+    {
+      "query": "where do i buy tickets",
+      "candidate_id": "venue.location",
+      "label": 0,
+      "features": [0.0, 0.125, 0.0, 0.31, 0.0, 0.0, 1.0, 0.3571]
+    },
+    {
+      "query": "i never got my ticket confirmation email",
+      "candidate_id": "tickets.problem",
+      "label": 1,
+      "features": [0.6667, 0.5, 0.5556, 0.78, 0.6667, 0.0, 1.0, 0.5]
+    },
+    {
+      "query": "what time is the convention on saturday",
+      "candidate_id": "dates.hours",
+      "label": 1,
+      "features": [0.5, 0.375, 0.2778, 0.74, 0.3333, 0.0, 1.0, 0.5]
+    },
+    {
+      "query": "is cosplay okay",
+      "candidate_id": "cosplay.policy",
+      "label": 1,
+      "features": [0.1667, 0.25, 0.2778, 0.71, 0.3333, 0.0, 1.0, 0.2143]
+    },
+    {
+      "query": "is cosplay okay",
+      "candidate_id": "photo.ops",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.33, 0.0, 0.0, 1.0, 0.2143]
+    },
+    {
+      "query": "i need wheelchair seating",
+      "candidate_id": "accessibility.support",
+      "label": 1,
+      "features": [0.3333, 0.25, 0.2778, 0.76, 0.3333, 0.0, 1.0, 0.2857]
+    },
+    {
+      "query": "where is the hotel",
+      "candidate_id": "venue.location",
+      "label": 1,
+      "features": [0.3333, 0.375, 0.2778, 0.75, 0.3333, 0.0, 1.0, 0.2857]
+    },
+    {
+      "query": "how do photo ops work",
+      "candidate_id": "photo.ops",
+      "label": 1,
+      "features": [0.3333, 0.625, 1.0, 0.86, 0.6667, 1.0, 1.0, 0.3571]
+    },
+    {
+      "query": "what should i do first when i arrive",
+      "candidate_id": "arrival.checklist",
+      "label": 1,
+      "features": [0.6667, 0.875, 1.0, 0.88, 0.6667, 1.0, 0.0, 0.5714]
+    },
+    {
+      "query": "what should i do first when i arrive",
+      "candidate_id": "tickets.buy",
+      "label": 0,
+      "features": [0.0, 0.125, 0.0, 0.29, 0.0, 0.0, 1.0, 0.5714]
+    },
+    {
+      "query": "tea earl grey hot",
+      "candidate_id": "lore.tea",
+      "label": 1,
+      "features": [0.5, 0.5, 0.5556, 0.8, 0.6667, 0.0, 0.0, 0.2857]
+    }
+  ],
+  "supervised_eval_examples": [
+    {
+      "query": "can i still get tickets at the door",
+      "candidate_id": "tickets.door",
+      "label": 1,
+      "features": [0.3333, 0.3750, 0.2778, 0.74, 0.3333, 0.0, 1.0, 0.5000]
+    },
+    {
+      "query": "can i still get tickets at the door",
+      "candidate_id": "venue.location",
+      "label": 0,
+      "features": [0.0, 0.1250, 0.0, 0.34, 0.0, 0.0, 1.0, 0.5000]
+    },
+    {
+      "query": "where do i check in",
+      "candidate_id": "arrival.checklist",
+      "label": 1,
+      "features": [0.1667, 0.2500, 0.2778, 0.67, 0.3333, 0.0, 0.0, 0.3571]
+    },
+    {
+      "query": "where do i check in",
+      "candidate_id": "tickets.problem",
+      "label": 0,
+      "features": [0.0, 0.1250, 0.0, 0.38, 0.0, 0.0, 1.0, 0.3571]
+    },
+    {
+      "query": "is there a quiet option if crowds get intense",
+      "candidate_id": "accessibility.support",
+      "label": 1,
+      "features": [0.1667, 0.1250, 0.2778, 0.72, 0.3333, 0.0, 1.0, 0.5714]
+    },
+    {
+      "query": "is there a quiet option if crowds get intense",
+      "candidate_id": "schedule.changes",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.41, 0.0, 0.0, 1.0, 0.5714]
+    },
+    {
+      "query": "where can i find the program",
+      "candidate_id": "schedule.programs",
+      "label": 1,
+      "features": [0.1667, 0.2500, 0.2778, 0.75, 0.3333, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "where can i find the program",
+      "candidate_id": "photo.ops",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.36, 0.0, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "do i need my receipt at checkin",
+      "candidate_id": "checkin.confirmation",
+      "label": 1,
+      "features": [0.3333, 0.2500, 0.2778, 0.78, 0.3333, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "do i need my receipt at checkin",
+      "candidate_id": "cosplay.policy",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.29, 0.0, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "are props okay with costumes",
+      "candidate_id": "cosplay.policy",
+      "label": 1,
+      "features": [0.3333, 0.1250, 0.2778, 0.71, 0.3333, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "are props okay with costumes",
+      "candidate_id": "venue.location",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.32, 0.0, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "whr do i pik up my badge",
+      "candidate_id": "arrival.checklist",
+      "label": 1,
+      "features": [0.1667, 0.1250, 0.0, 0.61, 0.0, 0.0, 0.0, 0.5000]
+    },
+    {
+      "query": "whr do i pik up my badge",
+      "candidate_id": "venue.location",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.28, 0.0, 0.0, 1.0, 0.5000]
+    },
+    {
+      "query": "photo op line?? need tkts or nah",
+      "candidate_id": "photo.ops",
+      "label": 1,
+      "features": [0.1667, 0.1250, 0.2778, 0.70, 0.3333, 0.0, 1.0, 0.5000]
+    },
+    {
+      "query": "photo op line?? need tkts or nah",
+      "candidate_id": "autographs",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.47, 0.0, 0.0, 1.0, 0.5000]
+    },
+    {
+      "query": "parking @ hyatt??",
+      "candidate_id": "venue.location",
+      "label": 1,
+      "features": [0.1667, 0.1250, 0.2778, 0.73, 0.3333, 0.0, 1.0, 0.2143]
+    },
+    {
+      "query": "parking @ hyatt??",
+      "candidate_id": "tickets.buy",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.24, 0.0, 0.0, 1.0, 0.2143]
+    },
+    {
+      "query": "sched changed? what got moved",
+      "candidate_id": "schedule.changes",
+      "label": 1,
+      "features": [0.3333, 0.1250, 0.2778, 0.76, 0.3333, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "sched changed? what got moved",
+      "candidate_id": "dates.hours",
+      "label": 0,
+      "features": [0.0, 0.0, 0.0, 0.39, 0.0, 0.0, 1.0, 0.4286]
+    }
+  ],
+  "preference_examples": [
+    {
+      "query": "can i buy passes in the app",
+      "chosen_candidate_id": "tickets.buy",
+      "rejected_candidate_id": "schedule.programs",
+      "reward": 1.0,
+      "chosen_features": [0.3333, 0.375, 0.2778, 0.72, 0.3333, 0.0, 1.0, 0.4286],
+      "rejected_features": [0.0, 0.125, 0.0, 0.36, 0.0, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "where do i park",
+      "chosen_candidate_id": "venue.location",
+      "rejected_candidate_id": "tickets.buy",
+      "reward": 1.0,
+      "chosen_features": [0.1667, 0.25, 0.2778, 0.69, 0.3333, 0.0, 1.0, 0.2857],
+      "rejected_features": [0.0, 0.125, 0.0, 0.3, 0.0, 0.0, 1.0, 0.2857]
+    },
+    {
+      "query": "do they have ada help",
+      "chosen_candidate_id": "accessibility.support",
+      "rejected_candidate_id": "venue.location",
+      "reward": 1.0,
+      "chosen_features": [0.3333, 0.25, 0.2778, 0.73, 0.3333, 0.0, 1.0, 0.3571],
+      "rejected_features": [0.0, 0.125, 0.0, 0.45, 0.0, 0.0, 1.0, 0.3571]
+    },
+    {
+      "query": "what changed on the schedule",
+      "chosen_candidate_id": "schedule.changes",
+      "rejected_candidate_id": "arrival.checklist",
+      "reward": 1.0,
+      "chosen_features": [0.3333, 0.375, 0.2778, 0.77, 0.3333, 0.0, 1.0, 0.3571],
+      "rejected_features": [0.0, 0.125, 0.0, 0.48, 0.0, 0.0, 0.0, 0.3571]
+    },
+    {
+      "query": "can i wear my uniform",
+      "chosen_candidate_id": "cosplay.policy",
+      "rejected_candidate_id": "checkin.confirmation",
+      "reward": 1.0,
+      "chosen_features": [0.1667, 0.125, 0.2778, 0.68, 0.3333, 0.0, 1.0, 0.3571],
+      "rejected_features": [0.0, 0.125, 0.0, 0.34, 0.0, 0.0, 1.0, 0.3571]
+    }
+  ],
+  "preference_eval_examples": [
+    {
+      "query": "where is badge pickup",
+      "chosen_candidate_id": "arrival.checklist",
+      "rejected_candidate_id": "schedule.programs",
+      "reward": 1.0,
+      "chosen_features": [0.1667, 0.1250, 0.2778, 0.66, 0.3333, 0.0, 0.0, 0.2857],
+      "rejected_features": [0.0, 0.0, 0.0, 0.33, 0.0, 0.0, 1.0, 0.2857]
+    },
+    {
+      "query": "is there accessible seating help",
+      "chosen_candidate_id": "accessibility.support",
+      "rejected_candidate_id": "venue.location",
+      "reward": 1.0,
+      "chosen_features": [0.3333, 0.2500, 0.2778, 0.75, 0.3333, 0.0, 1.0, 0.4286],
+      "rejected_features": [0.0, 0.1250, 0.0, 0.43, 0.0, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "where is the guest autograph line info",
+      "chosen_candidate_id": "autographs",
+      "rejected_candidate_id": "photo.ops",
+      "reward": 1.0,
+      "chosen_features": [0.3333, 0.2500, 0.2778, 0.73, 0.3333, 0.0, 1.0, 0.5000],
+      "rejected_features": [0.1667, 0.1250, 0.2778, 0.58, 0.3333, 0.0, 1.0, 0.5000]
+    },
+    {
+      "query": "has anything changed in the panel schedule",
+      "chosen_candidate_id": "schedule.changes",
+      "rejected_candidate_id": "dates.hours",
+      "reward": 1.0,
+      "chosen_features": [0.5000, 0.2500, 0.2778, 0.79, 0.3333, 0.0, 1.0, 0.5714],
+      "rejected_features": [0.1667, 0.1250, 0.0, 0.46, 0.0, 0.0, 1.0, 0.5714]
+    },
+    {
+      "query": "badge pickup or ticket problem??",
+      "chosen_candidate_id": "arrival.checklist",
+      "rejected_candidate_id": "tickets.problem",
+      "reward": 1.0,
+      "chosen_features": [0.1667, 0.1250, 0.2778, 0.64, 0.3333, 0.0, 0.0, 0.4286],
+      "rejected_features": [0.1667, 0.1250, 0.2778, 0.57, 0.3333, 0.0, 1.0, 0.4286]
+    },
+    {
+      "query": "ada seat help near main stage",
+      "chosen_candidate_id": "accessibility.support",
+      "rejected_candidate_id": "venue.location",
+      "reward": 1.0,
+      "chosen_features": [0.3333, 0.1250, 0.2778, 0.74, 0.3333, 0.0, 1.0, 0.4286],
+      "rejected_features": [0.1667, 0.1250, 0.2778, 0.58, 0.3333, 0.0, 1.0, 0.4286]
+    }
+  ]
+}

@@ -146,7 +146,7 @@ private struct ScreenProtectionOverlayView: View {
                     .font(.headline)
                 Text(appSwitcherActive ? "Hidden in app switcher." : "For security, this screen is hidden.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
             .foregroundStyle(.white)
             .padding(24)

@@ -83,9 +83,9 @@ enum TLIVisualPreset: String, CaseIterable, Identifiable {
         case .starfleet:
             "A cinematic bridge look with deep console tones, command red, and blue instrumentation glow."
         case .lcars:
-            "Full LCARS energy with bold ops rails, warm console panels, and unmistakable interface drama."
+            "Black-backed LCARS with signal-green title glow, blue shadow, and wide rounded category rails."
         case .risa:
-            "Bright resort color, warm skies, and an easygoing vacation-world atmosphere."
+            "Teal skies, electric lime fields, hot-pink sun discs, and coral rails inspired by the 2026 promo art."
         }
     }
 

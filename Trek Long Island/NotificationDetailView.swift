@@ -8,11 +8,16 @@ import UIKit
 
 struct NotificationDetailView: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var manager = NotificationManager.shared
 
     let notification: RisaNotification
 
     @State private var copiedToast = false
+
+    private let merchandiseURL = URL(string: "https://made-in-ny-shop.fourthwall.com/")!
+    private let conventionBundleURL = URL(string: "https://made-in-ny-shop.fourthwall.com/products/convention-bundle")!
+    private let etsyShopURL = URL(string: "https://www.etsy.com/shop/TrekLongIsland")!
 
     private var resolved: RisaNotification {
         // Prefer the live copy from the manager so read/unread toggles reflect instantly.
@@ -46,6 +51,12 @@ struct NotificationDetailView: View {
                     header(note)
                     Divider().overlay(TLITheme.border(scheme))
                     messageSection(note)
+                    if isPostConventionThankYou(note) {
+                        postConventionLinksSection
+                    }
+                    if let appStoreURL = softwareUpdateURL(for: note) {
+                        softwareUpdateActionSection(appStoreURL)
+                    }
                     metaSection(note)
 
                     if copiedToast {
@@ -136,7 +147,7 @@ struct NotificationDetailView: View {
 
                         if note.isPriority {
                             Text("PRIORITY")
-                                .font(.caption2.weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(Color.red, in: Capsule())
@@ -176,6 +187,150 @@ struct NotificationDetailView: View {
         )
     }
 
+    private var postConventionLinksSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Keep Exploring")
+                .font(.headline)
+                .foregroundStyle(TLITheme.textPrimary(scheme))
+
+            NavigationLink {
+                DiscountsView()
+            } label: {
+                notificationActionRow(
+                    title: "Discounts & Deals",
+                    detail: "Open partner offers, convention supplies, and app support links.",
+                    systemImage: "tag.fill",
+                    trailingImage: "chevron.right"
+                )
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                openURL(merchandiseURL)
+            } label: {
+                notificationActionRow(
+                    title: "Made in NY Shop",
+                    detail: "Shop merchandise and support the community after the convention.",
+                    systemImage: "bag.fill",
+                    trailingImage: "arrow.up.right"
+                )
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                openURL(conventionBundleURL)
+            } label: {
+                notificationActionRow(
+                    title: "Convention Swag Bundle",
+                    detail: "Open the Fourthwall bundle for convention swag.",
+                    systemImage: "gift.fill",
+                    trailingImage: "arrow.up.right"
+                )
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                openURL(etsyShopURL)
+            } label: {
+                notificationActionRow(
+                    title: "Trek Long Island Etsy Shop",
+                    detail: "Browse additional Trek Long Island swag on Etsy.",
+                    systemImage: "sparkles",
+                    trailingImage: "arrow.up.right"
+                )
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .background(
+            TLITheme.cardBackground(scheme),
+            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(TLITheme.border(scheme), lineWidth: 1)
+        )
+        .shadow(
+            color: TLITheme.cardShadowColor(scheme),
+            radius: scheme == .dark ? 5 : 3,
+            y: 3
+        )
+    }
+
+    private func notificationActionRow(title: String, detail: String, systemImage: String, trailingImage: String) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(TLITheme.accent(scheme).opacity(0.18))
+                    .frame(width: 42, height: 42)
+
+                Image(systemName: systemImage)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(TLITheme.accent(scheme))
+            }
+            .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TLITheme.textPrimary(scheme))
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(TLITheme.textSecondary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: trailingImage)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(TLITheme.textTertiary(scheme))
+        }
+        .padding(14)
+        .background(
+            TLITheme.accentSoft(scheme).opacity(scheme == .dark ? 0.34 : 0.46),
+            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(TLITheme.border(scheme).opacity(0.52), lineWidth: 1)
+        )
+    }
+
+    private func softwareUpdateActionSection(_ appStoreURL: URL) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Update")
+                .font(.headline)
+                .foregroundStyle(TLITheme.textPrimary(scheme))
+
+            Button {
+                openURL(appStoreURL)
+            } label: {
+                notificationActionRow(
+                    title: "Open App Store",
+                    detail: "Install the newest available version of the app.",
+                    systemImage: "arrow.down.circle.fill",
+                    trailingImage: "arrow.up.right"
+                )
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .background(
+            TLITheme.cardBackground(scheme),
+            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(TLITheme.border(scheme), lineWidth: 1)
+        )
+        .shadow(
+            color: TLITheme.cardShadowColor(scheme),
+            radius: scheme == .dark ? 5 : 3,
+            y: 3
+        )
+    }
+
     private func metaSection(_ note: RisaNotification) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Details")
@@ -205,7 +360,7 @@ struct NotificationDetailView: View {
                 HStack {
                     Label {
                         Text(note.timestamp, style: .relative)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                     } icon: {
                         Image(systemName: "timer")
                     }
@@ -266,10 +421,44 @@ struct NotificationDetailView: View {
     private func shareText(_ note: RisaNotification) -> String {
         var lines: [String] = [note.title]
         if !note.message.isEmpty { lines.append(note.message) }
+        if isPostConventionThankYou(note) {
+            lines.append("Discounts & Deals: available in the app")
+            lines.append("Made in NY Shop: \(merchandiseURL.absoluteString)")
+            lines.append("Convention Swag Bundle: \(conventionBundleURL.absoluteString)")
+            lines.append("Trek Long Island Etsy Shop: \(etsyShopURL.absoluteString)")
+        }
+        if let appStoreURL = softwareUpdateURL(for: note) {
+            lines.append("Update: \(appStoreURL.absoluteString)")
+        }
         lines.append("Role: \(note.role)")
         lines.append("Category: \(note.category)")
         lines.append(note.timestamp.formatted(date: .abbreviated, time: .shortened))
         return lines.joined(separator: "\n")
+    }
+
+    private func isPostConventionThankYou(_ note: RisaNotification) -> Bool {
+        note.documentID == "local-llnp-thank-you-2026" ||
+            (
+                note.title == "LLNP Note: Thank You, Away Team" &&
+                note.category == "LLNP Note"
+            )
+    }
+
+    private func softwareUpdateURL(for note: RisaNotification) -> URL? {
+        guard note.documentID?.hasPrefix("local-software-update-") == true ||
+                note.category.localizedCaseInsensitiveContains("Software Update") else {
+            return nil
+        }
+
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return nil
+        }
+
+        let range = NSRange(note.message.startIndex..<note.message.endIndex, in: note.message)
+        return detector
+            .matches(in: note.message, options: [], range: range)
+            .compactMap(\.url)
+            .first
     }
 
     private func copyToClipboard(_ note: RisaNotification) {

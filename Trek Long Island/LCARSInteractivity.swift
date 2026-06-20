@@ -34,6 +34,7 @@ struct LCARSReactiveSurfaceModifier: ViewModifier {
 
 private struct LCARSReactiveOverlay: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("TLI.Accessibility.reduceAnimations") private var reduceAnimations = false
 
     let accent: Color
     let cornerRadius: CGFloat
@@ -41,34 +42,43 @@ private struct LCARSReactiveOverlay: View {
     let idleSweepDuration: Double
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 : 1.0 / 30.0)) { context in
-            let seconds = context.date.timeIntervalSinceReferenceDate
-            let duration = max(idleSweepDuration, 0.8)
-            let phase = reduceMotion ? 0.42 : seconds.truncatingRemainder(dividingBy: duration) / duration
-            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        if reduceMotion || reduceAnimations || !emphasis {
+            overlay(phase: 0.42, showsSweep: false)
+        } else {
+            TimelineView(.animation(minimumInterval: 1.0 / 15.0)) { context in
+                let seconds = context.date.timeIntervalSinceReferenceDate
+                let duration = max(idleSweepDuration, 0.8)
+                overlay(phase: seconds.truncatingRemainder(dividingBy: duration) / duration, showsSweep: true)
+            }
+        }
+    }
 
-            GeometryReader { proxy in
-                let size = proxy.size
-                let width = max(size.width, 1)
-                let bandWidth = max(44, width * (emphasis ? 0.28 : 0.20))
-                let travel = width + (bandWidth * 2)
-                let xOffset = (travel * phase) - bandWidth
+    private func overlay(phase: Double, showsSweep: Bool) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
 
-                ZStack {
-                    shape
-                        .stroke(
-                            accent.opacity(emphasis ? 0.42 : 0.18),
-                            lineWidth: emphasis ? 1.15 : 0.7
-                        )
+        return GeometryReader { proxy in
+            let size = proxy.size
+            let width = max(size.width, 1)
+            let bandWidth = max(44, width * 0.28)
+            let travel = width + (bandWidth * 2)
+            let xOffset = (travel * phase) - bandWidth
 
+            ZStack {
+                shape
+                    .stroke(
+                        accent.opacity(emphasis ? 0.42 : 0.18),
+                        lineWidth: emphasis ? 1.15 : 0.7
+                    )
+
+                if showsSweep {
                     Rectangle()
                         .fill(
                             LinearGradient(
                                 colors: [
                                     .clear,
-                                    accent.opacity(emphasis ? 0.08 : 0.04),
-                                    .white.opacity(emphasis ? 0.18 : 0.10),
-                                    accent.opacity(emphasis ? 0.10 : 0.05),
+                                    accent.opacity(0.08),
+                                    .white.opacity(0.18),
+                                    accent.opacity(0.10),
                                     .clear
                                 ],
                                 startPoint: .leading,
@@ -77,29 +87,30 @@ private struct LCARSReactiveOverlay: View {
                         )
                         .frame(width: bandWidth)
                         .offset(x: xOffset - (width / 2))
-                        .blur(radius: emphasis ? 6 : 4)
-
-                    VStack(spacing: 7) {
-                        ForEach(0..<12, id: \.self) { _ in
-                            Rectangle()
-                                .fill(accent.opacity(emphasis ? 0.020 : 0.010))
-                                .frame(height: 1)
-                        }
-                    }
-                    .padding(.vertical, 10)
-                    .blendMode(.screen)
+                        .blur(radius: 6)
                 }
-                .frame(width: size.width, height: size.height)
-                .clipShape(shape)
+
+                VStack(spacing: 7) {
+                    ForEach(0..<12, id: \.self) { _ in
+                        Rectangle()
+                            .fill(accent.opacity(emphasis ? 0.020 : 0.010))
+                            .frame(height: 1)
+                    }
+                }
+                .padding(.vertical, 10)
+                .blendMode(.screen)
             }
-            .allowsHitTesting(false)
+            .frame(width: size.width, height: size.height)
+            .clipShape(shape)
         }
+        .allowsHitTesting(false)
     }
 }
 
 struct LCARSInteractiveButtonStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityShowButtonShapes) private var showButtonShapes
+    @AppStorage("TLI.Accessibility.reduceAnimations") private var reduceAnimations = false
 
     let accent: Color
     let cornerRadius: CGFloat
@@ -123,7 +134,7 @@ struct LCARSInteractiveButtonStyle: ButtonStyle {
             .saturation(configuration.isPressed ? 1.04 : 1.0)
             .scaleEffect(configuration.isPressed ? pressedScale : 1.0)
             .animation(
-                showButtonShapes || reduceMotion ? nil : .spring(response: 0.24, dampingFraction: 0.78),
+                showButtonShapes || reduceMotion || reduceAnimations ? nil : .spring(response: 0.24, dampingFraction: 0.78),
                 value: configuration.isPressed
             )
     }

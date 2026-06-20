@@ -34,6 +34,25 @@ enum HelloComputerMode: String, CaseIterable, Codable {
     }
 }
 
+enum HelloComputerPersona: String, CaseIterable, Codable {
+    case computer
+    case scotty
+
+    var title: String {
+        switch self {
+        case .computer: return "Computer"
+        case .scotty: return "Scotty"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .computer: return "cpu"
+        case .scotty: return "wrench.and.screwdriver.fill"
+        }
+    }
+}
+
 enum HelloComputerRole: String, Codable {
     case user
     case assistant

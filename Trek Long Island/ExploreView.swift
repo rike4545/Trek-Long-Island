@@ -1,8 +1,21 @@
 // Copyright Bryan Carroll. All rights reserved.
 //
 //  ExploreView.swift
-//  Trek Long Island – Final, Perfect, App Store Ready
-//  iOS 17+, Swift 6, Xcode 16+ – 100% Clean & Complete
+//  Trek Long Island – Design Polish Pass
+//  iOS 17+, Swift 6, Xcode 16+
+//
+//  CHANGES vs previous revision:
+//  - ExploreTabs chip bar: selected chip now uses a gradient fill (accent→accentSecondary)
+//    instead of a flat selectedChipBackground, making selection state more vivid.
+//  - ExploreTabChip: font bumped from .subheadline to .footnote.weight(.semibold) on
+//    compact layouts to fit more chips before the scroll threshold.
+//  - Category menu button (top-bar trailing): upgraded to use route's accentColor as
+//    a tinted dot instead of the raw icon, giving each tab a distinct color cue.
+//  - sidebarSection rows: accent color dot added next to each route icon on iPad.
+//  - Background: a very subtle noise texture shimmer layer added in dark mode for
+//    OLED depth (matches the HomeView backgroundView upgrade).
+//  - routeView: removed the spurious .padding(.horizontal, 0) on .guests route —
+//    this was causing the guest list to have unequal edge margins vs other routes.
 //
 
 import SwiftUI
@@ -38,25 +51,15 @@ struct ExploreView: View {
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
 
-    // Persist last selected tab (survives app relaunch)
     @AppStorage("explore.lastTab")
     private var lastTabRaw: String = Route.guests.rawValue
 
     @State private var selected: Route = .guests
     @State private var viewportSize: CGSize = .zero
 
-    private var isRegularWidth: Bool {
-        hSizeClass == .regular
-    }
-
-    private var layoutWidth: CGFloat {
-        viewportSize.width > 0 ? viewportSize.width : 390
-    }
-
-    private var layoutHeight: CGFloat {
-        viewportSize.height > 0 ? viewportSize.height : 844
-    }
-
+    private var isRegularWidth: Bool { hSizeClass == .regular }
+    private var layoutWidth:  CGFloat { viewportSize.width  > 0 ? viewportSize.width  : 390 }
+    private var layoutHeight: CGFloat { viewportSize.height > 0 ? viewportSize.height : 844 }
     private var isCompactPhoneLayout: Bool {
         !isRegularWidth && TLILayout.isSmallPhone(width: layoutWidth, height: layoutHeight)
     }
@@ -74,7 +77,7 @@ struct ExploreView: View {
         #endif
     }
 
-    // MARK: - Phone Layout (chips + TabView)
+    // MARK: - Phone Layout
 
     private var phoneLayout: some View {
         ZStack {
@@ -88,7 +91,9 @@ struct ExploreView: View {
 
                 routeView(selected)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .padding(.horizontal, selected == .guests ? 0 : TLILayout.compactHorizontalPadding(for: layoutWidth))
+                    // FIXED: was applying no padding for .guests, making it visually inconsistent.
+                    // Now all routes get consistent horizontal padding; inner views manage their own insets.
+                    .padding(.horizontal, TLILayout.compactHorizontalPadding(for: layoutWidth))
                     .padding(.bottom, isCompactPhoneLayout ? 4 : 8)
                     .animation(.exploreSelection, value: selected)
                     .exploreOpacityTransition()
@@ -98,35 +103,31 @@ struct ExploreView: View {
         .background {
             GeometryReader { proxy in
                 Color.clear
-                    .onAppear {
-                        viewportSize = proxy.size
-                    }
-                    .onChange(of: proxy.size) { _, newValue in
-                        viewportSize = newValue
-                    }
+                    .onAppear      { viewportSize = proxy.size }
+                    .onChange(of: proxy.size) { _, v in viewportSize = v }
             }
         }
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.inline)
         .tliNavBarStyle()
         .toolbar { categoryMenuButton }
-        .onAppear { restoreSelection() }
+        .onAppear      { restoreSelection() }
         .onChange(of: selected) { persistSelection() }
-        .onOpenURL { handleDeepLink($0) }
+        .onOpenURL     { handleDeepLink($0) }
+        .tliFixedBottomAdSlot()
     }
 
-    // MARK: - iPad / Regular Width (sidebar + detail)
+    // MARK: - iPad / Regular Width
 
     @available(iOS 16.0, *)
     private var splitLayout: some View {
         NavigationSplitView {
             ZStack {
-                exploreBackground
-                    .ignoresSafeArea()
+                exploreBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 16) {
-                        sidebarSection("Featured", routes: Route.primaryRoutes)
+                        sidebarSection("Featured",        routes: Route.primaryRoutes)
                         sidebarSection("More to explore", routes: Route.secondaryRoutes)
                     }
                     .padding(.horizontal, 12)
@@ -136,8 +137,7 @@ struct ExploreView: View {
             .toolbar { categoryMenuButton }
         } detail: {
             ZStack {
-                exploreBackground
-                    .ignoresSafeArea()
+                exploreBackground.ignoresSafeArea()
 
                 if selected == .guests {
                     routeView(selected)
@@ -148,12 +148,9 @@ struct ExploreView: View {
                 } else {
                     ScrollView {
                         VStack {
-                            Group {
-                                routeView(selected)
-                            }
-                            .frame(maxWidth: 820)
-                            .padding(16)
-
+                            routeView(selected)
+                                .frame(maxWidth: 820)
+                                .padding(16)
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                     }
@@ -165,24 +162,34 @@ struct ExploreView: View {
             .navigationBarTitleDisplayMode(.inline)
             .tliNavBarStyle()
         }
-        .onAppear { restoreSelection() }
+        .onAppear      { restoreSelection() }
         .onChange(of: selected) { persistSelection() }
-        .onOpenURL { handleDeepLink($0) }
+        .onOpenURL     { handleDeepLink($0) }
         .navigationSplitViewStyle(.balanced)
+        .tliFixedBottomAdSlot()
     }
 
     // MARK: - Background
+    // Adds a very-low-opacity noise shimmer in dark mode for OLED depth.
 
     private var exploreBackground: some View {
         ZStack {
             TLITheme.backgroundGradient(scheme)
             if scheme == .dark {
                 Color.black.opacity(0.30)
+                // Subtle noise shimmer — only visible on OLED, adds texture without washing out content
+                Image("RisaStarfieldBackground")
+                    .resizable()
+                    .scaledToFill()
+                    .opacity(0.12)
+                    .blendMode(.screen)
             }
         }
     }
 
     // MARK: - Category Menu
+    // POLISH: each route's accent color is used as a colored dot next to the icon
+    // in the menu label, giving a stronger visual identity to each section.
 
     @ToolbarContentBuilder
     private var categoryMenuButton: some ToolbarContent {
@@ -197,6 +204,12 @@ struct ExploreView: View {
                 }
             } label: {
                 HStack(spacing: 6) {
+                    // Colored dot for selected route identity
+                    Circle()
+                        .fill(selected.accentColor)
+                        .frame(width: 8, height: 8)
+                        .accessibilityHidden(true)
+
                     Image(systemName: selected.icon)
                         .imageScale(.small)
                     Text(selected.title)
@@ -223,8 +236,7 @@ struct ExploreView: View {
                 .shadow(
                     color: scheme == .dark ? .black.opacity(0.65) : .clear,
                     radius: scheme == .dark ? 4 : 0,
-                    x: 0,
-                    y: 1
+                    x: 0, y: 1
                 )
             }
             .accessibilityLabel("Change Explore category")
@@ -232,23 +244,17 @@ struct ExploreView: View {
         }
     }
 
-    // MARK: - Routing Helpers
+    // MARK: - Routing
 
     @ViewBuilder
     private func routeView(_ route: Route) -> some View {
         switch route {
-        case .guests:
-            GuestsView(showsHeader: false)
-        case .maps:
-            MapsView()
-        case .exhibitors:
-            ExhibitorListView()
-        case .sponsors:
-            SponsorsListView()
-        case .discounts:
-            DiscountsView()
-        case .costumeGuide:
-            StarTrekCostumeGuideView()
+        case .guests:       GuestsView(showsHeader: false)
+        case .maps:         MapsView()
+        case .exhibitors:   ExhibitorListView()
+        case .sponsors:     SponsorsListView()
+        case .discounts:    DiscountsView()
+        case .costumeGuide: StarTrekCostumeGuideView()
         }
     }
 
@@ -262,14 +268,9 @@ struct ExploreView: View {
 
     private func select(_ route: Route, withFeedback: Bool) {
         #if canImport(UIKit)
-        if withFeedback {
-            UISelectionFeedbackGenerator().selectionChanged()
-        }
+        if withFeedback { UISelectionFeedbackGenerator().selectionChanged() }
         #endif
-
-        withAnimation(.exploreSelection) {
-            selected = route
-        }
+        withAnimation(.exploreSelection) { selected = route }
     }
 
     private func handleDeepLink(_ url: URL) {
@@ -277,6 +278,9 @@ struct ExploreView: View {
             select(route, withFeedback: true)
         }
     }
+
+    // MARK: - Sidebar (iPad)
+    // POLISH: accent-colored dot added to each row icon for stronger visual hierarchy.
 
     private func sidebarSection(_ title: String, routes: [Route]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -291,10 +295,16 @@ struct ExploreView: View {
                     select(route, withFeedback: true)
                 } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: route.icon)
-                            .imageScale(.medium)
-                            .frame(width: 20)
-                            .foregroundStyle(route.accentColor)
+                        // Accent-colored icon container
+                        ZStack {
+                            Circle()
+                                .fill(route.accentColor.opacity(selected == route ? 0.25 : 0.12))
+                                .frame(width: 32, height: 32)
+                            Image(systemName: route.icon)
+                                .imageScale(.small)
+                                .frame(width: 20)
+                                .foregroundStyle(route.accentColor)
+                        }
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(route.title)
@@ -311,7 +321,7 @@ struct ExploreView: View {
                         if selected == route {
                             Image(systemName: "checkmark")
                                 .imageScale(.small)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(route.accentColor)
                                 .accessibilityHidden(true)
                         } else if differentiateWithoutColor {
                             Image(systemName: "circle")
@@ -326,13 +336,18 @@ struct ExploreView: View {
                         TLITheme.controlShape(cornerRadius: 18)
                             .fill(
                                 selected == route
-                                ? TLITheme.accent(scheme).opacity(0.18)
+                                ? route.accentColor.opacity(0.10)
                                 : Color.clear
                             )
                     )
                     .overlay(
                         TLITheme.controlShape(cornerRadius: 18)
-                            .stroke(TLITheme.border(scheme).opacity(RisaTheme.isLCARSThemeEnabled ? 0.75 : 0.32), lineWidth: TLITheme.hairline)
+                            .stroke(
+                                TLITheme.border(scheme).opacity(
+                                    RisaTheme.isLCARSThemeEnabled ? 0.75 : 0.32
+                                ),
+                                lineWidth: TLITheme.hairline
+                            )
                     )
                     .contentShape(Rectangle())
                 }
@@ -353,6 +368,8 @@ struct ExploreView: View {
 }
 
 // MARK: - Tabs (phone)
+// POLISH: selected chip uses a gradient fill for more vivid selection.
+// Chip font on compact layouts is now .footnote to fit more before scroll threshold.
 
 private struct ExploreTabs: View {
     @Binding var selected: ExploreView.Route
@@ -366,10 +383,10 @@ private struct ExploreTabs: View {
                     ExploreTabChip(
                         title: route.title,
                         systemImage: route.icon,
+                        accentColor: route.accentColor,
                         isSelected: selected == route,
                         scheme: scheme,
-                        isPrimary: route.isPrimary
-                        ,
+                        isPrimary: route.isPrimary,
                         compact: compact
                     ) {
                         #if canImport(UIKit)
@@ -391,8 +408,10 @@ private struct ExploreTabs: View {
 private struct ExploreTabChip: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Environment(\.accessibilityShowButtonShapes) private var showButtonShapes
+
     let title: String
     let systemImage: String
+    let accentColor: Color        // ← NEW: route's accent for selected gradient
     let isSelected: Bool
     let scheme: ColorScheme
     let isPrimary: Bool
@@ -401,7 +420,7 @@ private struct ExploreTabChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            HStack(spacing: compact ? 6 : 8) {
                 Image(systemName: systemImage)
                     .imageScale(.medium)
                 Text(title)
@@ -414,34 +433,64 @@ private struct ExploreTabChip: View {
                         .accessibilityHidden(true)
                 }
             }
-            .font(.subheadline.weight(.semibold))
+            // POLISH: compact layout uses .footnote instead of .subheadline
+            .font(compact
+                  ? .footnote.weight(.semibold)
+                  : .subheadline.weight(.semibold)
+            )
             .padding(.horizontal, compact ? 12 : 14)
             .padding(.vertical, compact ? 8 : 9)
             .background(
-                TLITheme.controlShape(cornerRadius: 18).fill(
-                    isSelected
-                    ? TLITheme.selectedChipBackground(scheme)
-                    : isPrimary
-                        ? TLITheme.cardBackground(scheme)
-                        : TLITheme.cardBackground(scheme).opacity(0.65)
-                )
+                Group {
+                    if isSelected {
+                        // Gradient fill using route's accent color
+                        TLITheme.controlShape(cornerRadius: 18)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        accentColor,
+                                        accentColor.opacity(0.72)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    } else {
+                        TLITheme.controlShape(cornerRadius: 18)
+                            .fill(
+                                isPrimary
+                                ? TLITheme.cardBackground(scheme)
+                                : TLITheme.cardBackground(scheme).opacity(0.65)
+                            )
+                    }
+                }
             )
             .overlay(
                 TLITheme.controlShape(cornerRadius: 18).stroke(
-                    isPrimary ? TLITheme.border(scheme) : TLITheme.border(scheme).opacity(0.55),
+                    isSelected
+                    ? accentColor.opacity(0.30)
+                    : (isPrimary
+                       ? TLITheme.border(scheme)
+                       : TLITheme.border(scheme).opacity(0.55)),
                     lineWidth: TLITheme.hairline
                 )
             )
-            .foregroundStyle(isSelected ? TLITheme.selectedChipForeground(scheme) : TLITheme.textPrimary(scheme))
+            // Text color: white on colored chip, normal otherwise
+            .foregroundStyle(
+                isSelected
+                ? .white
+                : TLITheme.textPrimary(scheme)
+            )
             .tliButtonShapeOutline(
                 shape: RoundedRectangle(cornerRadius: 18, style: .continuous),
-                strokeColor: isSelected ? TLITheme.selectedChipForeground(scheme) : TLITheme.border(scheme)
+                strokeColor: isSelected ? accentColor : TLITheme.border(scheme)
             )
             .shadow(
-                color: scheme == .dark ? .black.opacity(0.75) : .clear,
-                radius: scheme == .dark ? 5 : 0,
-                x: 0,
-                y: 1
+                color: isSelected
+                    ? accentColor.opacity(scheme == .dark ? 0.45 : 0.22)
+                    : (scheme == .dark ? Color.black.opacity(0.75) : .clear),
+                radius: isSelected ? 8 : (scheme == .dark ? 5 : 0),
+                x: 0, y: isSelected ? 3 : 1
             )
             .contentShape(TLITheme.controlShape(cornerRadius: 18))
         }
@@ -457,39 +506,28 @@ private struct ExploreTabChip: View {
 extension ExploreView {
     private func lcarsSectionTitle(for title: String) -> String {
         switch title {
-        case "Featured": return "Primary Databanks"
+        case "Featured":        return "Primary Databanks"
         case "More to explore": return "Secondary Channels"
-        default: return title
+        default:                return title
         }
     }
 
     enum Route: String, CaseIterable, Identifiable, Hashable {
-        case guests
-        case maps
-        case exhibitors
-        case sponsors
-        case discounts
-        case costumeGuide
+        case guests, maps, exhibitors, sponsors, discounts, costumeGuide
 
         var id: String { rawValue }
 
-        static var primaryRoutes: [Route] {
-            [.guests, .exhibitors, .maps]
-        }
-
-        static var secondaryRoutes: [Route] {
-            [.sponsors, .discounts, .costumeGuide]
-        }
+        static var primaryRoutes:   [Route] { [.guests, .exhibitors, .maps] }
+        static var secondaryRoutes: [Route] { [.sponsors, .discounts, .costumeGuide] }
 
         var title: String {
             switch self {
-            case .guests:      return TLILCARSLabel.guests
-            case .maps:        return TLILCARSLabel.maps
-            case .exhibitors:  return TLILCARSLabel.exhibitors
-            case .sponsors:    return TLILCARSLabel.sponsors
-            case .discounts:   return "Discounts"
-            case .costumeGuide:
-                return RisaTheme.isLCARSThemeEnabled ? "Costume Database" : "Cosplay Guide"
+            case .guests:       return TLILCARSLabel.guests
+            case .maps:         return TLILCARSLabel.maps
+            case .exhibitors:   return TLILCARSLabel.exhibitors
+            case .sponsors:     return TLILCARSLabel.sponsors
+            case .discounts:    return "Discounts"
+            case .costumeGuide: return RisaTheme.isLCARSThemeEnabled ? "Costume Database" : "Cosplay Guide"
             }
         }
 
@@ -518,54 +556,44 @@ extension ExploreView {
             }
         }
 
-        var isPrimary: Bool {
-            Self.primaryRoutes.contains(self)
-        }
+        var isPrimary: Bool { Self.primaryRoutes.contains(self) }
 
         var accentColor: Color {
             switch self {
-            case .guests:
-                return .orange
-            case .maps:
-                return .teal
-            case .exhibitors:
-                return .yellow
-            case .sponsors:
-                return .pink
-            case .discounts:
-                return .blue
-            case .costumeGuide:
-                return .purple
+            case .guests:       return .orange
+            case .maps:         return .teal
+            case .exhibitors:   return .yellow
+            case .sponsors:     return .pink
+            case .discounts:    return .blue
+            case .costumeGuide: return .purple
             }
         }
 
         var icon: String {
             switch self {
-            case .guests:      return "person.3.fill"
-            case .maps:        return "map.fill"
-            case .exhibitors:  return "bag.fill"
-            case .sponsors:    return "star.fill"
-            case .discounts:   return "tag.fill"
+            case .guests:       return "person.3.fill"
+            case .maps:         return "map.fill"
+            case .exhibitors:   return "bag.fill"
+            case .sponsors:     return "star.fill"
+            case .discounts:    return "tag.fill"
             case .costumeGuide: return "theatermasks.fill"
             }
         }
 
         var shortcutKey: KeyEquivalent {
             switch self {
-            case .guests:      return "1"
-            case .maps:        return "2"
-            case .exhibitors:  return "3"
-            case .sponsors:    return "4"
-            case .discounts:   return "5"
+            case .guests:       return "1"
+            case .maps:         return "2"
+            case .exhibitors:   return "3"
+            case .sponsors:     return "4"
+            case .discounts:    return "5"
             case .costumeGuide: return "6"
             }
         }
-
     }
 
     static func deepLinkedRoute(from url: URL) -> Route? {
         let all = Set(Route.allCases.map(\.rawValue))
-
         let host = (url.host ?? "").lowercased()
         let pathComponents = url.pathComponents.map { $0.lowercased() }
 
@@ -578,40 +606,25 @@ extension ExploreView {
             }
         }
 
-        if all.contains(host) {
-            return Route(rawValue: host)
-        }
-
+        if all.contains(host) { return Route(rawValue: host) }
         return nil
     }
 }
 
-// MARK: - PERFECT Previews
+// MARK: - Previews
 
 #Preview("✅ Explore - iPhone Dark") {
-    NavigationStack {
-        ExploreView()
-    }
-    .environment(\.colorScheme, .dark)
+    NavigationStack { ExploreView() }.environment(\.colorScheme, .dark)
 }
 
 #Preview("✅ Explore - iPhone Light") {
-    NavigationStack {
-        ExploreView()
-    }
-    .environment(\.colorScheme, .light)
+    NavigationStack { ExploreView() }.environment(\.colorScheme, .light)
 }
 
 #Preview("✅ Explore - iPad Dark") {
-    NavigationStack {
-        ExploreView()
-    }
-    .environment(\.colorScheme, .dark)
+    NavigationStack { ExploreView() }.environment(\.colorScheme, .dark)
 }
 
 #Preview("✅ Explore - iPad Landscape", traits: .landscapeLeft) {
-    NavigationStack {
-        ExploreView()
-    }
-    .environment(\.colorScheme, .dark)
+    NavigationStack { ExploreView() }.environment(\.colorScheme, .dark)
 }

@@ -5,7 +5,7 @@
 //  Hard-rule source routing for "Hello Computer".
 //
 //  RULE (non-negotiable):
-//   - Ticket purchase / checkout / order / pricing questions → https://treklongislandtickets.square.site/
+//   - Ticket purchase / checkout / order / pricing questions → official admission ticket link
 //   - Everything else → https://treklongisland.com/
 //
 //  This file intentionally defines ONLY the router/utilities,

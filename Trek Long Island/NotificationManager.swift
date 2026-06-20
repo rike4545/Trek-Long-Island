@@ -155,6 +155,8 @@ final class NotificationManager: ObservableObject {
     private let readDefaultsKey = "TrekLI.readNotificationIDs"
     private let welcomeNotificationDocumentID = "local-welcome-2026"
     private let welcomeNotificationFirstShownAtKey = "TrekLI.localWelcomeNotificationFirstShownAt"
+    private let postConventionThankYouNotificationDocumentID = "local-llnp-thank-you-2026"
+    private let softwareUpdateNotificationIDPrefix = "local-software-update-"
     private var readIDs: Set<String> = []
     private var readIDsObserver: NSObjectProtocol?
 
@@ -164,10 +166,11 @@ final class NotificationManager: ObservableObject {
     private let adminLevelDefaultsKey = "TrekLI.adminLevel"
     private let adminTimeout: TimeInterval = 3 * 60 // 3 minutes
     private var autoLockTimer: Timer?
+    private var hasStartedBackend = false
 
     /// Convention-only rotating password seed and window.
     /// Kept for operational display/history; no longer used for authentication.
-    private let rotatingPasswordSeed = "TrekLI-Convention-Rotate-v3:6ae2d53e070fed7c1ec94347e7869417"
+    private let rotatingPasswordSeed = "TrekLI-Convention-Rotate-v4:UILq/QMewHbyzndO2i2dlwGR87ud22YzEQZveAQkj5VwawQ+cg/8EyRWDzL+oV3u"
     private let rotatingCalendar = Calendar(identifier: .gregorian)
 
     // MARK: - Firestore collection helpers
@@ -190,7 +193,7 @@ final class NotificationManager: ObservableObject {
         loadReadIDs()
         observeReadIDsDefaults()
         restoreAdminState()
-        startBackend()
+        scheduleAutoLockTimerIfNeeded()
     }
 
     deinit {
@@ -215,7 +218,13 @@ final class NotificationManager: ObservableObject {
     // MARK: - Backend lifecycle
 
     /// Starts the appropriate backend given the current backendMode.
+    func startBackendIfNeeded() {
+        guard !hasStartedBackend else { return }
+        startBackend()
+    }
+
     private func startBackend() {
+        hasStartedBackend = true
         didReceiveFirstPublishedSnapshot = false
 
         switch backendMode {
@@ -296,6 +305,7 @@ final class NotificationManager: ObservableObject {
     /// a “refresh” affordance and can recover after transient listener errors.
     func refreshNow() async {
         guard backendMode == .live else { return }
+        startBackendIfNeeded()
         await withCheckedContinuation { cont in
             fetchPublishedOnce { [weak self] items, errorString in
                 Task { @MainActor in
@@ -349,6 +359,52 @@ final class NotificationManager: ObservableObject {
         Task {
             await refreshNow()
         }
+    }
+
+    func showSoftwareUpdateNotification(
+        latestVersion: String,
+        latestBuild: String?,
+        currentVersion: String,
+        currentBuild: String,
+        storeURL: URL?,
+        customMessage: String?
+    ) {
+        let normalizedVersion = latestVersion
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: " ", with: "-")
+        let normalizedBuild = latestBuild?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: " ", with: "-")
+        let documentID = "\(softwareUpdateNotificationIDPrefix)\(normalizedVersion)-\(normalizedBuild ?? "release")"
+        guard !readIDs.contains(documentID) else { return }
+
+        let message: String
+        let updateLabel = latestBuild.map { "version \(latestVersion) (build \($0))" } ?? "version \(latestVersion)"
+        if let customMessage, !customMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let storeURL {
+                message = "\(customMessage)\n\nOpen the App Store to update: \(storeURL.absoluteString)"
+            } else {
+                message = customMessage
+            }
+        } else if let storeURL {
+            message = "A newer app \(updateLabel) is available. You are using version \(currentVersion) (build \(currentBuild)). Open the App Store to update: \(storeURL.absoluteString)"
+        } else {
+            message = "A newer app \(updateLabel) is available. You are using version \(currentVersion) (build \(currentBuild)). Open the App Store to update when you are ready."
+        }
+
+        let updateNotification = RisaNotification(
+            documentID: documentID,
+            title: "App Update Available",
+            message: message,
+            role: "guest",
+            category: "Software Update",
+            timestamp: Date(),
+            isRead: false,
+            isPriority: true
+        )
+
+        upsertIncomingNotification(updateNotification)
+        lastIncomingPriority = updateNotification
     }
 
     /// Public helper: validate whether the stored unlock time has expired.
@@ -1023,7 +1079,9 @@ final class NotificationManager: ObservableObject {
         applyRoleFilterAndUpdateUnread()
         configurePendingAccess()
         restartAutoLockTimer(remaining: adminTimeout)
-        TLIPushTopicManager.syncTopics(isAdminUnlocked: isStaffUnlocked)
+        Task {
+            await TLIPushTopicManager.syncTopics(isAdminUnlocked: isStaffUnlocked)
+        }
         analytics.track(
             name: "admin_unlock_success",
             domain: "auth",
@@ -1045,7 +1103,9 @@ final class NotificationManager: ObservableObject {
         configurePendingAccess()
         autoLockTimer?.invalidate()
         autoLockTimer = nil
-        TLIPushTopicManager.syncTopics(isAdminUnlocked: isStaffUnlocked)
+        Task {
+            await TLIPushTopicManager.syncTopics(isAdminUnlocked: isStaffUnlocked)
+        }
         analytics.track(
             name: "admin_locked",
             domain: "auth",
@@ -1300,11 +1360,14 @@ final class NotificationManager: ObservableObject {
     private func notificationsIncludingWelcome() -> [RisaNotification] {
         var items = allNotifications
 
-        guard shouldInjectWelcomeNotification else {
-            return items
+        if shouldInjectWelcomeNotification {
+            items.append(makeWelcomeNotification())
         }
 
-        items.append(makeWelcomeNotification())
+        if shouldInjectPostConventionThankYouNotification {
+            items.append(makePostConventionThankYouNotification())
+        }
+
         return items
     }
 
@@ -1341,6 +1404,32 @@ final class NotificationManager: ObservableObject {
             category: "General",
             timestamp: firstShownAt,
             isRead: readIDs.contains(welcomeNotificationDocumentID),
+            isPriority: false
+        )
+    }
+
+    private var shouldInjectPostConventionThankYouNotification: Bool {
+        guard Date() >= TLIConventionDates.postConventionThankYouDate else { return false }
+        guard !readIDs.contains(postConventionThankYouNotificationDocumentID) else { return false }
+
+        return !allNotifications.contains { note in
+            note.documentID == postConventionThankYouNotificationDocumentID ||
+            (
+                note.title == "LLNP Note: Thank You, Away Team" &&
+                note.role.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "guest"
+            )
+        }
+    }
+
+    private func makePostConventionThankYouNotification() -> RisaNotification {
+        RisaNotification(
+            documentID: postConventionThankYouNotificationDocumentID,
+            title: "LLNP Note: Thank You, Away Team",
+            message: "Thank you to our fans, sponsors, guests, vendors, volunteers, and crew for an action-packed away mission at Trek Long Island. See you next year. Before you beam out, check Discounts & Deals and the Made in NY Shop for partner offers and merchandise.",
+            role: "guest",
+            category: "LLNP Note",
+            timestamp: TLIConventionDates.postConventionThankYouDate,
+            isRead: readIDs.contains(postConventionThankYouNotificationDocumentID),
             isPriority: false
         )
     }

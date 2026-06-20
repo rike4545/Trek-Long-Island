@@ -16,6 +16,8 @@ private enum SplashStage {
 
 struct SplashScreenView: View {
     @Environment(\.colorScheme) private var scheme
+    @AppStorage("TLI.Profile.displayName") private var displayName: String = ""
+    @AppStorage("TLI.Profile.rank") private var rankRaw: String = TLIProfileRank.captain.rawValue
 
     @State private var stage: SplashStage = .trek
     @State private var cardOpacity: Double = 0
@@ -41,29 +43,41 @@ struct SplashScreenView: View {
                     Color.black.opacity(scheme == .dark ? 0.60 : 0.50)
                         .ignoresSafeArea()
 
-                    let cardWidth  = min(geo.size.width - 48, 420)
-                    let cardHeight = min(geo.size.height - 180, 560)
+                    let safeTop = max(geo.safeAreaInsets.top, 24)
+                    let safeBottom = max(geo.safeAreaInsets.bottom, 18)
+                    let isCompactHeight = geo.size.height < 720
+                    let cardWidth = min(geo.size.width - 48, 420)
+                    let cardHeight = min(
+                        max(geo.size.height - safeTop - safeBottom - (isCompactHeight ? 156 : 178), 330),
+                        isCompactHeight ? 460 : 560
+                    )
 
-                    VStack(spacing: 16) {
-                        Spacer(minLength: max(geo.safeAreaInsets.top, 24))
+                    VStack(spacing: isCompactHeight ? 10 : 16) {
+                        Spacer(minLength: safeTop)
 
-                        glassPanel
+                        glassPanel(isCompactHeight: isCompactHeight)
                             .frame(width: cardWidth, height: cardHeight)
                             .opacity(cardOpacity)
 
                         Text("""
 Star Trek and all related marks, logos and characters are solely owned by CBS Studios Inc. and Paramount Pictures. This fan production is not endorsed by, sponsored by, nor affiliated with CBS, Paramount Pictures, or any other Star Trek franchise.
 """)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundColor(.white.opacity(0.65))
                             .multilineTextAlignment(.center)
                             .lineSpacing(2)
-                            .padding(.horizontal, 28)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .minimumScaleFactor(0.82)
+                            .padding(.horizontal, geo.size.width < 360 ? 18 : 28)
+                            .accessibilityLabel("Star Trek and related marks disclaimer. This fan production is not endorsed by, sponsored by, nor affiliated with CBS, Paramount Pictures, or any other Star Trek franchise.")
 
                         Text("Tap anywhere to continue")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.7))
-                            .padding(.bottom, max(geo.safeAreaInsets.bottom, 18))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .padding(.bottom, safeBottom)
 
                         Spacer(minLength: 0)
                     }
@@ -78,10 +92,14 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
 
     // MARK: - Glass PADD Panel
 
-    private var glassPanel: some View {
+    private func glassPanel(isCompactHeight: Bool) -> some View {
         let accent = RisaTheme.accentGold(scheme)
+        let logoSize: CGFloat = isCompactHeight ? 168 : 220
+        let verticalPadding: CGFloat = isCompactHeight ? 16 : 20
+        let horizontalPadding: CGFloat = isCompactHeight ? 22 : 26
+        let panelSpacing: CGFloat = isCompactHeight ? 12 : 18
 
-        return VStack(spacing: 18) {
+        return VStack(spacing: panelSpacing) {
             // LCARS header
             HStack(spacing: 8) {
                 Capsule()
@@ -103,14 +121,14 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
             // Logo + deflector glow
             ZStack {
                 DeflectorGlow()
-                    .frame(width: 220, height: 220)
+                    .frame(width: logoSize, height: logoSize)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
                 if stage == .trek || !isSponsorActive {
                     Image(trekLogo)
                         .resizable()
                         .scaledToFit()
-                        .frame(maxWidth: 220)
+                        .frame(maxWidth: logoSize)
                         .transition(.opacity)
                 }
 
@@ -118,11 +136,11 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
                     Image(sponsorLogo)
                         .resizable()
                         .scaledToFit()
-                        .frame(maxWidth: 220)
+                        .frame(maxWidth: logoSize)
                         .transition(.opacity)
                 }
             }
-            .padding(.top, 4)
+            .padding(.top, isCompactHeight ? 0 : 4)
             .animation(.easeInOut(duration: 0.7), value: stage)
 
             // Title block – either Trek LI or sponsor presentation
@@ -130,31 +148,40 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
                 if stage == .sponsor && isSponsorActive {
                     VStack(spacing: 8) {
                         Text("APP SPONSOR")
-                            .font(.caption2.monospaced())
+                            .font(.caption.monospaced())
                             .textCase(.uppercase)
                             .foregroundColor(.white.opacity(0.7))
 
                         Text("The Transporter Room Podcast")
-                            .font(.headline.weight(.semibold))
+                            .font(isCompactHeight ? .subheadline.weight(.semibold) : .headline.weight(.semibold))
                             .foregroundColor(accent)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.85)
 
                         Text("Proudly Presents")
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.9))
 
                         Text("Trek Long Island")
-                            .font(.title2.bold())
+                            .font(isCompactHeight ? .title3.bold() : .title2.bold())
                             .foregroundColor(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                     }
                 } else {
                     VStack(spacing: 2) {
                         Text("Trek Long Island")
-                            .font(.system(.title2, design: .rounded).weight(.semibold))
+                            .font(.system(isCompactHeight ? .title3 : .title2, design: .rounded).weight(.semibold))
                             .foregroundColor(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
 
                         Text("Convention Companion")
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.75))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                     }
                 }
             }
@@ -162,8 +189,10 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
             // Greeting + Stardate
             VStack(spacing: 8) {
                 Text(greeting())
-                    .font(.system(.headline, design: .rounded))
+                    .font(.system(isCompactHeight ? .subheadline : .headline, design: .rounded))
                     .foregroundColor(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
 
                 HStack(spacing: 12) {
                     Capsule()
@@ -171,7 +200,7 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
                         .frame(width: 58, height: 26)
                         .overlay(
                             Text("SD")
-                                .font(.caption2.monospaced())
+                                .font(.caption.monospaced())
                                 .foregroundColor(.white)
                         )
 
@@ -188,22 +217,26 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
             // Event info
             VStack(spacing: 4) {
                 Text(TLIConventionDates.displayRange)
-                    .font(.headline.weight(.semibold))
+                    .font(isCompactHeight ? .subheadline.weight(.semibold) : .headline.weight(.semibold))
                     .foregroundColor(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
 
                 Text("Hauppauge, New York · Sector 001")
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.80))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
-            .padding(.top, 2)
+            .padding(.top, isCompactHeight ? 0 : 2)
 
             // Warp sweep “progress”
             WarpSweepBar()
                 .frame(width: 180, height: 8)
-                .padding(.top, 4)
+                .padding(.top, isCompactHeight ? 0 : 4)
         }
-        .padding(.horizontal, 26)
-        .padding(.vertical, 20)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(
@@ -274,10 +307,12 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
 
     private func greeting() -> String {
         let hour = Calendar.current.component(.hour, from: Date())
+        let rank = TLIProfileRank(rawValue: rankRaw) ?? .captain
+        let commandName = TLIProfilePreferences.commandName(rank: rank, displayName: displayName)
         switch hour {
-        case 5..<12:  return "Good morning, Captain"
-        case 12..<17: return "Good afternoon, Captain"
-        default:      return "Good evening, Captain"
+        case 5..<12:  return "Good morning, \(commandName)"
+        case 12..<17: return "Good afternoon, \(commandName)"
+        default:      return "Good evening, \(commandName)"
         }
     }
 }

@@ -225,6 +225,10 @@ final class HelloComputerTTSController: NSObject, ObservableObject {
             with: "the official photo op ticket page"
         )
         text = text.replacingOccurrences(
+            of: TicketPurchaseLinks.admissionURLString,
+            with: "the official admission ticket page"
+        )
+        text = text.replacingOccurrences(
             of: "https://treklongislandtickets.square.site/",
             with: "the official ticket site"
         )
@@ -327,7 +331,7 @@ struct HelloComputerVoicePickerView: View {
                                         Text(voice.quality == .enhanced || voice.quality == .premium
                                              ? "Enhanced" : "Standard")
                                             .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(Color.primary.opacity(0.72))
                                     }
 
                                     Spacer()
@@ -365,19 +369,19 @@ struct HelloComputerVoicePickerView: View {
                     LabeledContent("Rate") {
                         HStack {
                             Text("Slow")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(Color.primary.opacity(0.72))
                             Slider(value: $tts.speechRate, in: 0.3...0.6)
                             Text("Fast")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                     LabeledContent("Pitch") {
                         HStack {
                             Text("Low")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(Color.primary.opacity(0.72))
                             Slider(value: $tts.pitchMultiplier, in: 0.75...1.25)
                             Text("High")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                 } header: {
@@ -442,7 +446,7 @@ struct HelloComputerTTSSettingsRow: View {
                 Label("Computer Voice", systemImage: "waveform")
                 Spacer()
                 Text(tts.isEnabled ? "On" : "Off")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .font(.subheadline)
             }
         }

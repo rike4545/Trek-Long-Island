@@ -572,7 +572,7 @@ private struct CRMContactDetailView: View {
                             HStack(spacing: 8) {
                                 ForEach(squareIntegration.connection.capabilities) { capability in
                                     Text(capability.title)
-                                        .font(.caption2.weight(.semibold))
+                                        .font(.caption.weight(.semibold))
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 5)
                                         .background(TLITheme.accentSoft(scheme), in: Capsule())
@@ -773,7 +773,7 @@ private struct CRMTaskRow: View {
 
                 if task.isOverdue {
                     Text("Overdue")
-                        .font(.caption2.weight(.bold))
+                        .font(.caption.weight(.bold))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 3)
                         .background(.red.opacity(0.16), in: Capsule())
@@ -839,7 +839,7 @@ private struct CRMContactRow: View {
                     .lineLimit(1)
 
                 Text(contact.displayOrganization)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(TLITheme.textSecondary(scheme))
                     .lineLimit(1)
             }
@@ -848,7 +848,7 @@ private struct CRMContactRow: View {
 
             VStack(alignment: .trailing, spacing: 4) {
                 Text(contact.kind.title)
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 5)
                     .background(TLITheme.accentSoft(scheme), in: Capsule())
@@ -856,7 +856,7 @@ private struct CRMContactRow: View {
 
                 if openTaskCount > 0 {
                     Text("\(openTaskCount) open")
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(.orange)
                 }
             }

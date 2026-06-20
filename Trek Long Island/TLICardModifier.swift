@@ -20,7 +20,7 @@ struct TLIPanelSurfaceModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = TLITheme.panelShape(cornerRadius: cornerRadius)
-        let decorationOpacity = RisaTheme.isLCARSThemeEnabled ? 0.34 : 0.55
+        let decorationOpacity = RisaTheme.isLCARSThemeEnabled ? 0.26 : 0.36
         let effectiveBorderOpacity = accessibilityContrast == .increased ? max(borderOpacity, 0.98) : borderOpacity
         let panelFill = (RisaTheme.isLCARSThemeEnabled ? TLITheme.cardBackground(scheme) : Color.clear)
             .opacity(reduceTransparency ? 1.0 : 1.0)
@@ -45,7 +45,7 @@ struct TLIPanelSurfaceModifier: ViewModifier {
             )
             .overlay(
                 shape
-                    .stroke(TLITheme.border(scheme).opacity(effectiveBorderOpacity), lineWidth: accessibilityContrast == .increased ? 1.4 : 0.95)
+                    .stroke(TLITheme.border(scheme).opacity(effectiveBorderOpacity), lineWidth: accessibilityContrast == .increased ? 1.6 : 1.1)
             )
             .shadow(
                 color: TLITheme.cardShadowColor(scheme),
@@ -60,12 +60,12 @@ struct TLIPanelSurfaceModifier: ViewModifier {
 struct TLICardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .padding(16)
+            .padding(18)
             .modifier(
                 TLIPanelSurfaceModifier(
                     cornerRadius: 20,
                     fillOpacity: 1,
-                    borderOpacity: 0.92,
+                    borderOpacity: 0.96,
                     shadowRadius: 14,
                     shadowY: 8
                 )
@@ -122,7 +122,7 @@ extension View {
 
                     if let metadata {
                         Text(metadata.uppercased())
-                            .font(.caption2.monospaced().weight(.bold))
+                            .font(.caption.monospaced().weight(.bold))
                             .foregroundStyle(RisaTheme.textSecondary(.dark))
                     }
                 }

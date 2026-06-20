@@ -125,7 +125,7 @@ struct TLIBrandHeader: View {
 
     private var badgeLabel: some View {
         Text(TLIBrandIdentity.appBadge)
-            .font(.caption2.weight(.heavy))
+            .font(.caption.weight(.heavy))
             .tracking(1.4)
             .foregroundStyle(TLITheme.textSecondary(scheme))
             .padding(.horizontal, 10)

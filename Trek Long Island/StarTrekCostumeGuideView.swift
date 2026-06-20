@@ -1,14 +1,9 @@
 import SwiftUI
-#if canImport(SafariServices)
-import SafariServices
-#endif
 
 @MainActor
 struct StarTrekCostumeGuideView: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.openURL) private var openURL
-
-    @State private var safariItem: CostumeGuideSafariItem?
 
     private struct GuideLink: Identifiable {
         let id = UUID()
@@ -155,19 +150,13 @@ struct StarTrekCostumeGuideView: View {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 ShareLink(item: homeURL)
                 Button {
-                    presentSafari(homeURL)
+                    openURL(homeURL)
                 } label: {
                     Image(systemName: "safari")
                 }
                 .accessibilityLabel("Open costume guide")
             }
         }
-        #if canImport(SafariServices)
-        .sheet(item: $safariItem) { item in
-            CostumeGuideSafariSheet(url: item.url)
-                .ignoresSafeArea()
-        }
-        #endif
     }
 
     private var heroCard: some View {
@@ -204,7 +193,7 @@ struct StarTrekCostumeGuideView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    presentSafari(homeURL)
+                    openURL(homeURL)
                 } label: {
                     Label("Open guide", systemImage: "globe")
                         .frame(maxWidth: .infinity)
@@ -240,7 +229,7 @@ struct StarTrekCostumeGuideView: View {
             LazyVGrid(columns: TLILayout.columns(for: .compact, minTileWidth: 220, spacing: 12), spacing: 12) {
                 ForEach(eraGuides) { era in
                     Button {
-                        presentSafari(era.destination)
+                        openURL(era.destination)
                     } label: {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -290,7 +279,7 @@ struct StarTrekCostumeGuideView: View {
     }
 
     private var footerNote: some View {
-        Text("Guide content lives on the official website. This in-app view is a curated launchpad for cosplay research and shopping prep.")
+        Text("Guide content lives on the official website. This view is a curated launchpad for cosplay research and shopping prep.")
             .font(.footnote)
             .foregroundStyle(TLITheme.textSecondary(scheme))
             .padding(.top, 4)
@@ -298,7 +287,7 @@ struct StarTrekCostumeGuideView: View {
 
     private func resourceCard(_ link: GuideLink) -> some View {
         Button {
-            presentSafari(link.url)
+            openURL(link.url)
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 ZStack {
@@ -351,33 +340,7 @@ struct StarTrekCostumeGuideView: View {
         }
     }
 
-    private func presentSafari(_ url: URL) {
-        #if canImport(SafariServices)
-        safariItem = CostumeGuideSafariItem(url: url)
-        #else
-        openURL(url)
-        #endif
-    }
 }
-
-private struct CostumeGuideSafariItem: Identifiable {
-    let url: URL
-    var id: URL { url }
-}
-
-#if canImport(SafariServices)
-private struct CostumeGuideSafariSheet: UIViewControllerRepresentable {
-    let url: URL
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let controller = SFSafariViewController(url: url)
-        controller.dismissButtonStyle = .close
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
-}
-#endif
 
 #Preview {
     NavigationStack {

@@ -22,11 +22,11 @@ struct SettingsView: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Environment(\.accessibilityShowButtonShapes) private var showButtonShapes
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
-    @StateObject private var removeAdsPurchase = TLIRemoveAdsPurchaseManager.shared
     @State private var showOnboardingReplay = false
 
     @AppStorage("TLI.Profile.displayName") private var displayName: String = ""
     @AppStorage("TLI.Profile.rank") private var rankRaw: String = TLIProfileRank.captain.rawValue
+    @AppStorage("TLI.Profile.division") private var divisionRaw: String = TLIProfileDivision.command.rawValue
     @AppStorage("TLI.Profile.role") private var roleRaw: String = TLIProfileRole.firstTimer.rawValue
     @AppStorage("TLI.Profile.objectives") private var objectivesRaw: String = ""
 
@@ -62,6 +62,7 @@ struct SettingsView: View {
     @AppStorage("TLI.Accessibility.reduceAnimations") private var reduceAnimations: Bool = false
     @AppStorage("TLI.Home.showMissionControl") private var showMissionControl: Bool = true
     @AppStorage(TLIAudioSettings.uiSoundsEnabledKey) private var uiSoundsEnabled: Bool = true
+    @AppStorage(TLIWebLinkOpeningPreference.storageKey) private var webLinkOpeningRaw: String = TLIWebLinkOpeningPreference.defaultPreference.rawValue
 
     private var selectedAppearance: AppAppearance {
         get { AppAppearance(rawValue: appAppearanceRaw) ?? .system }
@@ -92,9 +93,19 @@ struct SettingsView: View {
         nonmutating set { typographyRaw = newValue.rawValue }
     }
 
+    private var selectedWebLinkOpening: TLIWebLinkOpeningPreference {
+        get { TLIWebLinkOpeningPreference.fromStoredRawValue(webLinkOpeningRaw) }
+        nonmutating set { webLinkOpeningRaw = newValue.rawValue }
+    }
+
     private var selectedRank: TLIProfileRank {
         get { TLIProfileRank(rawValue: rankRaw) ?? .captain }
         nonmutating set { rankRaw = newValue.rawValue }
+    }
+
+    private var selectedDivision: TLIProfileDivision {
+        get { TLIProfileDivision(rawValue: divisionRaw) ?? .command }
+        nonmutating set { divisionRaw = newValue.rawValue }
     }
 
     private var selectedObjectives: Set<TLIProfileObjective> {
@@ -122,11 +133,9 @@ struct SettingsView: View {
                         notificationAccessCard
                         notificationBehaviorCard
                         homeScreenCard
+                        webLinksCard
                         accessibilityCard
                         voicePermissionsCard
-                        if !TLIAdAvailability.areAdsDisabledForCurrentTarget {
-                            adExperienceCard
-                        }
                         adminAccessCard
                         linksCard
                         aboutCard
@@ -141,6 +150,8 @@ struct SettingsView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 32)
                 }
+                .scrollDismissesKeyboard(.interactively)
+                .simultaneousGesture(TapGesture().onEnded { dismissKeyboard() })
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -149,9 +160,6 @@ struct SettingsView: View {
         .tint(TLITheme.accent(scheme))
         .tliFixedBottomAdSlot()
         .task {
-            if !TLIAdAvailability.areAdsDisabledForCurrentTarget {
-                removeAdsPurchase.start()
-            }
             await refreshNotificationStatus()
             refreshVoicePermissionStatus()
             syncAppIconPickerWithSystem()
@@ -160,9 +168,6 @@ struct SettingsView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 Task { await refreshNotificationStatus() }
-                if !TLIAdAvailability.areAdsDisabledForCurrentTarget {
-                    Task { await removeAdsPurchase.refreshEntitlements() }
-                }
                 refreshVoicePermissionStatus()
                 syncAppIconPickerWithSystem()
                 Task { await sanitizeAppIconSelectionIfNeeded() }
@@ -170,10 +175,17 @@ struct SettingsView: View {
         }
         .onChange(of: selectedAppIconRaw) { _, _ in
             guard !suppressAppIconApply else { return }
+            dismissKeyboard()
             scheduleAppIconApply()
+        }
+        .onDisappear {
+            dismissKeyboard()
         }
         .fullScreenCover(isPresented: $showOnboardingReplay) {
             TLIOnboardingView(canDismiss: true)
+                .onDisappear {
+                    dismissKeyboard()
+                }
         }
     }
 
@@ -242,6 +254,7 @@ struct SettingsView: View {
         ) {
             VStack(alignment: .leading, spacing: 10) {
                 settingsSummaryRow(title: "Captain", value: TLIProfilePreferences.commandName(rank: selectedRank, displayName: displayName))
+                settingsSummaryRow(title: "Division", value: selectedDivision.title)
                 settingsSummaryRow(title: "Profile", value: selectedRole.title)
                 settingsSummaryRow(title: "Focus", value: TLIProfilePreferences.objectivesSummary(from: selectedObjectives))
             }
@@ -354,7 +367,7 @@ struct SettingsView: View {
                     if let msg = appIconErrorMessage {
                         Text(msg)
                             .font(.system(.footnote, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                     } else {
                         Text("Select a preview to switch your Home Screen icon. Older novelty icons were removed from the selector.")
                             .font(.system(.footnote, design: .rounded))
@@ -550,6 +563,10 @@ struct SettingsView: View {
                     .foregroundStyle(TLITheme.textSecondary(scheme))
                     .fixedSize(horizontal: false, vertical: true)
 
+                if preset == .risa {
+                    risaPresetArtwork
+                }
+
                 HStack(spacing: 8) {
                     ForEach(presetPreviewLabels(for: preset), id: \.self) { item in
                         Text(item)
@@ -598,6 +615,31 @@ struct SettingsView: View {
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
+    private var risaPresetArtwork: some View {
+        Image("RisaSettingsSunsetWater")
+            .resizable()
+            .scaledToFill()
+            .frame(maxWidth: .infinity)
+            .frame(height: 124)
+            .clipped()
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [
+                        .clear,
+                        TLITheme.cardBackground(scheme).opacity(scheme == .dark ? 0.28 : 0.18)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(TLITheme.border(scheme).opacity(0.28), lineWidth: 1)
+            }
+            .accessibilityHidden(true)
+    }
+
     private func presetPreviewLabels(for preset: TLIVisualPreset) -> [String] {
         switch preset {
         case .tos, .tng, .ds9, .voyager, .enterprise, .starfleet:
@@ -642,7 +684,7 @@ struct SettingsView: View {
                 } else {
                     Text(statusLabel(for: notificationStatus))
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             }
 
@@ -781,71 +823,6 @@ struct SettingsView: View {
         }
     }
 
-    private var adExperienceCard: some View {
-        SettingsSectionCard(
-            icon: "megaphone.fill",
-            iconColor: .yellow,
-            title: "Sponsored Content",
-            subtitle: "Purchase a one-time ad-free upgrade."
-        ) {
-            if removeAdsPurchase.isPurchased {
-                Label("Ads removed on this Apple ID.", systemImage: "checkmark.seal.fill")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                    .foregroundStyle(.green)
-            }
-
-            Button {
-                Task { await removeAdsPurchase.restorePurchases() }
-            } label: {
-                HStack {
-                    Image(systemName: "arrow.clockwise")
-                    Text("Restore Purchases")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                    Spacer()
-                }
-            }
-            .buttonStyle(SettingsGhostButtonStyle())
-            .disabled(removeAdsPurchase.isBusy)
-
-            if !removeAdsPurchase.isPurchased {
-                Button {
-                    Task { await removeAdsPurchase.purchaseRemoveAds() }
-                } label: {
-                    HStack {
-                        Label("Remove All Ads (\(removeAdsPurchase.displayPrice))", systemImage: "cart.fill.badge.plus")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                        Spacer()
-                    }
-                }
-                .buttonStyle(
-                    SettingsPrimaryButtonStyle(
-                        accent: TLITheme.accent(scheme)
-                    )
-                )
-                .disabled(removeAdsPurchase.isBusy)
-            }
-
-            if removeAdsPurchase.isBusy {
-                ProgressView("Contacting App Store…")
-                    .font(.system(.footnote, design: .rounded))
-            }
-
-            if let error = removeAdsPurchase.purchaseErrorMessage, !error.isEmpty {
-                Text(error)
-                    .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
-
-            Text("Ads help reduce the administrative cost for app development and developer program fees.")
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(TLITheme.textSecondary(scheme))
-
-            Text("Ad behavior, cooldowns, and app-open controls are managed in Ops Center.")
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(TLITheme.textSecondary(scheme))
-        }
-    }
-
     private var voicePermissionsCard: some View {
         SettingsSectionCard(
             icon: "mic.fill",
@@ -863,7 +840,7 @@ struct SettingsView: View {
                     Spacer()
                     Text(microphoneStatusLabel)
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
 
                 HStack {
@@ -873,7 +850,7 @@ struct SettingsView: View {
                     Spacer()
                     Text(speechStatusLabel)
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             }
 
@@ -1027,6 +1004,56 @@ struct SettingsView: View {
         }
     }
 
+    private var webLinksCard: some View {
+        SettingsSectionCard(
+            icon: "safari.fill",
+            iconColor: .cyan,
+            title: "Web Links",
+            subtitle: "Choose where website links open."
+        ) {
+            Picker("Open Web Links", selection: Binding(
+                get: { selectedWebLinkOpening },
+                set: { selectedWebLinkOpening = $0 }
+            )) {
+                ForEach(TLIWebLinkOpeningPreference.allCases) { preference in
+                    Label(preference.title, systemImage: preference.systemImage)
+                        .tag(preference)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(TLIWebLinkOpeningPreference.allCases) { preference in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: preference.systemImage)
+                            .foregroundStyle(
+                                selectedWebLinkOpening == preference
+                                ? TLITheme.accent(scheme)
+                                : TLITheme.textTertiary(scheme)
+                            )
+                            .frame(width: 20)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(preference.title)
+                                .font(selectedTypography.font(.subheadline, weight: .semibold))
+                                .foregroundStyle(TLITheme.textPrimary(scheme))
+
+                            Text(preference.subtitle)
+                                .font(selectedTypography.font(.footnote))
+                                .foregroundStyle(TLITheme.textSecondary(scheme))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+
+            Text("This applies to website links across the app. System links, local files, and app deep links still use their normal handler.")
+                .font(selectedTypography.font(.footnote))
+                .foregroundStyle(TLITheme.textSecondary(scheme))
+        }
+    }
+
     private var linksCard: some View {
         SettingsSectionCard(
             icon: "link.circle.fill",
@@ -1047,15 +1074,27 @@ struct SettingsView: View {
             )
 
             SettingsLinkRow(
-                title: "Contact the Crew",
+                title: "Contact Support",
                 systemImage: "envelope.open",
-                url: URL(string: "https://treklongisland.com/contact/")
+                url: URL(string: "https://qualtricsxmm8q5gxrhq.qualtrics.com/jfe/form/SV_1TvkCrIKgaEYHPM")
             )
 
             SettingsLinkRow(
                 title: "Made in NY Shop",
                 systemImage: "bag.fill",
                 url: URL(string: "https://made-in-ny-shop.fourthwall.com/")
+            )
+
+            SettingsLinkRow(
+                title: "Convention Swag Bundle",
+                systemImage: "gift.fill",
+                url: URL(string: "https://made-in-ny-shop.fourthwall.com/products/convention-bundle")
+            )
+
+            SettingsLinkRow(
+                title: "Trek Long Island Etsy Shop",
+                systemImage: "sparkles",
+                url: URL(string: "https://www.etsy.com/shop/TrekLongIsland")
             )
 
             SettingsLinkRow(
@@ -1079,7 +1118,7 @@ struct SettingsView: View {
                 Spacer()
                 Text(appVersionString)
                     .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             HStack {
@@ -1088,7 +1127,7 @@ struct SettingsView: View {
                 Spacer()
                 Text(appBuildString)
                     .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             Divider().opacity(0.4)
@@ -1106,6 +1145,7 @@ struct SettingsView: View {
                 .foregroundStyle(TLITheme.textSecondary(scheme))
 
             Button {
+                dismissKeyboard()
                 showOnboardingReplay = true
             } label: {
                 HStack {
@@ -1174,6 +1214,7 @@ struct SettingsView: View {
     }
 
     private func scheduleAppIconApply() {
+        dismissKeyboard()
         pendingAppIconApplyTask?.cancel()
         pendingAppIconApplyTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(250))
@@ -1200,7 +1241,7 @@ struct SettingsView: View {
 
             lastError = error
             guard let error, isTransientAppIconError(error), index < retryDelays.count - 1 else {
-                return (lastError, isTransientAppIconError(error!))
+                return (lastError, error.map(isTransientAppIconError) ?? false)
             }
         }
 
@@ -1393,10 +1434,17 @@ struct SettingsView: View {
     }
 
     private func openSystemSettings() {
+        dismissKeyboard()
         #if canImport(UIKit)
         if let url = URL(string: UIApplication.openSettingsURLString) {
             openURL(url)
         }
+        #endif
+    }
+
+    private func dismissKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
     }
 
@@ -1474,7 +1522,7 @@ struct SettingsSectionCard<Content: View>: View {
         .overlay(alignment: .topTrailing) {
             if showButtonShapes {
                 Image(systemName: "accessibility")
-                    .font(.caption2.weight(.bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(TLITheme.textTertiary(scheme))
                     .padding(10)
                     .accessibilityHidden(true)
@@ -1614,13 +1662,13 @@ private struct SettingsLinkRow: View {
 
                     Image(systemName: "arrow.up.forward.square")
                         .font(.system(.footnote, design: .rounded).weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
                 .padding(.vertical, 6)
                 .frame(minHeight: 44)
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Opens in Safari")
+            .accessibilityHint("Uses your Web Links setting.")
         }
     }
 }

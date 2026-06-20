@@ -168,7 +168,7 @@ struct CoordinatorAccessView: View {
             Section {
                 Text(adminAuth.lastError ?? "This build does not include FirebaseAuth.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
     }
@@ -194,7 +194,7 @@ struct CoordinatorAccessView: View {
 
             Text(detail)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(.vertical, 4)
     }

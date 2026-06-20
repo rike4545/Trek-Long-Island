@@ -18,11 +18,11 @@ struct BadgeView: View {
 
             if count < 10 {
                 Text("\(count)")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundColor(.white)
             } else {
                 Text("9+")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundColor(.white)
             }
         }

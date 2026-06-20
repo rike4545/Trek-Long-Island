@@ -7,6 +7,7 @@ struct EasterEggMissionView: View {
     @AppStorage("TLI.EasterEggs.welcome") private var foundWelcomeSignal = false
     @AppStorage("TLI.EasterEggs.stardate") private var foundStardateSignal = false
     @AppStorage("TLI.EasterEggs.scottyVideo") private var foundScottyVideo = false
+    @AppStorage("TLI.EasterEggs.facebookReel") private var foundFacebookReel = false
     @AppStorage("TLI.EasterEggs.captainsChair") private var experiencedCaptainsChair = false
     @AppStorage("TLI.EasterEggs.tricorderRecoveredSignal") private var recoveredTricorderSignal = false
     @AppStorage("TLI.EasterEggs.picardDay") private var foundPicardDaySignal = false
@@ -49,6 +50,13 @@ struct EasterEggMissionView: View {
                 detail: "Available inside Hello Computer.",
                 found: foundScottyVideo,
                 binding: $foundScottyVideo
+            ),
+            MissionItem(
+                id: "facebook-reel",
+                title: "Subspace reel transmission",
+                detail: "Available inside Hello Computer.",
+                found: foundFacebookReel,
+                binding: $foundFacebookReel
             ),
             MissionItem(
                 id: "captains-chair",
@@ -218,6 +226,7 @@ struct EasterEggMissionView: View {
         foundWelcomeSignal = false
         foundStardateSignal = false
         foundScottyVideo = false
+        foundFacebookReel = false
         experiencedCaptainsChair = false
         recoveredTricorderSignal = false
         foundPicardDaySignal = false

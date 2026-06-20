@@ -148,7 +148,7 @@ extension HelloComputerFAQBank {
 
         .init(
             question: "Do children need their own ticket?",
-            answer: "Ticket requirements for children vary by age and ticket type. Check the official ticket site for current pricing and children's admission policy:\\nhttps://treklongislandtickets.square.site/",
+            answer: "Ticket requirements for children vary by age and ticket type. Check the official admission ticket page for current pricing and children's admission policy:\\n\(TicketPurchaseLinks.ticketsURLString)",
             tags: ["children", "kids", "ticket", "child ticket", "free", "age", "under"],
             source: .officialFAQ
         ),
@@ -162,7 +162,7 @@ extension HelloComputerFAQBank {
 
         .init(
             question: "Can my child get an autograph or photo with a guest?",
-            answer: "Yes — most guests welcome younger fans. General guidelines:\\n• Keep the child with a guardian at all times in photo op and autograph lines.\\n• Ask the handler or table staff if there are any special accommodations for young fans.\\n• Some guests have personal preferences — table staff will let you know.\\n\\nPhoto op and autograph schedules:\\nhttps://treklongisland.com/programs/",
+            answer: "Yes — most guests welcome younger fans. General guidelines:\\n• Keep the child with a guardian at all times in photo op and autograph lines.\\n• Ask the handler or table staff if there are any special accommodations for young fans.\\n• Some guests have personal preferences — table staff will let you know.\\n\\nPhoto op schedule:\\n\(TicketPurchaseLinks.photoOpScheduleURLString)\\n\\nProgram updates:\\nhttps://treklongisland.com/programs/",
             tags: ["child", "kids", "autograph", "photo op", "guest", "meet", "young fans"],
             source: .generalGuidance
         ),
@@ -173,7 +173,7 @@ extension HelloComputerFAQBank {
 
         .init(
             question: "How do photo ops work at Trek Long Island?",
-            answer: "Photo ops are time-slotted sessions where you get a posed photo taken with a guest by a professional photographer.\\n\\nHow it works:\\n1) Purchase your photo op ticket: \(TicketPurchaseLinks.photoOpsURLString)\\n2) Check the Schedule for your assigned time slot and room.\\n3) Arrive 5–10 minutes early — lines move fast.\\n4) Have your confirmation ready (screenshot is fine).\\n5) Photos are typically available digitally after the con.\\n\\nSchedule and updates:\\nhttps://treklongisland.com/programs/",
+            answer: "Photo ops are time-slotted sessions where you get a posed photo taken with a guest by a professional photographer.\\n\\nHow it works:\\n1) Purchase your photo op ticket: \(TicketPurchaseLinks.photoOpsURLString)\\n2) Check the official photo-op schedule for your assigned time slot and room: \(TicketPurchaseLinks.photoOpScheduleURLString)\\n3) Arrive 5–10 minutes early — lines move fast.\\n4) Have your confirmation ready (screenshot is fine).\\n5) Photos are typically available digitally after the con.",
             tags: ["photo op", "photo", "picture", "photograph", "pose", "how", "works"],
             source: .officialFAQ
         ),
@@ -187,14 +187,14 @@ extension HelloComputerFAQBank {
 
         .init(
             question: "How do autograph sessions work?",
-            answer: "Autograph sessions take place at guest tables in the autograph hall.\\n\\nTips:\\n1) Check the Schedule for each guest's signing times — these can change.\\n2) Have your item ready before you reach the table.\\n3) Some autographs may be included with your ticket; others may have an additional fee — check the ticket site.\\n4) Be respectful of time — handlers will let you know if a longer conversation is OK.\\n\\nOfficial updates:\\nhttps://treklongisland.com/",
+            answer: "Autograph sessions take place at guest tables in the autograph hall.\\n\\n\(TicketPurchaseLinks.autographPreSalesStatusText())\\n\\nTips:\\n1) Check the Schedule for each guest's signing times — these can change.\\n2) Have your item ready before you reach the table.\\n3) Some autographs may be included with your ticket; others may have an additional fee — check the ticket site.\\n4) Be respectful of time — handlers will let you know if a longer conversation is OK.\\n\\nOfficial updates:\\nhttps://treklongisland.com/",
             tags: ["autograph", "signing", "sign", "table", "how", "works", "session"],
             source: .officialFAQ
         ),
 
         .init(
             question: "Are autographs included in my ticket?",
-            answer: "This depends on your ticket type. Some packages include autographs; others require a separate purchase.\\n\\nCheck your ticket details or the official ticket site:\\nhttps://treklongislandtickets.square.site/",
+            answer: "This depends on your ticket type. Some packages include autographs; others require a separate purchase.\\n\\nCheck your ticket details or the official admission ticket page:\\n\(TicketPurchaseLinks.ticketsURLString)",
             tags: ["autograph", "included", "ticket", "free", "extra", "cost", "purchase"],
             source: .officialFAQ
         ),

@@ -9,7 +9,7 @@
 
 import Foundation
 
-/// Represents different levels of administrative access.
+/// Represents legacy administrative access levels.
 enum AdminLevel: String, CaseIterable {
     case staff1
     case staff2
@@ -17,16 +17,10 @@ enum AdminLevel: String, CaseIterable {
     case staff4
 }
 
-/// Centralized configuration for admin passwords and their corresponding access level.
+/// Legacy placeholder kept so older references continue to compile.
+/// Coordinator authentication is now handled by Firebase allowlisted accounts.
 struct AdminPasswordConfig {
-    /// A dictionary mapping passwords (lowercased) to `AdminLevel`.
-    static let passwords: [String: AdminLevel] = [
-        "Qq96jboduGuIGRUz": .staff1,
-        "gcAsF8VqZV1rynvJ": .staff2,
-        "FRXpO4qhI2gLnqCP": .staff3,
-        "Gf98I9HpLLPpBY33": .staff4
-    ]
+    static let passwords: [String: AdminLevel] = [:]
 
-    /// The QVIP password (handled separately in logic).
-    static let qvipPassword = "Sgd8tFEBdATPv4DkWz"
+    static let qvipPassword = ""
 }

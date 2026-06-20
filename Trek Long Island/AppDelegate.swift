@@ -37,9 +37,11 @@ final class TLIAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationC
         TLINetworkMonitor.shared.start()
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
-        Messaging.messaging().subscribe(toTopic: pushTopic)
-        TLIPushTopicManager.syncTopics(isAdminUnlocked: NotificationManager.shared.isStaffUnlocked)
         Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            try? await Messaging.messaging().subscribe(toTopic: pushTopic)
+            await TLIPushTopicManager.syncTopicsFromStoredAdminState()
             _ = await NotificationPermissionCoordinator.refreshRemoteNotificationRegistration()
         }
         trackAnalytics(name: "app_launch_completed", domain: "app")
@@ -58,7 +60,7 @@ final class TLIAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationC
         #if DEBUG
         let key = "GADApplicationIdentifier"
         let appID = Bundle.main.object(forInfoDictionaryKey: key) as? String
-        if appID?.isEmpty != false {
+        if appID == nil || appID!.isEmpty {
             assertionFailure("Missing \(key) in Info.plist. AdMob will not initialize correctly.")
             print("Missing \(key) in Info.plist. AdMob will not initialize correctly.")
         }
@@ -114,15 +116,18 @@ final class TLIAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationC
 
     // FCM token
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print("FCM token:", fcmToken ?? "nil")
-        Messaging.messaging().subscribe(toTopic: pushTopic)
-        TLIPushTopicManager.syncTopics(isAdminUnlocked: NotificationManager.shared.isStaffUnlocked)
+        #if DEBUG
+        print("FCM token present:", fcmToken?.isEmpty == false)
+        #endif
+        Task {
+            try? await Messaging.messaging().subscribe(toTopic: pushTopic)
+            await TLIPushTopicManager.syncTopicsFromStoredAdminState()
+        }
         trackAnalytics(
             name: "fcm_token_updated",
             domain: "push",
             metadata: ["token_present": (fcmToken?.isEmpty == false) ? "true" : "false"]
         )
-        // TODO: send to your server if needed
     }
 
     // Keep the app full-screen across portrait/landscape on iPhone to prevent

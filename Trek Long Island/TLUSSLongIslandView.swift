@@ -156,6 +156,18 @@ struct TLUSSLongIslandView: View {
                         code: "SCI-05"
                     )
                 }
+
+                NavigationLink {
+                    TLStellarCartographyBorgGameView()
+                } label: {
+                    systemRow(
+                        title: "Stellar Cartography",
+                        subtitle: "Map transwarp echoes, isolate the Borg cube, and keep the grid from assimilation.",
+                        systemImage: "sparkles",
+                        accent: ShipDirectoryPalette.mint,
+                        code: "SCI-06"
+                    )
+                }
             }
         }
     }
@@ -237,7 +249,7 @@ struct TLUSSLongIslandView: View {
                     .foregroundStyle(ShipDirectoryPalette.textDim)
                 Spacer(minLength: 0)
                 Text("CAM 01")
-                    .font(.caption2.weight(.bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(.black.opacity(0.82))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -347,7 +359,7 @@ struct TLUSSLongIslandView: View {
                     .foregroundStyle(ShipDirectoryPalette.textDim)
                 Spacer(minLength: 0)
                 Text("NCC-2026")
-                    .font(.caption2.weight(.bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(.black.opacity(0.82))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -511,7 +523,7 @@ struct TLUSSLongIslandView: View {
                 Spacer(minLength: 0)
 
                 Text("LCARS")
-                    .font(.caption2.weight(.bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(ShipDirectoryPalette.textDim)
             }
 
@@ -629,7 +641,7 @@ struct TLUSSLongIslandView: View {
     private func headerBadge(_ title: String, value: String, color: Color) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(title)
-                .font(.caption2.weight(.bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(ShipDirectoryPalette.textDim)
             Text(value)
                 .font(.caption.weight(.bold))
@@ -643,7 +655,7 @@ struct TLUSSLongIslandView: View {
     private func metricPill(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title.uppercased())
-                .font(.caption2.weight(.bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(ShipDirectoryPalette.textDim)
             Text(value)
                 .font(.subheadline.weight(.bold))
@@ -659,7 +671,7 @@ struct TLUSSLongIslandView: View {
     private func readoutLine(_ title: String, value: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title.uppercased())
-                .font(.caption2.weight(.bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(ShipDirectoryPalette.textDim)
             Spacer(minLength: 10)
             Text(value)
@@ -699,7 +711,7 @@ struct TLUSSLongIslandView: View {
                             .foregroundStyle(ShipDirectoryPalette.textBright)
 
                         Text(code)
-                            .font(.caption2.weight(.bold))
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(.black.opacity(0.82))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)

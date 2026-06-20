@@ -9,7 +9,7 @@ import SwiftUI
 import FirebaseCore
 import UserNotifications
 
-private let tliForceOnboardingForTesting = true
+private let tliForceOnboardingForTesting = false
 
 private struct TLISmoothScrollModifier: ViewModifier {
     func body(content: Content) -> some View {
@@ -22,6 +22,55 @@ private struct TLISmoothScrollModifier: ViewModifier {
 private extension View {
     func tliSmoothScrolling() -> some View {
         modifier(TLISmoothScrollModifier())
+    }
+}
+
+private enum TLIDeepLinkDestination: String, Identifiable {
+    case missionPlan
+    case photoAutographs
+    case support
+    case map
+    case schedule
+    case alerts
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .missionPlan: return "My Mission Plan"
+        case .photoAutographs: return "Photo & Autographs"
+        case .support: return "Support Center"
+        case .map: return "Convention Map"
+        case .schedule: return "Schedule"
+        case .alerts: return "Announcements"
+        }
+    }
+}
+
+private extension TLIDeepLinkDestination {
+    init?(url: URL) {
+        let host = url.host?.lowercased()
+        let pathParts = url.pathComponents
+            .filter { $0 != "/" }
+            .map { $0.lowercased() }
+        let token = pathParts.first ?? host
+
+        switch token {
+        case "mission-plan", "mission", "plan":
+            self = .missionPlan
+        case "photo-autographs", "photo-autograph", "photos", "autographs":
+            self = .photoAutographs
+        case "support", "help":
+            self = .support
+        case "map", "maps":
+            self = .map
+        case "schedule":
+            self = .schedule
+        case "alerts", "announcements", "notifications":
+            self = .alerts
+        default:
+            return nil
+        }
     }
 }
 
@@ -38,10 +87,13 @@ struct TrekLIApp: App {
     @StateObject private var networkMonitor = TLINetworkMonitor.shared
     @StateObject private var nearbyRoomCountStore = NearbyRoomCountStore.shared
     @StateObject private var usageInsightsStore = TLIUsageInsightsStore.shared
-    @State private var isShowingSplash = !TLIAppFeatureFlags.isCustomSplashDisabled && TLIConventionDates.shouldShowLaunchSplash()
+    @State private var isShowingSplash = !TLIAppFeatureFlags.isCustomSplashDisabled
     @State private var isShowingOnboarding = false
     @State private var isShowingWelcomeNotice = false
     @State private var hasPresentedWelcomeNoticeThisSession = false
+    @State private var hasStartedPostLaunchServices = false
+    @State private var shouldRequestNotificationsAfterOnboarding = false
+    @State private var deepLinkDestination: TLIDeepLinkDestination?
 
     // Appearance preference
     @AppStorage("appVisualPreset") private var appVisualPresetRaw: String = TLIVisualPreset.defaultPreset.rawValue
@@ -63,17 +115,16 @@ struct TrekLIApp: App {
             appContent
                 .onAppear {
                     normalizeStoredThemeStateIfNeeded()
+                    normalizeStoredTypographyIfNeeded()
                     TLIAdDefaults.register()
                     TLIAdExperience.noteAppLaunch()
-                    if !TLIAdAvailability.areAdsDisabledForCurrentTarget {
-                        TLIRemoveAdsPurchaseManager.shared.start()
-                    }
                     UIKitAppearance.configure(for: resolvedUIKitColorScheme, typography: selectedTypography)
                     trackAnalytics(name: "app_opened", domain: "app")
                     usageInsightsStore.noteLaunch()
                     usageInsightsStore.noteScenePhase(.active)
                     syncOnboardingPresentation()
                     syncWelcomeNoticePresentation()
+                    startPostLaunchServicesIfNeeded()
 
                     if !hasLaunchedBefore {
                         hasLaunchedBefore = true
@@ -92,26 +143,18 @@ struct TrekLIApp: App {
                     UIKitAppearance.configure(for: resolvedUIKitColorScheme, typography: selectedTypography)
                 }
                 .onChange(of: typographyRaw) { _, _ in
+                    normalizeStoredTypographyIfNeeded()
                     UIKitAppearance.configure(for: resolvedUIKitColorScheme, typography: selectedTypography)
                 }
                 .onChange(of: hasCompletedOnboarding) { _, _ in
+                    // Dismiss the onboarding cover; the welcome notice is presented
+                    // from the cover's onDismiss so the two never overlap.
                     syncOnboardingPresentation()
-                    syncWelcomeNoticePresentation()
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {
                         UIKitAppearance.configure(for: resolvedUIKitColorScheme, typography: selectedTypography)
-                        if !TLIAdAvailability.areAdsDisabledForCurrentTarget {
-                            Task { await TLIRemoveAdsPurchaseManager.shared.refreshEntitlements() }
-                        }
-                        Task { @MainActor in
-                            NotificationManager.shared.ensureAdminTimeout()
-                            await NotificationManager.shared.refreshNow()
-                        }
-                        if !TLIAdAvailability.areAdsDisabledForCurrentTarget {
-                            AdMobInterstitialManager.shared.appDidBecomeActive()
-                            AdMobAppOpenManager.shared.appDidBecomeActive()
-                        }
+                        startPostLaunchServicesIfNeeded()
                         trackAnalytics(name: "app_became_active", domain: "app")
                         syncOnboardingPresentation()
                         syncWelcomeNoticePresentation()
@@ -151,13 +194,17 @@ struct TrekLIApp: App {
                     MainTabView()
                 }
             }
-                .fullScreenCover(isPresented: $isShowingOnboarding) {
+                .fullScreenCover(isPresented: $isShowingOnboarding, onDismiss: {
+                    handleOnboardingDismissed()
+                }) {
                     TLIOnboardingView {
-                        requestNotificationPermissionIfNeeded()
+                        shouldRequestNotificationsAfterOnboarding = true
                     }
                     .id("onboarding")
                 }
-                .fullScreenCover(isPresented: $isShowingSplash) {
+                .fullScreenCover(isPresented: $isShowingSplash, onDismiss: {
+                    handleSplashDismissed()
+                }) {
                     SplashScreenView {
                         finishSplashPresentation()
                     }
@@ -170,7 +217,18 @@ struct TrekLIApp: App {
                         isShowingWelcomeNotice = false
                     }
                 }
+                .sheet(item: $deepLinkDestination) { destination in
+                    NavigationStack {
+                        deepLinkView(for: destination)
+                            .navigationTitle(destination.title)
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                }
+                .onOpenURL { url in
+                    handleDeepLink(url)
+                }
                 .tliSmoothScrolling()
+                .tliWebLinkOpening()
                 .tliAppTypography(selectedTypography)
                 .environmentObject(helloComputerStore) // ✅ inject once at the top
                 .environmentObject(preferencesSyncStore)
@@ -178,7 +236,7 @@ struct TrekLIApp: App {
                 .environmentObject(nearbyRoomCountStore)
                 .environmentObject(usageInsightsStore)
                 .preferredColorScheme(currentColorScheme)
-                .dynamicTypeSize(largeTypeBoost ? .large ... .accessibility5 : .xSmall ... .accessibility5)
+                .dynamicTypeSize(largeTypeBoost ? .large ... .accessibility5 : .small ... .accessibility5)
                 .environment(\.controlSize, largeTapTargets ? .large : .regular)
                 .environment(\.defaultMinListRowHeight, largeTapTargets ? 52 : 44)
                 .environment(\.defaultMinListHeaderHeight, largeTapTargets ? 34 : 28)
@@ -187,8 +245,30 @@ struct TrekLIApp: App {
                         transaction.animation = nil
                     }
                 }
-                .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+    }
+
+    @ViewBuilder
+    private func deepLinkView(for destination: TLIDeepLinkDestination) -> some View {
+        switch destination {
+        case .missionPlan:
+            MyMissionPlanView()
+        case .photoAutographs:
+            PhotoAutographTrackerView()
+        case .support:
+            SupportCenterView()
+        case .map:
+            MapsView()
+        case .schedule:
+            ScheduleView()
+        case .alerts:
+            NotificationsView()
+        }
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        guard let destination = TLIDeepLinkDestination(url: url) else { return }
+        deepLinkDestination = destination
     }
 
     private var shouldPresentOnboarding: Bool {
@@ -215,11 +295,16 @@ struct TrekLIApp: App {
     }
 
     private var selectedTypography: TLITypographyPreference {
+        // Pure read. Normalization of a stale/invalid stored value happens in
+        // onAppear / onChange, never inside body evaluation.
+        TLITypographyPreference.fromStoredRawValue(typographyRaw)
+    }
+
+    private func normalizeStoredTypographyIfNeeded() {
         let normalized = TLITypographyPreference.fromStoredRawValue(typographyRaw)
         if normalized.rawValue != typographyRaw {
             typographyRaw = normalized.rawValue
         }
-        return normalized
     }
 
     private var resolvedUIKitColorScheme: ColorScheme {
@@ -242,10 +327,8 @@ struct TrekLIApp: App {
         currentColorScheme ?? resolvedUIKitColorScheme
     }
 
-    private func requestNotificationPermissionIfNeeded() {
-        Task {
-            _ = await NotificationPermissionCoordinator.requestAuthorizationIfNeeded()
-        }
+    private func requestNotificationPermissionIfNeeded() async {
+        _ = await NotificationPermissionCoordinator.requestAuthorizationIfNeeded()
     }
 
     private func syncOnboardingPresentation() {
@@ -262,11 +345,49 @@ struct TrekLIApp: App {
         isShowingWelcomeNotice = shouldShow
     }
 
-    private func finishSplashPresentation() {
-        isShowingSplash = false
+    private func startPostLaunchServicesIfNeeded() {
+        guard !hasStartedPostLaunchServices else { return }
+        hasStartedPostLaunchServices = true
+
         Task { @MainActor in
-            await Task.yield()
-            syncOnboardingPresentation()
+            try? await Task.sleep(for: .seconds(1.25))
+            guard !Task.isCancelled else { return }
+
+            preferencesSyncStore.startRemoteSyncIfNeeded()
+            usageInsightsStore.startRemoteSyncIfNeeded()
+
+            NotificationManager.shared.ensureAdminTimeout()
+            NotificationManager.shared.startBackendIfNeeded()
+            await NotificationManager.shared.refreshNow()
+            await AppUpdateMonitor.shared.checkForAvailableUpdate()
+        }
+    }
+
+    private func finishSplashPresentation() {
+        // Only dismiss here. Presenting the next cover/sheet is deferred to the
+        // splash cover's onDismiss (handleSplashDismissed) so we never present a
+        // new full-screen cover while this one is still animating away.
+        isShowingSplash = false
+    }
+
+    private func handleSplashDismissed() {
+        syncOnboardingPresentation()
+        // Only consider the welcome notice if onboarding isn't taking over.
+        if !isShowingOnboarding {
+            syncWelcomeNoticePresentation()
+        }
+    }
+
+    private func handleOnboardingDismissed() {
+        guard shouldRequestNotificationsAfterOnboarding else {
+            syncWelcomeNoticePresentation()
+            return
+        }
+
+        shouldRequestNotificationsAfterOnboarding = false
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            await requestNotificationPermissionIfNeeded()
             syncWelcomeNoticePresentation()
         }
     }
@@ -286,8 +407,27 @@ enum AppAppearance: String, CaseIterable {
 }
 
 // MARK: - UIKit Appearance
+@MainActor
 enum UIKitAppearance {
-    static func configure(for scheme: ColorScheme, typography: TLITypographyPreference) {
+    private static var lastConfiguredScheme: ColorScheme?
+    private static var lastConfiguredTypography: TLITypographyPreference?
+
+    static func configure(
+        for scheme: ColorScheme,
+        typography: TLITypographyPreference,
+        force: Bool = false
+    ) {
+        // Rebuilding every global appearance proxy is comparatively expensive and
+        // was happening on every launch, every theme/typography write, and every
+        // foreground. Skip when nothing relevant actually changed.
+        if !force,
+           lastConfiguredScheme == scheme,
+           lastConfiguredTypography == typography {
+            return
+        }
+        lastConfiguredScheme = scheme
+        lastConfiguredTypography = typography
+
         let accent = RisaTheme.accentUIColor(for: scheme)
         let navTitle = RisaTheme.navTitleUIColor(for: scheme)
         let border = UIColor(RisaTheme.cardStroke(scheme)).withAlphaComponent(0.34)

@@ -58,7 +58,7 @@ struct MapsView: View {
     )
 
     private var routeRooms: [String] {
-        ["Main Hall", "Panel B", "Panel C", "Panel D", "Windwatch", "Kids Track", "Photo Sessions", "Vendor Hall Announcements", "Special Events"]
+        ["Main Hall", "Panel B", "Panel C", "Panel D", "Windwatch", "Kids Track", "Photo Sessions", "Vendor Hall Announcements", "Special Events", "Trustees Board Room"]
     }
 
     // MARK: - Floor map image

@@ -133,7 +133,9 @@ struct QRCodeView: View {
 
                     HStack(spacing: 10) {
                         Button {
-                            openURL(URL(string: qrPayload)!)
+                            if let url = URL(string: qrPayload) {
+                                openURL(url)
+                            }
                         } label: {
                             Label("Open", systemImage: "safari.fill")
                         }
@@ -149,7 +151,7 @@ struct QRCodeView: View {
 
                     Text(qrPayload)
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                         .lineLimit(2)
                 }
 
@@ -263,7 +265,7 @@ struct QRCodeView: View {
             } else {
                 Text("Accepted scans increment tally by order. Over-scans fail once purchased count is reached.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
         .padding(16)
@@ -291,7 +293,7 @@ struct QRCodeView: View {
             if !hasOrders {
                 Text("No orders loaded. Add at least one order to start generating and validating ticket QR codes.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else if !ticketStore.isTicketScanningEnabled || !ticketStore.isTicketGenerationEnabled {
                 Text("Attention: one or more ticket operator controls are disabled.")
                     .font(.caption.weight(.semibold))
@@ -303,13 +305,13 @@ struct QRCodeView: View {
             } else {
                 Text("\(summary.totalRemaining) ticket(s) remaining to scan.")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if let lastSquareImportMessage = ticketStore.lastSquareImportMessage {
                 Text(lastSquareImportMessage)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
         .padding(16)
@@ -343,7 +345,7 @@ struct QRCodeView: View {
             if ticketStore.orders.isEmpty {
                 Text("No order records yet.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 ForEach(ticketStore.orders) { order in
                     VStack(alignment: .leading, spacing: 4) {
@@ -354,27 +356,27 @@ struct QRCodeView: View {
                             HStack(spacing: 8) {
                                 if order.source.lowercased() == "square" {
                                     Text("Square")
-                                        .font(.caption2.weight(.bold))
+                                        .font(.caption.weight(.bold))
                                         .padding(.horizontal, 7)
                                         .padding(.vertical, 4)
                                         .background(Capsule().fill(TLITheme.accentSoft(scheme)))
                                 }
                                 Text(order.orderNumber)
                                     .font(.caption.monospaced())
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.primary.opacity(0.72))
                             }
                         }
 
                         Text("Tickets: \(order.ticketCount) • Scanned: \(order.scannedCount) • Remaining: \(max(0, order.ticketCount - order.scannedCount))")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
 
                         HStack {
                             Text(order.lastScannedAt == nil
                                  ? "No scans yet"
                                  : "Last scanned \(order.lastScannedAt!, style: .relative)")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                             Spacer(minLength: 8)
                             Button("Delete", role: .destructive) {
                                 ticketStore.removeOrder(id: order.id)
@@ -400,7 +402,7 @@ struct QRCodeView: View {
                 .foregroundStyle(RisaTheme.textPrimary(scheme))
             Text("Unlock a staff/operator role to enable ticket QR generation and ticket scanning.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(16)
         .background(glassCardBackground)
@@ -427,11 +429,11 @@ struct QRCodeView: View {
                         .foregroundStyle(RisaTheme.textPrimary(scheme))
                     Text("Order \(order.orderNumber) • \(order.ticketCount) ticket(s)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
                 Spacer(minLength: 8)
                 Text(TicketQRPayload.issuerName)
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 5)
                     .background(.ultraThinMaterial, in: Capsule())
@@ -464,7 +466,7 @@ struct QRCodeView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Label("Present at check-in", systemImage: "person.crop.rectangle.badge.checkmark")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
 
                     Button {
                         #if canImport(UIKit)
@@ -484,8 +486,8 @@ struct QRCodeView: View {
                     .buttonStyle(.borderedProminent)
 
                     Text("Payload is issuer-locked to Trek Long Island Corp.")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -514,8 +516,8 @@ struct QRCodeView: View {
     private func tallyPill(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text(value)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(RisaTheme.textPrimary(scheme))
@@ -636,7 +638,9 @@ private final class TicketScannerViewController: UIViewController, AVCaptureMeta
 
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer?
+    private let sessionQueue = DispatchQueue(label: "me.treklongisland.ticket-scanner.camera")
     private var hasDetectedCode = false
+    private var isConfigured = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -646,21 +650,31 @@ private final class TicketScannerViewController: UIViewController, AVCaptureMeta
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if !captureSession.isRunning {
-            captureSession.startRunning()
-        }
+        startSession()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if captureSession.isRunning {
-            captureSession.stopRunning()
-        }
+        stopSession()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer?.frame = view.layer.bounds
+    }
+
+    private func startSession() {
+        guard isConfigured, !captureSession.isRunning else { return }
+        sessionQueue.async { [captureSession] in
+            captureSession.startRunning()
+        }
+    }
+
+    private func stopSession() {
+        guard isConfigured, captureSession.isRunning else { return }
+        sessionQueue.async { [captureSession] in
+            captureSession.stopRunning()
+        }
     }
 
     private func configureCamera() {
@@ -681,6 +695,7 @@ private final class TicketScannerViewController: UIViewController, AVCaptureMeta
         preview.frame = view.layer.bounds
         view.layer.addSublayer(preview)
         previewLayer = preview
+        isConfigured = true
     }
 
     func metadataOutput(
@@ -694,7 +709,7 @@ private final class TicketScannerViewController: UIViewController, AVCaptureMeta
               let value = metadataObject.stringValue else { return }
 
         hasDetectedCode = true
-        captureSession.stopRunning()
+        stopSession()
         onCodeDetected?(value)
     }
 }

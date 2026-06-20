@@ -25,7 +25,7 @@ struct PicardDayBannerView: View {
                         .foregroundStyle(TLITheme.accent(scheme))
 
                     Text("USS Enterprise-D")
-                        .font(.caption2.weight(.bold))
+                        .font(.caption.weight(.bold))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(

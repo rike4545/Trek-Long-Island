@@ -8,7 +8,7 @@
 //  - Scotty prompt + subtle Easter egg link
 //  - Normalizes FAQ text so "\n" renders as real line breaks
 //  - Auto-scrolls to newest answer
-//  - Opens links in an in-app Safari sheet
+//  - Opens links externally
 //
 //  Swift 6 • iOS 17+
 //
@@ -21,22 +21,20 @@ import Speech
 import UIKit
 #endif
 
-#if canImport(SafariServices)
-import SafariServices
-#endif
-
 @MainActor
 struct HelloComputerView: View {
 
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openURL) private var openURL
     @EnvironmentObject private var store: HelloComputerStore
 
-    @State private var presentedLink: IdentifiableURL? = nil
     @FocusState private var inputFocused: Bool
     @StateObject private var voiceInput = HelloComputerVoiceInputController()
     @State private var showsExpandedShortcuts = false
     @State private var topBarActivatedAt = Date()
+    @AppStorage("TLI.EasterEggs.scottyVideo") private var foundScottyVideo = false
+    @AppStorage("TLI.EasterEggs.facebookReel") private var foundFacebookReel = false
     private let sfx = ZenSFX.shared
 
     private let bottomAnchorID = "helloComputerBottomAnchor"
@@ -95,21 +93,6 @@ struct HelloComputerView: View {
         .onChange(of: store.isThinking) { _, isThinking in
             guard isThinking else { return }
             topBarActivatedAt = .now
-        }
-        .sheet(item: $presentedLink) { link in
-            #if canImport(SafariServices)
-            TrekSafariView(url: link.url)
-                .ignoresSafeArea()
-            #else
-            VStack(spacing: 12) {
-                Text("Open this link in Safari:")
-                    .font(.headline)
-                Text(link.url.absoluteString)
-                    .font(.footnote)
-                    .textSelection(.enabled)
-            }
-            .padding()
-            #endif
         }
         .onAppear {
             voiceInput.onHandsFreeSubmit = { text in
@@ -175,10 +158,12 @@ struct HelloComputerView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityLabel("Computer core online.")
 
-            Text("Ask for a live briefing, plan your day, or get venue and guest help without bouncing between tabs.")
+            Text(store.persona == .scotty ? "Scotty persona is active. Ask for a live briefing, day plan, reminders, or help keeping your convention engines running." : "Ask for a live briefing, plan your day, or get venue and guest help without bouncing between tabs.")
                 .font(.subheadline)
                 .foregroundStyle(TLITheme.textSecondary(scheme))
                 .fixedSize(horizontal: false, vertical: true)
+
+            personaPicker
 
             QuickCommandDeck(
                 scheme: scheme,
@@ -207,11 +192,11 @@ struct HelloComputerView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Hello, Computer")
+                    Text(store.persona == .scotty ? "Hello, Scotty" : "Hello, Computer")
                         .font(.headline)
                         .foregroundStyle(TLITheme.textPrimary(scheme))
 
-                    Text("Ask a follow-up or fire off another fast command.")
+                    Text(store.persona == .scotty ? "Engineering tone active for your next command." : "Ask a follow-up or fire off another fast command.")
                         .font(.footnote)
                         .foregroundStyle(TLITheme.textSecondary(scheme))
                         .fixedSize(horizontal: false, vertical: true)
@@ -233,6 +218,8 @@ struct HelloComputerView: View {
                     sendShortcut(prompt, submitImmediately: true)
                 }
             )
+
+            personaPicker
 
             HStack(spacing: 12) {
                 Button(showsExpandedShortcuts ? "Hide shortcut library" : "More shortcuts") {
@@ -315,10 +302,24 @@ struct HelloComputerView: View {
                 .fill(TLITheme.chipBackground(scheme))
                 .frame(width: 20, height: 10)
             Text(promptHeaderTitle)
-                .font(.caption2.weight(.bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(TLITheme.textSecondary(scheme))
             Spacer(minLength: 8)
         }
+    }
+
+    private var personaPicker: some View {
+        Picker("Assistant persona", selection: Binding(
+            get: { store.persona },
+            set: { store.setPersona($0) }
+        )) {
+            ForEach(HelloComputerPersona.allCases, id: \.self) { persona in
+                Label(persona.title, systemImage: persona.systemImage)
+                    .tag(persona)
+            }
+        }
+        .pickerStyle(.segmented)
+        .accessibilityLabel("Assistant persona")
     }
 
     private func sourceAndResetRow(lastSource: HelloComputerAnswerSource) -> some View {
@@ -426,7 +427,8 @@ struct HelloComputerView: View {
 
             Button {
                 if let url = URL(string: "https://www.youtube.com/watch?v=hShY6xZWVGE") {
-                    presentedLink = IdentifiableURL(url)
+                    foundScottyVideo = true
+                    openURL(url)
                 }
             } label: {
                 HStack(spacing: 6) {
@@ -445,6 +447,29 @@ struct HelloComputerView: View {
                 )
             )
             .accessibilityLabel("Open Scotty easter egg video")
+
+            Button {
+                if let url = URL(string: "https://www.facebook.com/reel/1980360026020488") {
+                    foundFacebookReel = true
+                    openURL(url)
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "play.tv")
+                    Text("Reel")
+                }
+                .font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(TLITheme.accent(scheme))
+            .buttonStyle(
+                LCARSInteractiveButtonStyle(
+                    accent: TLITheme.accent(scheme),
+                    cornerRadius: 12,
+                    idleEmphasis: false,
+                    pressedScale: 0.985
+                )
+            )
+            .accessibilityLabel("Open hidden Facebook reel")
         }
     }
 
@@ -475,7 +500,7 @@ struct HelloComputerView: View {
                                 normalize: normalized,
                                 reduceMotion: reduceMotion,
                                 isNewestAssistant: msg.id == store.messages.last(where: { $0.role == .assistant })?.id,
-                                onOpenURL: { url in presentedLink = IdentifiableURL(url) }
+                                onOpenURL: { url in openURL(url) }
                             )
                         }
 
@@ -1457,12 +1482,6 @@ private struct PendingActionSheet: View {
 
 // MARK: - URL Helpers
 
-private struct IdentifiableURL: Identifiable {
-    let url: URL
-    var id: URL { url }
-    init(_ url: URL) { self.url = url }
-}
-
 private enum URLDetector {
     static func urls(in text: String) -> [URL] {
         guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
@@ -1477,19 +1496,3 @@ private enum URLDetector {
         return urls.filter { seen.insert($0.absoluteString).inserted }
     }
 }
-
-// MARK: - Safari Sheet (unique name to avoid redeclaration collisions)
-
-#if canImport(SafariServices)
-private struct TrekSafariView: UIViewControllerRepresentable {
-    let url: URL
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let vc = SFSafariViewController(url: url)
-        vc.dismissButtonStyle = .close
-        return vc
-    }
-
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
-}
-#endif

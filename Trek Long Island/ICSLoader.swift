@@ -50,7 +50,8 @@ final class ICSLoader: ObservableObject {
         "Kids Track": "https://calendar.google.com/calendar/ical/688704b695362de1cddd3611655db243616492260d8e69460a7104e2712a3628%40group.calendar.google.com/public/basic.ics",
         "Photo Sessions": "https://calendar.google.com/calendar/ical/76042d34e4a2af266c8dd469aa94c2c3713235f0d23ee40ff323dea5e67f9dbd%40group.calendar.google.com/public/basic.ics",
         "Vendor Hall Announcements": "https://calendar.google.com/calendar/ical/c1af329cac8ab9d99f5aafe3c566fa4ebd2d3be789f2132278ac0f57a4ed689e%40group.calendar.google.com/public/basic.ics",
-        "Special Events": "https://calendar.google.com/calendar/ical/f96346e217449a7d8fa443a85c5c9518535157df8f0d416f25c63cdbdbf4a3b8%40group.calendar.google.com/public/basic.ics"
+        "Special Events": "https://calendar.google.com/calendar/ical/f96346e217449a7d8fa443a85c5c9518535157df8f0d416f25c63cdbdbf4a3b8%40group.calendar.google.com/public/basic.ics",
+        "Trustees Board Room": "https://calendar.google.com/calendar/ical/a5ccac39e8bd184fea2fbab32a5a76c8825bf84c7caba97a3c7d81853235165d%40group.calendar.google.com/public/basic.ics"
     ]
 
     private let cacheLastSyncKey = "TLI.Schedule.cacheLastSync"

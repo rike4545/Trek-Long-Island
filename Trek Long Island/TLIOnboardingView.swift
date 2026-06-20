@@ -18,6 +18,7 @@ struct TLIOnboardingView: View {
     @AppStorage("TLI.Onboarding.completed") private var hasCompletedOnboarding = false
     @AppStorage("TLI.Profile.displayName") private var displayName: String = ""
     @AppStorage("TLI.Profile.rank") private var rankRaw: String = TLIProfileRank.captain.rawValue
+    @AppStorage("TLI.Profile.division") private var divisionRaw: String = TLIProfileDivision.command.rawValue
     @AppStorage("TLI.Profile.role") private var roleRaw: String = TLIProfileRole.firstTimer.rawValue
     @AppStorage("TLI.Profile.objectives") private var objectivesRaw: String = ""
     @AppStorage("appVisualPreset") private var appVisualPresetRaw: String = TLIVisualPreset.defaultPreset.rawValue
@@ -62,9 +63,9 @@ struct TLIOnboardingView: View {
                 .animation(reduceMotionEnabled ? nil : .spring(response: 0.42, dampingFraction: 0.88), value: currentStep)
             }
             .adaptiveContentWidth(
-                maxWidth: 860,
-                horizontalPadding: TLILayout.compactHorizontalPadding(for: layoutWidth),
-                verticalPadding: isCompactPhoneLayout ? 8 : 12
+                maxWidth: onboardingContentMaxWidth,
+                horizontalPadding: onboardingHorizontalPadding,
+                verticalPadding: onboardingVerticalPadding
             )
         }
         .background {
@@ -97,7 +98,22 @@ struct TLIOnboardingView: View {
             notificationStatus = await NotificationPermissionCoordinator.refreshRemoteNotificationRegistration()
         }
         .onAppear {
+            normalizeOnboardingState()
             usageInsightsStore.noteSelectedTab("onboarding")
+        }
+        .onChange(of: currentStep) { _, _ in
+            dismissKeyboard()
+        }
+        .onDisappear {
+            dismissKeyboard()
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    dismissKeyboard()
+                }
+            }
         }
     }
 
@@ -113,6 +129,11 @@ struct TLIOnboardingView: View {
     private var selectedRank: TLIProfileRank {
         get { TLIProfileRank(rawValue: rankRaw) ?? .captain }
         nonmutating set { rankRaw = newValue.rawValue }
+    }
+
+    private var selectedDivision: TLIProfileDivision {
+        get { TLIProfileDivision(rawValue: divisionRaw) ?? .command }
+        nonmutating set { divisionRaw = newValue.rawValue }
     }
 
     private var selectedTheme: TLIColorTheme {
@@ -163,6 +184,45 @@ struct TLIOnboardingView: View {
         hSizeClass != .regular && TLILayout.isSmallPhone(width: layoutWidth, height: layoutHeight)
     }
 
+    private var isNarrowPhoneLayout: Bool {
+        hSizeClass != .regular && layoutWidth <= 360
+    }
+
+    private var isShortViewport: Bool {
+        layoutHeight <= 740
+    }
+
+    private var onboardingContentMaxWidth: CGFloat {
+        hSizeClass == .regular ? 720 : 560
+    }
+
+    private var onboardingHorizontalPadding: CGFloat {
+        if hSizeClass == .regular {
+            return 24
+        }
+        return layoutWidth <= 340 ? 10 : 14
+    }
+
+    private var onboardingVerticalPadding: CGFloat {
+        isShortViewport ? 6 : 12
+    }
+
+    private var onboardingSectionSpacing: CGFloat {
+        isCompactPhoneLayout ? 12 : 18
+    }
+
+    private var onboardingPanelSpacing: CGFloat {
+        isCompactPhoneLayout ? 12 : 16
+    }
+
+    private var footerButtonHeight: CGFloat {
+        isCompactPhoneLayout ? 48 : 54
+    }
+
+    private var pageBottomPadding: CGFloat {
+        isCompactPhoneLayout ? 82 : 96
+    }
+
     private var topBar: some View {
         VStack(spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
@@ -183,13 +243,13 @@ struct TLIOnboardingView: View {
                         .font(
                             RisaTheme.isLCARSThemeEnabled
                                 ? .system(size: isCompactPhoneLayout ? 22 : 24, weight: .black, design: .monospaced)
-                                : .system(.largeTitle, design: .rounded).weight(.bold)
+                                : .system(isCompactPhoneLayout ? .title2 : .largeTitle, design: .rounded).weight(.bold)
                         )
                         .foregroundStyle(TLITheme.textPrimary(scheme))
                         .lineLimit(2)
 
                     Text(stepSubtitle)
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(isCompactPhoneLayout ? .footnote : .subheadline, design: .rounded))
                         .foregroundStyle(TLITheme.textSecondary(scheme))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -251,26 +311,30 @@ struct TLIOnboardingView: View {
                 .frame(height: 8)
             }
         }
-        .padding(.top, 6)
+        .padding(.top, isCompactPhoneLayout ? 2 : 6)
     }
 
     private var bottomBar: some View {
         VStack(spacing: 10) {
-            if isCompactPhoneLayout {
+            if isNarrowPhoneLayout {
                 VStack(spacing: 12) {
-                    backButton
+                    if currentStep > 0 {
+                        backButton
+                    }
                     primaryButton
                 }
             } else {
                 HStack(spacing: 12) {
-                    backButton
+                    if currentStep > 0 {
+                        backButton
+                    }
                     primaryButton
                 }
             }
         }
-        .padding(.horizontal, TLILayout.compactHorizontalPadding(for: layoutWidth))
-        .padding(.top, 12)
-        .padding(.bottom, isCompactPhoneLayout ? 8 : 12)
+        .padding(.horizontal, onboardingHorizontalPadding)
+        .padding(.top, isCompactPhoneLayout ? 8 : 12)
+        .padding(.bottom, isCompactPhoneLayout ? 6 : 12)
     }
 
     private var backButton: some View {
@@ -284,8 +348,8 @@ struct TLIOnboardingView: View {
                 Image(systemName: "chevron.left")
                 Text("Back")
             }
-            .font(.system(.body, design: .rounded).weight(.semibold))
-            .frame(maxWidth: .infinity, minHeight: 54)
+            .font(.system(isCompactPhoneLayout ? .subheadline : .body, design: .rounded).weight(.semibold))
+            .frame(maxWidth: .infinity, minHeight: footerButtonHeight)
         }
         .buttonStyle(TLIOnboardingSecondaryButtonStyle())
         .opacity(currentStep == 0 ? 0 : 1)
@@ -298,18 +362,18 @@ struct TLIOnboardingView: View {
         } label: {
             HStack(spacing: 10) {
                 Text(primaryButtonTitle)
-                    .font(.system(.body, design: .rounded).weight(.bold))
+                    .font(.system(isCompactPhoneLayout ? .subheadline : .body, design: .rounded).weight(.bold))
                 Image(systemName: primaryButtonIcon)
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
             }
-            .frame(maxWidth: .infinity, minHeight: 54)
+            .frame(maxWidth: .infinity, minHeight: footerButtonHeight)
         }
         .buttonStyle(TLIOnboardingPrimaryButtonStyle(accent: TLITheme.accent(scheme)))
     }
 
     private var welcomeStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: onboardingSectionSpacing) {
                 featureHero(
                     eyebrow: "Personalize first",
                     title: "Let’s tune the bridge to how you explore Trek Long Island.",
@@ -317,7 +381,7 @@ struct TLIOnboardingView: View {
                     imageSystemName: "person.crop.circle.badge.sparkles"
                 )
 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: onboardingPanelSpacing) {
                     onboardingSectionHeader(
                         title: "What should the crew call you?",
                         detail: "You can use your real name or a captain alias."
@@ -333,6 +397,9 @@ struct TLIOnboardingView: View {
                         .onboardingInputFieldStyle(scheme: scheme)
                         .focused($isNameFocused)
                         .submitLabel(.done)
+                        .onSubmit {
+                            dismissKeyboard()
+                        }
 
                     onboardingSectionHeader(
                         title: "Choose your personalized rank.",
@@ -342,6 +409,17 @@ struct TLIOnboardingView: View {
                     LazyVGrid(columns: roleColumns, spacing: 12) {
                         ForEach(TLIProfileRank.allCases) { rank in
                             rankCard(rank)
+                        }
+                    }
+
+                    onboardingSectionHeader(
+                        title: "Choose your division.",
+                        detail: "Pick the uniform track that best matches your convention style."
+                    )
+
+                    LazyVGrid(columns: roleColumns, spacing: 12) {
+                        ForEach(TLIProfileDivision.allCases) { division in
+                            divisionCard(division)
                         }
                     }
 
@@ -356,16 +434,17 @@ struct TLIOnboardingView: View {
                         }
                     }
                 }
-                .onboardingPanel(scheme: scheme)
+                .onboardingPanel(scheme: scheme, compact: isCompactPhoneLayout)
             }
-            .padding(.bottom, 96)
+            .padding(.bottom, pageBottomPadding)
         }
         .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var scheduleStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: onboardingSectionSpacing) {
                 featureHero(
                     eyebrow: "Why this app matters",
                     title: "Your weekend moves faster when your plan lives in one place.",
@@ -373,7 +452,7 @@ struct TLIOnboardingView: View {
                     imageSystemName: "calendar.badge.clock"
                 )
 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: onboardingPanelSpacing) {
                     TLIOnboardingFeatureRow(
                         icon: "star.circle.fill",
                         title: "Favorite panels and guests",
@@ -394,16 +473,17 @@ struct TLIOnboardingView: View {
 
                     personalizedBriefing
                 }
-                .onboardingPanel(scheme: scheme)
+                .onboardingPanel(scheme: scheme, compact: isCompactPhoneLayout)
             }
-            .padding(.bottom, 96)
+            .padding(.bottom, pageBottomPadding)
         }
         .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var themeStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: onboardingSectionSpacing) {
                 featureHero(
                     eyebrow: "Make it yours",
                     title: "Choose the command style that feels right.",
@@ -411,7 +491,7 @@ struct TLIOnboardingView: View {
                     imageSystemName: "paintpalette.fill"
                 )
 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: onboardingPanelSpacing) {
                     onboardingSectionHeader(
                         title: "Choose your bridge vibe.",
                         detail: "Pick between Federation Command, LCARS Ops, or the brighter Risa mode."
@@ -442,16 +522,17 @@ struct TLIOnboardingView: View {
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(TLITheme.textSecondary(scheme))
                 }
-                .onboardingPanel(scheme: scheme)
+                .onboardingPanel(scheme: scheme, compact: isCompactPhoneLayout)
             }
-            .padding(.bottom, 96)
+            .padding(.bottom, pageBottomPadding)
         }
         .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var assistantStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: onboardingSectionSpacing) {
                 featureHero(
                     eyebrow: "Unique feature",
                     title: "Hello, Computer turns the app into a convention copilot.",
@@ -459,12 +540,12 @@ struct TLIOnboardingView: View {
                     imageSystemName: "sparkles.rectangle.stack.fill"
                 )
 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: onboardingPanelSpacing) {
                     Text("What matters most on your mission?")
                         .font(.system(.headline, design: .rounded).weight(.bold))
                         .foregroundStyle(TLITheme.textPrimary(scheme))
 
-                    LazyVGrid(columns: TLILayout.columns(for: .compact, minTileWidth: 200, spacing: 12), spacing: 12) {
+                    LazyVGrid(columns: objectiveColumns, spacing: 12) {
                         ForEach(TLIProfileObjective.allCases) { objective in
                             objectiveCard(objective)
                         }
@@ -493,16 +574,17 @@ struct TLIOnboardingView: View {
                         shadowY: 2
                     )
                 }
-                .onboardingPanel(scheme: scheme)
+                .onboardingPanel(scheme: scheme, compact: isCompactPhoneLayout)
             }
-            .padding(.bottom, 96)
+            .padding(.bottom, pageBottomPadding)
         }
         .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var setupStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: onboardingSectionSpacing) {
                 featureHero(
                     eyebrow: "Final setup",
                     title: "A couple of switches make the app work harder for you.",
@@ -510,7 +592,7 @@ struct TLIOnboardingView: View {
                     imageSystemName: "switch.2"
                 )
 
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: onboardingSectionSpacing) {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Label("Notifications", systemImage: "bell.badge.fill")
@@ -577,16 +659,17 @@ struct TLIOnboardingView: View {
                             .foregroundStyle(TLITheme.textSecondary(scheme))
                     }
                 }
-                .onboardingPanel(scheme: scheme)
+                .onboardingPanel(scheme: scheme, compact: isCompactPhoneLayout)
             }
-            .padding(.bottom, 96)
+            .padding(.bottom, pageBottomPadding)
         }
         .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var readyStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: onboardingSectionSpacing) {
                 featureHero(
                     eyebrow: "You’re ready",
                     title: "Welcome to your personalized Trek Long Island bridge.",
@@ -594,12 +677,13 @@ struct TLIOnboardingView: View {
                     imageSystemName: "checkmark.seal.fill"
                 )
 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: onboardingPanelSpacing) {
                     Text("\(commandName), here’s what your app is optimized for:")
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(TLITheme.textPrimary(scheme))
 
                     summaryRow(title: "Rank", value: selectedRank.title)
+                    summaryRow(title: "Division", value: selectedDivision.title)
                     summaryRow(title: "Mission profile", value: selectedRole.title)
                     summaryRow(title: "Command style", value: selectedVisualPreset.title)
                     summaryRow(title: "Focus", value: selectedObjectivesSummary)
@@ -613,11 +697,12 @@ struct TLIOnboardingView: View {
                         .font(.system(.body, design: .rounded))
                         .foregroundStyle(TLITheme.textSecondary(scheme))
                 }
-                .onboardingPanel(scheme: scheme)
+                .onboardingPanel(scheme: scheme, compact: isCompactPhoneLayout)
             }
-            .padding(.bottom, 96)
+            .padding(.bottom, pageBottomPadding)
         }
         .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var stepTitle: String {
@@ -658,15 +743,24 @@ struct TLIOnboardingView: View {
 
     private var roleColumns: [GridItem] {
         if hSizeClass == .regular {
-            return TLILayout.columns(for: .regular, minTileWidth: 220, spacing: 12)
+            return TLILayout.columns(for: .regular, minTileWidth: 210, spacing: 12)
         }
-        if layoutWidth <= 340 {
+        if layoutWidth <= 380 {
             return [GridItem(.flexible(), spacing: 12)]
         }
         return [
             GridItem(.flexible(), spacing: 12),
             GridItem(.flexible(), spacing: 12)
         ]
+    }
+
+    private var objectiveColumns: [GridItem] {
+        if hSizeClass == .regular {
+            return TLILayout.columns(for: .regular, minTileWidth: 220, spacing: 12)
+        }
+        return layoutWidth <= 430
+            ? [GridItem(.flexible(), spacing: 12)]
+            : TLILayout.columns(for: .compact, minTileWidth: 200, spacing: 12)
     }
 
     private var personalizedBriefing: some View {
@@ -690,12 +784,15 @@ struct TLIOnboardingView: View {
     }
 
     private var samplePrompts: [String] {
-        let prompts = selectedObjectives.isEmpty ? Set(TLIProfileObjective.defaultSet) : selectedObjectives
-        return prompts.prefix(3).map(\.samplePrompt)
+        resolvedObjectives.prefix(3).map(\.samplePrompt)
     }
 
     private var selectedObjectivesSummary: String {
         TLIProfilePreferences.objectivesSummary(from: selectedObjectives)
+    }
+
+    private var resolvedObjectives: Set<TLIProfileObjective> {
+        selectedObjectives.isEmpty ? Set(TLIProfileObjective.defaultSet) : selectedObjectives
     }
 
     private var notificationLabel: String {
@@ -736,14 +833,12 @@ struct TLIOnboardingView: View {
     }
 
     private func handlePrimaryAction() {
-        isNameFocused = false
+        dismissKeyboard()
+        normalizeOnboardingState()
 
         if currentStep == totalSteps - 1 {
             completeOnboarding()
         } else {
-            if currentStep == 0, selectedObjectives.isEmpty {
-                selectedObjectives = Set(TLIProfileObjective.defaultSet)
-            }
             withAnimation(reduceMotionEnabled ? nil : .spring(response: 0.36, dampingFraction: 0.9)) {
                 currentStep += 1
             }
@@ -751,9 +846,8 @@ struct TLIOnboardingView: View {
     }
 
     private func completeOnboarding() {
-        if selectedObjectives.isEmpty {
-            selectedObjectives = Set(TLIProfileObjective.defaultSet)
-        }
+        dismissKeyboard()
+        normalizeOnboardingState()
         TLIAdExperience.markOnboardingCompleted()
         hasCompletedOnboarding = true
         onFinish?()
@@ -762,11 +856,41 @@ struct TLIOnboardingView: View {
         }
     }
 
+    private func normalizeOnboardingState() {
+        if TLIProfileRank(rawValue: rankRaw) == nil {
+            selectedRank = .captain
+        }
+        if TLIProfileDivision(rawValue: divisionRaw) == nil {
+            selectedDivision = .command
+        }
+        if TLIProfileRole(rawValue: roleRaw) == nil {
+            selectedRole = .firstTimer
+        }
+        let normalizedPreset = TLIVisualPreset.fromStoredRawValue(appVisualPresetRaw)
+        if normalizedPreset.rawValue != appVisualPresetRaw {
+            selectedVisualPreset = normalizedPreset
+        }
+        if AppAppearance(rawValue: appAppearanceRaw) == nil {
+            selectedAppearance = normalizedPreset.appearance
+        }
+        if selectedObjectives.isEmpty {
+            selectedObjectives = Set(TLIProfileObjective.defaultSet)
+        }
+    }
+
     private func requestNotifications() async {
+        dismissKeyboard()
         guard !isRequestingNotifications else { return }
         isRequestingNotifications = true
         defer { isRequestingNotifications = false }
         notificationStatus = await NotificationPermissionCoordinator.requestAuthorizationIfNeeded()
+    }
+
+    private func dismissKeyboard() {
+        isNameFocused = false
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
     }
 
     private func onboardingSectionHeader(title: String, detail: String) -> some View {
@@ -782,8 +906,10 @@ struct TLIOnboardingView: View {
 
     @ViewBuilder
     private func featureHero(eyebrow: String, title: String, detail: String, imageSystemName: String) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            lcarsHeroRail
+        HStack(alignment: .top, spacing: isCompactPhoneLayout ? 10 : 14) {
+            if !isNarrowPhoneLayout {
+                lcarsHeroRail
+            }
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .center, spacing: 10) {
@@ -792,17 +918,21 @@ struct TLIOnboardingView: View {
                         .kerning(1.4)
                         .foregroundStyle(TLITheme.accent(scheme))
 
-                    Spacer(minLength: 8)
+                    if !isNarrowPhoneLayout {
+                        Spacer(minLength: 8)
 
-                    Text("PADD // \(currentStep + 1)")
-                        .font(.system(.caption2, design: .monospaced).weight(.bold))
-                        .foregroundStyle(TLITheme.textTertiary(scheme))
+                        Text("PADD // \(currentStep + 1)")
+                            .font(.system(.caption2, design: .monospaced).weight(.bold))
+                            .foregroundStyle(TLITheme.textTertiary(scheme))
+                    }
                 }
 
                 if isCompactPhoneLayout {
                     VStack(alignment: .leading, spacing: 12) {
                         heroCopy(title: title, detail: detail)
-                        heroIcon(systemName: imageSystemName)
+                        if !isShortViewport {
+                            heroIcon(systemName: imageSystemName)
+                        }
                     }
                 } else {
                     HStack(alignment: .top, spacing: 14) {
@@ -812,13 +942,13 @@ struct TLIOnboardingView: View {
                 }
             }
         }
-        .padding(isCompactPhoneLayout ? 16 : 18)
+        .padding(isCompactPhoneLayout ? 14 : 18)
         .tliPanelSurface(
-            cornerRadius: 28,
+            cornerRadius: isCompactPhoneLayout ? 18 : 28,
             fillOpacity: scheme == .dark ? 0.88 : 0.94,
             borderOpacity: 0.7,
-            shadowRadius: 8,
-            shadowY: 4
+            shadowRadius: isCompactPhoneLayout ? 5 : 8,
+            shadowY: isCompactPhoneLayout ? 2 : 4
         )
     }
 
@@ -840,8 +970,8 @@ struct TLIOnboardingView: View {
             Text(title)
                 .font(
                     RisaTheme.isLCARSThemeEnabled
-                        ? .system(size: isCompactPhoneLayout ? 20 : 22, weight: .heavy, design: .monospaced)
-                        : .system(.title2, design: .rounded).weight(.bold)
+                        ? .system(size: isCompactPhoneLayout ? 18 : 22, weight: .heavy, design: .monospaced)
+                        : .system(isCompactPhoneLayout ? .title3 : .title2, design: .rounded).weight(.bold)
                 )
                 .foregroundStyle(TLITheme.textPrimary(scheme))
                 .fixedSize(horizontal: false, vertical: true)
@@ -857,12 +987,12 @@ struct TLIOnboardingView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(TLITheme.accentSoft(scheme))
-                .frame(width: isCompactPhoneLayout ? 68 : 82, height: isCompactPhoneLayout ? 68 : 82)
+                .frame(width: isCompactPhoneLayout ? 56 : 82, height: isCompactPhoneLayout ? 56 : 82)
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(TLITheme.border(scheme).opacity(0.5), lineWidth: 1)
-                .frame(width: isCompactPhoneLayout ? 68 : 82, height: isCompactPhoneLayout ? 68 : 82)
+                .frame(width: isCompactPhoneLayout ? 56 : 82, height: isCompactPhoneLayout ? 56 : 82)
             Image(systemName: systemName)
-                .font(.system(size: isCompactPhoneLayout ? 24 : 28, weight: .semibold))
+                .font(.system(size: isCompactPhoneLayout ? 21 : 28, weight: .semibold))
                 .foregroundStyle(TLITheme.textPrimary(scheme))
         }
         .accessibilityHidden(true)
@@ -896,8 +1026,8 @@ struct TLIOnboardingView: View {
                     .foregroundStyle(TLITheme.textSecondary(scheme))
             }
             .foregroundStyle(TLITheme.textPrimary(scheme))
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 128, alignment: .topLeading)
+            .padding(isCompactPhoneLayout ? 14 : 16)
+            .frame(maxWidth: .infinity, minHeight: isCompactPhoneLayout ? 110 : 128, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(fillStyle)
@@ -937,7 +1067,48 @@ struct TLIOnboardingView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
+            .padding(isCompactPhoneLayout ? 14 : 16)
+            .tliPanelSurface(
+                cornerRadius: 20,
+                fillOpacity: isSelected ? 0.98 : (scheme == .dark ? 0.84 : 0.92),
+                borderOpacity: isSelected ? 0.9 : 0.65,
+                shadowRadius: 5,
+                shadowY: 3
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private func divisionCard(_ division: TLIProfileDivision) -> some View {
+        let isSelected = selectedDivision == division
+
+        return Button {
+            selectedDivision = division
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: division.icon)
+                        .font(.system(.title3, design: .rounded).weight(.bold))
+                    Spacer()
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(TLITheme.accent(scheme))
+                    }
+                }
+
+                Text(division.title)
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .foregroundStyle(TLITheme.textPrimary(scheme))
+
+                Text(division.description)
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(TLITheme.textSecondary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(isCompactPhoneLayout ? 14 : 16)
             .tliPanelSurface(
                 cornerRadius: 20,
                 fillOpacity: isSelected ? 0.98 : (scheme == .dark ? 0.84 : 0.92),
@@ -958,10 +1129,10 @@ struct TLIOnboardingView: View {
         return Button {
             selectedVisualPreset = preset
         } label: {
-            HStack(spacing: 14) {
+            HStack(spacing: isCompactPhoneLayout ? 10 : 14) {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(themeGradient(preset.theme))
-                    .frame(width: 74, height: 74)
+                    .frame(width: isCompactPhoneLayout ? 54 : 74, height: isCompactPhoneLayout ? 54 : 74)
                     .overlay(
                         Image(systemName: themeSymbol(preset.theme))
                             .font(.system(.title2, design: .rounded).weight(.bold))
@@ -986,7 +1157,7 @@ struct TLIOnboardingView: View {
                     .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(isSelected ? accent : TLITheme.textTertiary(scheme))
             }
-            .padding(14)
+            .padding(isCompactPhoneLayout ? 12 : 14)
             .tliPanelSurface(
                 cornerRadius: 22,
                 fillOpacity: scheme == .dark ? 0.86 : 0.93,
@@ -1027,8 +1198,8 @@ struct TLIOnboardingView: View {
                     .font(.system(.footnote, design: .rounded))
                     .foregroundStyle(TLITheme.textSecondary(scheme))
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+            .padding(isCompactPhoneLayout ? 14 : 16)
+            .frame(maxWidth: .infinity, minHeight: isCompactPhoneLayout ? 118 : 150, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(
@@ -1179,7 +1350,7 @@ private struct TLIOnboardingPrimaryButtonStyle: ButtonStyle {
                 )
                     .fill(accent.opacity(configuration.isPressed ? 0.82 : 1.0))
             )
-            .shadow(color: accent.opacity(0.22), radius: 18, x: 0, y: 10)
+            .shadow(color: accent.opacity(0.18), radius: 10, x: 0, y: 5)
             .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
             .animation(.spring(response: 0.24, dampingFraction: 0.82), value: configuration.isPressed)
     }
@@ -1221,42 +1392,45 @@ private struct TLIOnboardingSecondaryButtonStyle: ButtonStyle {
 
 private struct TLIOnboardingPanelModifier: ViewModifier {
     let scheme: ColorScheme
+    let compact: Bool
 
     func body(content: Content) -> some View {
         HStack(spacing: 0) {
-            VStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [TLITheme.accent(scheme), RisaTheme.accentGold(scheme)],
-                            startPoint: .top,
-                            endPoint: .bottom
+            if !compact {
+                VStack(spacing: 10) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [TLITheme.accent(scheme), RisaTheme.accentGold(scheme)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
                         )
-                    )
-                    .frame(width: 14, height: 84)
+                        .frame(width: 14, height: 84)
 
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(TLITheme.accentSoft(scheme))
-                    .frame(width: 14)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(TLITheme.accentSoft(scheme))
+                        .frame(width: 14)
 
-                Spacer(minLength: 0)
+                    Spacer(minLength: 0)
+                }
+                .padding(.leading, 16)
+                .padding(.vertical, 18)
             }
-            .padding(.leading, 16)
-            .padding(.vertical, 18)
 
             content
-                .padding(18)
+                .padding(compact ? 14 : 18)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(TLITheme.cardBackground(scheme).opacity(scheme == .dark ? 0.92 : 0.78))
+            RoundedRectangle(cornerRadius: compact ? 18 : 26, style: .continuous)
+                .fill(TLITheme.cardBackground(scheme).opacity(scheme == .dark ? 0.9 : 0.76))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .stroke(TLITheme.border(scheme).opacity(0.72), lineWidth: 1)
+            RoundedRectangle(cornerRadius: compact ? 18 : 26, style: .continuous)
+                .stroke(TLITheme.border(scheme).opacity(compact ? 0.58 : 0.72), lineWidth: 1)
         )
-        .shadow(color: TLITheme.cardShadowColor(scheme), radius: 16, x: 0, y: 8)
+        .shadow(color: TLITheme.cardShadowColor(scheme), radius: compact ? 6 : 16, x: 0, y: compact ? 3 : 8)
     }
 }
 
@@ -1295,8 +1469,8 @@ private struct TLIOnboardingInputFieldModifier: ViewModifier {
 }
 
 private extension View {
-    func onboardingPanel(scheme: ColorScheme) -> some View {
-        modifier(TLIOnboardingPanelModifier(scheme: scheme))
+    func onboardingPanel(scheme: ColorScheme, compact: Bool) -> some View {
+        modifier(TLIOnboardingPanelModifier(scheme: scheme, compact: compact))
     }
 
     func onboardingInputFieldStyle(scheme: ColorScheme) -> some View {

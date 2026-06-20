@@ -20,9 +20,9 @@ final class AdminPinStore {
     static let shared = AdminPinStore()
     private init() { }
 
-    /// PIN “697455” → .admin, PIN “940090” → .superAdmin
-    private let adminPIN = "697455"
-    private let superAdminPIN = "940090"
+    /// Local fallback PINs for legacy admin access.
+    private let adminPIN = "83106803"
+    private let superAdminPIN = "90979747"
 
     func role(for pin: String) -> UserRole {
         if pin == superAdminPIN {

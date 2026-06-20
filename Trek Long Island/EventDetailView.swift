@@ -41,9 +41,11 @@ struct EventDetailView: View {
                     }
 
                     if !event.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(event.description)
-                            .font(.body)
-                            .foregroundColor(.white.opacity(0.9))
+                        LinkifiedText(
+                            text: event.description,
+                            font: .body,
+                            foregroundStyle: .white.opacity(0.9)
+                        )
                             .padding(.top)
                     }
 

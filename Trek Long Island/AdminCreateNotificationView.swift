@@ -195,7 +195,7 @@ struct AdminCreateNotificationView: View {
                         Text(p.label)
                         if let note = p.note {
                             Text("- \(note)")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                     .tag(p)

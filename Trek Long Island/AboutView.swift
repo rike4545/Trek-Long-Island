@@ -21,8 +21,10 @@ struct AboutView: View {
     private let websiteURL        = URL(string: "https://www.treklongisland.com")!
     private let scheduleURL       = URL(string: "https://www.treklongisland.com/schedule")!
     private let codeOfConductURL  = URL(string: "https://www.treklongisland.com/code-of-conduct")!
-    private let emailURL          = URL(string: "mailto:hellotreklongisland@gmail.com")!
+    private let feedbackURL       = URL(string: "https://qualtricsxmm8q5gxrhq.qualtrics.com/jfe/form/SV_1TvkCrIKgaEYHPM")!
     private let shopURL           = URL(string: "https://made-in-ny-shop.fourthwall.com/")!
+    private let conventionBundleURL = URL(string: "https://made-in-ny-shop.fourthwall.com/products/convention-bundle")!
+    private let punkShopURL              = URL(string: "https://punkarmy.net/store/treklongisland/")!
 
     // MARK: - App Info
 
@@ -48,6 +50,7 @@ struct AboutView: View {
 
                         conventionCard
                         appCard
+                        legalCard
                         linksCard
                         creditsCard
                         footerMeta
@@ -143,6 +146,31 @@ struct AboutView: View {
         }
     }
 
+    private var legalCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Legal & Ownership Notes")
+                    .font(selectedTypography.font(.headline, weight: .semibold))
+                    .foregroundStyle(RisaTheme.textPrimary(scheme))
+
+                Text("The mobile app codebase and original app artwork are protected copyrighted works. All rights reserved.")
+                    .font(selectedTypography.font(.footnote))
+                    .foregroundStyle(RisaTheme.textSecondary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Star Trek and related marks, characters, and franchise elements belong to their respective owners, including Paramount Global. References are used in a fan-celebratory convention context.")
+                    .font(selectedTypography.font(.footnote))
+                    .foregroundStyle(RisaTheme.textSecondary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("This app is a companion guide and does not replace tickets, credentials, posted signage, event policies, or on-site instructions.")
+                    .font(selectedTypography.font(.caption))
+                    .foregroundStyle(RisaTheme.textTertiary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
     private var linksCard: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 12) {
@@ -184,10 +212,24 @@ struct AboutView: View {
                     )
 
                     linkButton(
+                        icon: "gift.fill",
+                        title: "Convention Swag Bundle",
+                        subtitle: "Quick link to the Fourthwall bundle",
+                        url: conventionBundleURL
+                    )
+
+                    linkButton(
+                        icon: "sparkles",
+                        title: "Trek Long Island Punk Shop",
+                        subtitle: "Additional Trek Long Island swag",
+                        url: punkShopURL
+                    )
+
+                    linkButton(
                         icon: "envelope.fill",
-                        title: "Contact the Team",
-                        subtitle: "Email the convention organizers",
-                        url: emailURL
+                        title: "Feedback & Support Form",
+                        subtitle: "Send app questions, corrections, or support requests",
+                        url: feedbackURL
                     )
                 }
                 .padding(.top, 4)
@@ -216,7 +258,7 @@ struct AboutView: View {
                 .foregroundStyle(RisaTheme.textSecondary(scheme))
 
                 Text("Star Trek and all related marks are trademarks of Paramount Global and used here in a fan-celebratory context.")
-                    .font(selectedTypography.font(.caption2))
+                    .font(selectedTypography.font(.caption))
                     .foregroundStyle(RisaTheme.textTertiary(scheme))
                     .padding(.top, 4)
             }

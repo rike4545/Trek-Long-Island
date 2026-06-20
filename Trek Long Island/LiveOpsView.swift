@@ -46,6 +46,8 @@ struct LiveOpsView: View {
     @State private var visualMetricFocus: LiveOpsMetricFocus = .risk
     @State private var showCriticalOnly: Bool = false
     @State private var selectedVisualizerRoomID: String?
+    @State private var feedbackExportURL: URL?
+    @State private var feedbackExportError: String?
 
     private var happeningNow: [ICSParsedEvent] {
         let now = Date()
@@ -219,7 +221,7 @@ struct LiveOpsView: View {
                         if overLimitRooms.isEmpty && atCapacityRooms.isEmpty && criticalTicketCount == 0 {
                             Text("All key operator signals look stable right now.")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         } else {
                             if !overLimitRooms.isEmpty {
                                 Text("CO over limit: \(overLimitRooms.map(\.roomName).joined(separator: ", "))")
@@ -246,7 +248,7 @@ struct LiveOpsView: View {
             Section("Live Sessions") {
                 if happeningNow.isEmpty {
                     Text("No sessions are live right now.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 } else {
                     ForEach(happeningNow.prefix(8), id: \.id) { event in
                         VStack(alignment: .leading, spacing: 4) {
@@ -257,7 +259,7 @@ struct LiveOpsView: View {
                                 Text("ends \(event.endDate, style: .time)")
                             }
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                         }
                         .padding(.vertical, 2)
                     }
@@ -267,7 +269,7 @@ struct LiveOpsView: View {
                     Divider()
                     Text("Starting within 1 hour")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                     ForEach(startingSoon.prefix(6), id: \.id) { event in
                         HStack {
                             Text(event.title)
@@ -275,7 +277,7 @@ struct LiveOpsView: View {
                             Spacer(minLength: 8)
                             Text(event.startDate, style: .time)
                                 .font(.caption.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                 }
@@ -303,7 +305,7 @@ struct LiveOpsView: View {
                                 .lineLimit(2)
                             Text("Updated \(state.lastUpdated, style: .relative) by \(state.updatedBy)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
 
                         HStack(spacing: 8) {
@@ -311,9 +313,9 @@ struct LiveOpsView: View {
                                 .foregroundStyle(state.occupancyState == .overLimit ? .red : (state.occupancyState == .compliant ? .green : .secondary))
                             Text("CO: \(state.occupancyLabel)")
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                             Text("•")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                             Text(state.occupancyState.title)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(state.occupancyState == .overLimit ? .red : .secondary)
@@ -322,7 +324,7 @@ struct LiveOpsView: View {
                         if !state.note.isEmpty {
                             Text(state.note)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                     .padding(.vertical, 4)
@@ -339,7 +341,7 @@ struct LiveOpsView: View {
                      ? "Wait times are estimates from staff spot checks and can change quickly."
                      : waitTimesOffMessage)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if canViewPanelInsights { panelInsightsSection }
@@ -357,7 +359,7 @@ struct LiveOpsView: View {
                         if !opsStore.waitTimesEnabled {
                             Text(waitTimesOffMessage)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
 
                         Stepper(
@@ -401,7 +403,7 @@ struct LiveOpsView: View {
                         if !opsStore.waitTimesEnabled {
                             Text("Wait times are currently disabled by super admin.")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
 
                         if includeWait && opsStore.waitTimesEnabled {
@@ -413,7 +415,7 @@ struct LiveOpsView: View {
                             HStack {
                                 Label("Nearby detected apps: \(detectedCountForSelectedRoom)", systemImage: "dot.radiowaves.left.and.right")
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.primary.opacity(0.72))
                                 Spacer(minLength: 8)
                                 Button("Use Detected Count") {
                                     selectedOccupancyCount = detectedCountForSelectedRoom
@@ -423,7 +425,7 @@ struct LiveOpsView: View {
                         } else if nearbyRoomCountStore.isEnabled {
                             Text("No nearby app count detected for this room yet.")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                         Stepper("CO room limit: \(selectedOccupancyLimit)", value: $selectedOccupancyLimit, in: 0...20000, step: 1)
 
@@ -463,7 +465,7 @@ struct LiveOpsView: View {
                         let tickets = opsStore.activeTickets(limit: 8)
                         if tickets.isEmpty {
                             Text("No active support tickets.")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         } else {
                             ForEach(tickets) { ticket in
                                 VStack(alignment: .leading, spacing: 6) {
@@ -474,8 +476,8 @@ struct LiveOpsView: View {
                                             .padding(.vertical, 4)
                                             .background(.ultraThinMaterial, in: Capsule())
                                         Label(ticket.privacy.title, systemImage: ticket.privacy.symbolName)
-                                            .font(.caption2.weight(.semibold))
-                                            .foregroundStyle(.secondary)
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Color.primary.opacity(0.72))
                                         Spacer(minLength: 8)
                                         Menu(ticket.status.title) {
                                             ForEach(SupportTicketStatus.allCases) { status in
@@ -489,7 +491,7 @@ struct LiveOpsView: View {
                                         .font(.headline)
                                     Text("\(ticket.location) • \(ticket.severity.title) • \(ticket.updatedAt, style: .relative)")
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Color.primary.opacity(0.72))
                                 }
                                 .padding(.vertical, 2)
                             }
@@ -508,7 +510,7 @@ struct LiveOpsView: View {
                         .font(.headline)
                     Text("Unlock a staff role in Ops Center to continue.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                     NavigationLink {
                         OpsCenterView()
                     } label: {
@@ -569,7 +571,7 @@ struct LiveOpsView: View {
         VStack(alignment: .leading, spacing: 4) {
             Label(title, systemImage: systemImage)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text(value)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(TLITheme.textPrimary(scheme))
@@ -595,7 +597,7 @@ struct LiveOpsView: View {
             if filteredSnapshots.isEmpty {
                 Text("No rooms match this filter.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 ForEach(filteredSnapshots) { snapshot in
                     Button {
@@ -651,7 +653,7 @@ struct LiveOpsView: View {
                 }
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(10)
         .background(
@@ -691,12 +693,12 @@ struct LiveOpsView: View {
 
             Text(operatorRecommendation(for: snapshot))
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
 
             HStack(spacing: 10) {
                 Label("Updated \(snapshot.state.lastUpdated, style: .relative)", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                 Spacer(minLength: 8)
                 Button("Load into Update Form") {
                     selectedRoomName = snapshot.state.roomName
@@ -792,10 +794,32 @@ struct LiveOpsView: View {
                 )
             }
 
+            if feedbackStore.totalResponses > 0 {
+                Button {
+                    prepareFeedbackExport()
+                } label: {
+                    Label("Prepare Feedback Export", systemImage: "square.and.arrow.up")
+                        .font(.subheadline.weight(.semibold))
+                }
+
+                if let feedbackExportURL {
+                    ShareLink(item: feedbackExportURL) {
+                        Label("Export CSV for Records", systemImage: "doc.text")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                }
+            }
+
+            if let feedbackExportError {
+                Text(feedbackExportError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
             let insights = feedbackStore.insights(limit: 10)
             if insights.isEmpty {
                 Text("No panel feedback submissions yet.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 ForEach(insights) { insight in
                     panelInsightRow(insight)
@@ -810,7 +834,7 @@ struct LiveOpsView: View {
             let flagged = feedbackStore.flaggedEntries.prefix(10)
             if flagged.isEmpty {
                 Text("No flagged feedback entries.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 ForEach(Array(flagged)) { entry in
                     flaggedFeedbackRow(entry)
@@ -843,12 +867,12 @@ struct LiveOpsView: View {
                 }
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.primary.opacity(0.72))
 
             if !insight.topTags.isEmpty {
                 Text("Top tags: \(insight.topTags.map(\.title).joined(separator: ", "))")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if feedbackStore.shouldAlert(for: insight) {
@@ -858,6 +882,16 @@ struct LiveOpsView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func prepareFeedbackExport() {
+        do {
+            feedbackExportURL = try feedbackStore.makeExportFile()
+            feedbackExportError = nil
+        } catch {
+            feedbackExportURL = nil
+            feedbackExportError = "Could not prepare feedback export. Please try again."
+        }
     }
 
     @ViewBuilder
@@ -878,7 +912,7 @@ struct LiveOpsView: View {
             if !entry.comment.isEmpty {
                 Text(entry.comment)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             HStack(spacing: 10) {
@@ -917,7 +951,7 @@ struct LiveOpsView: View {
                     .font(.subheadline.weight(.semibold))
                 Text(meaning)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
     }

@@ -8,7 +8,6 @@
 
 
 import SwiftUI
-import SafariServices
 
 // MARK: - SlideshowView
 public struct SlideshowView: View {
@@ -95,17 +94,4 @@ public struct LCARSButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .foregroundColor(.white)
     }
-}
-
-// MARK: - SafariView Wrapper
-public struct SafariView: UIViewControllerRepresentable {
-    public let url: URL
-    public init(url: URL) {
-        self.url = url
-    }
-
-    public func makeUIViewController(context: Context) -> SFSafariViewController {
-        SFSafariViewController(url: url)
-    }
-    public func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) { }
 }

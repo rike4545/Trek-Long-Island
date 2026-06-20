@@ -9,6 +9,8 @@
 
 import Foundation
 
+private let trekLongIslandFeedbackURL = "https://qualtricsxmm8q5gxrhq.qualtrics.com/jfe/form/SV_1TvkCrIKgaEYHPM"
+
 enum ContactOption: String, CaseIterable, Identifiable {
     case guestBooking = "Guest Booking Inquiries"
     case vendors = "Vendors"
@@ -21,15 +23,7 @@ enum ContactOption: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var email: String {
-        switch self {
-        case .guestBooking: return "hellotreklongisland@gmail.com"
-        case .vendors: return "hellotreklongisland@gmail.com"
-        case .registration: return "hellotreklongisland@gmail.com"
-        case .infoDesk: return "hellotreklongisland@gmail.com"
-        case .volunteers: return "hellotreklongisland@gmail.com"
-        case .kidsEvents: return "hellotreklongisland@gmail.com"
-        case .appIssues: return "hellotreklongisland@gmail.com"
-        }
+        trekLongIslandFeedbackURL
     }
 
     var subjectLine: String {

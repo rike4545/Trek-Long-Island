@@ -128,7 +128,7 @@ struct NotificationCardView: View {
 
                     if isPriority {
                         Text("PRIORITY")
-                            .font(.caption2.weight(.bold))
+                            .font(.caption.weight(.bold))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)
                             .background(Color.red, in: Capsule())
@@ -163,7 +163,7 @@ struct NotificationCardView: View {
             if showTimestamp {
                 Text(notification.timestamp, format: .dateTime.hour().minute())
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
         .padding(.top, 2)

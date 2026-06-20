@@ -4,7 +4,6 @@ import SwiftUI
 @MainActor
 struct ShopSimonAffiliateAdView: View {
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.openURL) private var openURL
 
     @State private var didTrackImpression = false
 
@@ -20,12 +19,12 @@ struct ShopSimonAffiliateAdView: View {
 
     var body: some View {
         Button {
-            openURL(clickURL)
+            TLIExternalWebOpener.open(clickURL)
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Sponsored")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
 
                 AsyncImage(url: creativeImageURL) { phase in
                     switch phase {

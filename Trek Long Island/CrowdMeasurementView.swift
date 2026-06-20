@@ -6,10 +6,16 @@ struct CrowdMeasurementView: View {
     @Environment(\.colorScheme) private var scheme
     @ObservedObject private var opsStore = ConventionOpsStore.shared
     @EnvironmentObject private var nearbyRoomCountStore: NearbyRoomCountStore
+    @StateObject private var bluetoothScanner = BluetoothTricorderStore()
     @State private var selectedManualRoomName: String = ""
     @State private var manualTickerCount: Int = 0
     @State private var manualReporterName: String = "Door Counter"
     @State private var manualReportMessage: String?
+    @State private var bluetoothReportMessage: String?
+    @State private var isBluetoothAutoPublishing = false
+    @State private var lastBluetoothAutoPublish: CrowdBluetoothRoomEstimatePublish?
+    private let bluetoothStaleTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    private let bluetoothAutoPublishInterval: TimeInterval = 30
 
     private var sortedRooms: [RoomOpsState] {
         opsStore.roomStates.sorted { lhs, rhs in
@@ -56,6 +62,7 @@ struct CrowdMeasurementView: View {
                     header
                     summaryStrip
                     nearbyAutoCountCard
+                    bluetoothSignalSweepCard
                     manualTickerCard
                     waitTimesNotice
                     roomsSection
@@ -69,7 +76,7 @@ struct CrowdMeasurementView: View {
                 .padding(.bottom, 30)
             }
         }
-        .navigationTitle("Crowd Measurement")
+        .navigationTitle("Crowd Management")
         .navigationBarTitleDisplayMode(.inline)
         .tliNavBarStyle()
         .tliFixedBottomAdSlot()
@@ -81,6 +88,16 @@ struct CrowdMeasurementView: View {
         }
         .onChange(of: selectedManualRoomName) { _, newValue in
             syncManualTicker(to: newValue)
+            bluetoothReportMessage = nil
+            lastBluetoothAutoPublish = nil
+        }
+        .onReceive(bluetoothStaleTimer) { _ in
+            bluetoothScanner.pruneStaleDevices()
+            autoPublishBluetoothSweepCountIfNeeded()
+        }
+        .onDisappear {
+            isBluetoothAutoPublishing = false
+            bluetoothScanner.stopScanning()
         }
     }
 
@@ -90,7 +107,7 @@ struct CrowdMeasurementView: View {
                 .font(.system(.title2, design: .rounded).weight(.bold))
                 .foregroundStyle(TLITheme.textPrimary(scheme))
 
-            Text("People counters and line waits are estimates from room operations updates.")
+            Text("People counters, line waits, nearby app sharing, and Bluetooth signal sweeps live together here for floor operations.")
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(TLITheme.textSecondary(scheme))
         }
@@ -150,11 +167,11 @@ struct CrowdMeasurementView: View {
 
                 Text("This is a nearby-device estimate based on users who currently have the app open and joined to the same room.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 Text("Enable sharing and select a room to estimate how many nearby devices have the app active there.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if let authorizationMessage = nearbyRoomCountStore.authorizationMessage {
@@ -173,6 +190,179 @@ struct CrowdMeasurementView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(TLITheme.border(scheme), lineWidth: 1)
         )
+    }
+
+    private var bluetoothSignalSweepCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Image(systemName: "antenna.radiowaves.left.and.right")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(TLITheme.accent(scheme))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Bluetooth Signal Sweep")
+                        .font(.headline)
+                        .foregroundStyle(TLITheme.textPrimary(scheme))
+                    Text("Use a local BLE sweep as a secondary crowd signal when app-based nearby counting is unavailable or incomplete.")
+                        .font(.caption)
+                        .foregroundStyle(TLITheme.textSecondary(scheme))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            BluetoothSignalSweepScope(
+                devices: bluetoothScanner.devices,
+                isScanning: bluetoothScanner.isScanning,
+                estimatedPeople: bluetoothScanner.estimatedPeopleInRoom,
+                signalCount: bluetoothScanner.roomEstimateSignalCount
+            )
+
+            HStack(spacing: 10) {
+                bluetoothStatusBadge
+                Spacer(minLength: 8)
+
+                Button {
+                    bluetoothScanner.isScanning ? bluetoothScanner.stopScanning() : bluetoothScanner.startScanning()
+                    bluetoothReportMessage = nil
+                } label: {
+                    Label(
+                        bluetoothScanner.isScanning ? "Stop Sweep" : "Start Sweep",
+                        systemImage: bluetoothScanner.isScanning ? "stop.fill" : "play.fill"
+                    )
+                    .font(.subheadline.weight(.bold))
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(bluetoothScanner.isScanning ? .red : TLITheme.accent(scheme))
+            }
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: 10)], spacing: 10) {
+                metricCard(title: "BLE Signals", value: "\(bluetoothScanner.devices.count)", icon: "sensor.tag.radiowaves.forward.fill")
+                metricCard(title: "Room Est.", value: "\(bluetoothScanner.estimatedPeopleInRoom)", icon: "person.3.fill")
+                metricCard(
+                    title: "Strongest",
+                    value: bluetoothScanner.strongestDevice.map { "\($0.rssi) dBm" } ?? "n/a",
+                    icon: "chart.bar.fill"
+                )
+                metricCard(
+                    title: "Connectable",
+                    value: "\(bluetoothScanner.devices.filter(\.isConnectable).count)",
+                    icon: "link"
+                )
+            }
+
+            Picker("Publish sweep to room", selection: $selectedManualRoomName) {
+                Text("Select a room").tag("")
+                ForEach(roomNames, id: \.self) { room in
+                    Text(room).tag(room)
+                }
+            }
+
+            Toggle(
+                "Automatically update this room every 30 seconds",
+                isOn: Binding(
+                    get: { isBluetoothAutoPublishing },
+                    set: { setBluetoothAutoPublishing($0) }
+                )
+            )
+            .disabled(selectedManualRoomName.isEmpty)
+
+            HStack(spacing: 10) {
+                Button {
+                    publishBluetoothSweepCount(source: .manual)
+                } label: {
+                    Label("Publish Sweep", systemImage: "square.and.arrow.up")
+                        .font(.subheadline.weight(.bold))
+                }
+                .buttonStyle(.bordered)
+                .disabled(selectedManualRoomName.isEmpty || bluetoothScanner.estimatedPeopleInRoom == 0)
+
+                if isBluetoothAutoPublishing {
+                    Label("Auto armed", systemImage: "arrow.triangle.2.circlepath")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(TLITheme.textSecondary(scheme))
+                }
+            }
+
+            Text(bluetoothScanner.statusMessage)
+                .font(.caption)
+                .foregroundStyle(TLITheme.textSecondary(scheme))
+                .fixedSize(horizontal: false, vertical: true)
+
+            if !selectedManualRoomName.isEmpty {
+                Text("Publishes to \(selectedManualRoomName), matching the manual ticker room below.")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(TLITheme.textSecondary(scheme))
+            }
+
+            if let bluetoothReportMessage {
+                Label(bluetoothReportMessage, systemImage: "checkmark.seal.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(TLITheme.accent(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Label(
+                "Bluetooth estimates are approximate. They detect nearby BLE signals, not people; some guests carry multiple devices, and some carry none.",
+                systemImage: "lock.shield.fill"
+            )
+            .font(.caption)
+            .foregroundStyle(TLITheme.textSecondary(scheme))
+            .fixedSize(horizontal: false, vertical: true)
+
+            bluetoothSignalList
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(TLITheme.cardBackground(scheme))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(TLITheme.border(scheme), lineWidth: 1)
+        )
+    }
+
+    private var bluetoothStatusBadge: some View {
+        Label(bluetoothScanner.bluetoothStateLabel, systemImage: bluetoothScanner.isScanning ? "dot.radiowaves.left.and.right" : "power")
+            .font(.caption.weight(.bold))
+            .foregroundStyle(bluetoothScanner.isScanning ? TLITheme.accent(scheme) : TLITheme.textPrimary(scheme))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(TLITheme.chipBackground(scheme), in: Capsule())
+            .accessibilityLabel("Bluetooth status: \(bluetoothScanner.bluetoothStateLabel)")
+    }
+
+    @ViewBuilder
+    private var bluetoothSignalList: some View {
+        if bluetoothScanner.devices.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(bluetoothScanner.isScanning ? "Listening for nearby signals..." : "No Bluetooth sweep running.")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TLITheme.textPrimary(scheme))
+                Text(bluetoothScanner.isScanning ? "Move through the room for a few seconds while the sweep listens." : "Start a sweep to use nearby BLE signals as another crowd-management input.")
+                    .font(.caption)
+                    .foregroundStyle(TLITheme.textSecondary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(TLITheme.controlShape(cornerRadius: 14).fill(TLITheme.cardBackground(scheme).opacity(0.72)))
+            .overlay(
+                TLITheme.controlShape(cornerRadius: 14)
+                    .stroke(TLITheme.border(scheme).opacity(0.7), lineWidth: 1)
+            )
+        } else {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Detected Bluetooth Signals")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TLITheme.textPrimary(scheme))
+
+                ForEach(bluetoothScanner.devices.prefix(8)) { device in
+                    bluetoothSignalRow(device)
+                }
+            }
+        }
     }
 
     private var manualTickerCard: some View {
@@ -276,7 +466,7 @@ struct CrowdMeasurementView: View {
                  ? "Line wait estimates are currently enabled."
                  : "Line wait estimates are temporarily disabled.")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -299,7 +489,7 @@ struct CrowdMeasurementView: View {
                     .font(.headline)
                 Text("Room counters and wait times will appear once operators publish updates.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -323,8 +513,8 @@ struct CrowdMeasurementView: View {
     private func metricCard(title: String, value: String, icon: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Label(title, systemImage: icon)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text(value)
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(TLITheme.textPrimary(scheme))
@@ -370,7 +560,7 @@ struct CrowdMeasurementView: View {
             if let automaticCount = nearbyRoomCountStore.automaticCount(for: room.roomName) {
                 Label("Nearby apps: \(automaticCount)", systemImage: "dot.radiowaves.left.and.right")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if room.occupancyLimit > 0 {
@@ -390,7 +580,7 @@ struct CrowdMeasurementView: View {
 
             Text("Updated \(room.lastUpdated, style: .relative)")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -420,6 +610,54 @@ struct CrowdMeasurementView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+
+    private func bluetoothSignalRow(_ device: BluetoothTricorderDevice) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: device.signalLevel.symbolName)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(bluetoothSignalColor(for: device.signalLevel))
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(device.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TLITheme.textPrimary(scheme))
+                    .lineLimit(1)
+
+                HStack(spacing: 10) {
+                    Text(device.signalLevel.rawValue)
+                    Text("\(device.rssi) dBm")
+                    if device.serviceCount > 0 {
+                        Text("\(device.serviceCount) service\(device.serviceCount == 1 ? "" : "s")")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(TLITheme.textSecondary(scheme))
+            }
+
+            Spacer(minLength: 8)
+
+            Text(device.lastSeen, style: .relative)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(TLITheme.textTertiary(scheme))
+        }
+        .padding(12)
+        .background(TLITheme.controlShape(cornerRadius: 14).fill(TLITheme.cardBackground(scheme).opacity(0.72)))
+        .overlay(
+            TLITheme.controlShape(cornerRadius: 14)
+                .stroke(bluetoothSignalColor(for: device.signalLevel).opacity(0.34), lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+    }
+
+    private func bluetoothSignalColor(for level: BluetoothSignalLevel) -> Color {
+        switch level {
+        case .strong: return .green
+        case .moderate: return TLITheme.accent(scheme)
+        case .faint: return .orange
+        case .trace: return TLITheme.textTertiary(scheme)
+        }
     }
 
     private func seedManualTickerSelectionIfNeeded() {
@@ -456,6 +694,62 @@ struct CrowdMeasurementView: View {
         manualReportMessage = "Reported \(manualTickerCount) people for \(selectedManualRoomName)."
     }
 
+    private func setBluetoothAutoPublishing(_ isEnabled: Bool) {
+        isBluetoothAutoPublishing = isEnabled
+        lastBluetoothAutoPublish = nil
+
+        if isEnabled {
+            if !bluetoothScanner.isScanning {
+                bluetoothScanner.startScanning()
+            }
+            bluetoothReportMessage = "Auto update armed for \(selectedManualRoomName.isEmpty ? "selected room" : selectedManualRoomName)."
+        } else {
+            bluetoothReportMessage = "Auto update paused."
+        }
+    }
+
+    private func autoPublishBluetoothSweepCountIfNeeded() {
+        guard isBluetoothAutoPublishing, bluetoothScanner.isScanning, !selectedManualRoomName.isEmpty else { return }
+        let estimate = bluetoothScanner.estimatedPeopleInRoom
+        guard estimate > 0 else { return }
+
+        if let lastBluetoothAutoPublish {
+            let isSameRoom = lastBluetoothAutoPublish.roomName == selectedManualRoomName
+            let isSameEstimate = lastBluetoothAutoPublish.estimate == estimate
+            let isFresh = Date().timeIntervalSince(lastBluetoothAutoPublish.date) < bluetoothAutoPublishInterval
+            if isSameRoom, isSameEstimate, isFresh {
+                return
+            }
+        }
+
+        publishBluetoothSweepCount(source: .automatic)
+    }
+
+    private func publishBluetoothSweepCount(source: CrowdBluetoothRoomEstimateSource) {
+        guard !selectedManualRoomName.isEmpty else { return }
+        let estimate = bluetoothScanner.estimatedPeopleInRoom
+        guard estimate > 0 else { return }
+
+        var state = opsStore.state(for: selectedManualRoomName)
+        state.occupancyCount = estimate
+        state.updatedBy = "Bluetooth Signal Sweep"
+        state.lastUpdated = .now
+        state.note = "\(source.notePrefix) crowd-management Bluetooth sweep estimate from \(bluetoothScanner.roomEstimateSignalCount) nearby BLE signal\(bluetoothScanner.roomEstimateSignalCount == 1 ? "" : "s")."
+        opsStore.upsertRoomState(state)
+
+        manualTickerCount = estimate
+        manualReportMessage = nil
+        bluetoothReportMessage = "\(source.messagePrefix) \(estimate) estimated people for \(selectedManualRoomName)."
+
+        if source == .automatic {
+            lastBluetoothAutoPublish = CrowdBluetoothRoomEstimatePublish(
+                roomName: selectedManualRoomName,
+                estimate: estimate,
+                date: .now
+            )
+        }
+    }
+
     private func statusRank(_ status: RoomLiveStatus) -> Int {
         switch status {
         case .open: return 1
@@ -484,6 +778,31 @@ struct CrowdMeasurementView: View {
         if wait >= 45 { return .red }
         if wait >= 20 { return .orange }
         return .green
+    }
+}
+
+private struct CrowdBluetoothRoomEstimatePublish: Equatable {
+    let roomName: String
+    let estimate: Int
+    let date: Date
+}
+
+private enum CrowdBluetoothRoomEstimateSource {
+    case manual
+    case automatic
+
+    var notePrefix: String {
+        switch self {
+        case .manual: return "Manual"
+        case .automatic: return "Automatic"
+        }
+    }
+
+    var messagePrefix: String {
+        switch self {
+        case .manual: return "Published"
+        case .automatic: return "Auto-updated"
+        }
     }
 }
 

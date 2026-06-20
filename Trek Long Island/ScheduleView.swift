@@ -39,34 +39,17 @@ private let scheduleTimeFormatter: DateFormatter = {
 // MARK: - Convention date window
 
 /// Active convention window.
-///
-/// Until June 1, 2026, the app shows the May 30–June 1, 2025 window.
-/// Starting June 1, 2026, it automatically switches to June 12–14, 2026.
 private let scheduleConventionCalendar = Calendar(identifier: .gregorian)
-
-private let conventionSwitchDate: Date = {
-    var comps = DateComponents()
-    comps.calendar = scheduleConventionCalendar
-    comps.timeZone = .current
-    comps.year = 2026
-    comps.month = 6
-    comps.day = 1
-    comps.hour = 0
-    comps.minute = 0
-    comps.second = 0
-    return comps.date ?? .distantFuture
-}()
 
 private let activeConventionWindow: (start: Date, end: Date) = {
     let calendar = scheduleConventionCalendar
-    let use2026Convention = Date() >= conventionSwitchDate
 
     var startComponents = DateComponents()
     startComponents.calendar = calendar
     startComponents.timeZone = .current
-    startComponents.year = use2026Convention ? 2026 : 2025
-    startComponents.month = use2026Convention ? 6 : 5
-    startComponents.day = use2026Convention ? 12 : 30
+    startComponents.year = 2026
+    startComponents.month = 6
+    startComponents.day = 12
     startComponents.hour = 0
     startComponents.minute = 0
     startComponents.second = 0
@@ -74,9 +57,9 @@ private let activeConventionWindow: (start: Date, end: Date) = {
     var endComponents = DateComponents()
     endComponents.calendar = calendar
     endComponents.timeZone = .current
-    endComponents.year = use2026Convention ? 2026 : 2025
+    endComponents.year = 2026
     endComponents.month = 6
-    endComponents.day = use2026Convention ? 14 : 1
+    endComponents.day = 14
     endComponents.hour = 23
     endComponents.minute = 59
     endComponents.second = 59
@@ -162,8 +145,14 @@ struct ScheduleView: View {
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.sizeCategory) private var sizeCategory
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @ObservedObject private var networkMonitor = TLINetworkMonitor.shared
     @StateObject private var loader = ICSLoader()
+
+    /// Minimum gap between automatic schedule refetches (foreground / tab return).
+    private let autoRefreshMinInterval: TimeInterval = 90
+    @State private var lastAutoRefresh: Date = .distantPast
 
     @State private var selectedDay: DayFilter = .all
     @State private var selectedFeeds: Set<String> = []   // multi-select rooms
@@ -334,6 +323,7 @@ struct ScheduleView: View {
                 // Extra space so cards don’t feel glued to the tab bar
                 .padding(.bottom, 40)
             }
+            .refreshable { await pullToRefresh() }
         }
         .navigationTitle(TLILCARSLabel.schedule)
         .navigationBarTitleDisplayMode(.inline)
@@ -351,6 +341,10 @@ struct ScheduleView: View {
             if selectedFeeds.isEmpty, !trackedRoomsCSV.isEmpty {
                 selectedFeeds = Set(trackedRoomsCSV.split(separator: "|").map(String.init))
             }
+        }
+        .onAppear { maybeAutoRefresh() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { maybeAutoRefresh() }
         }
         .onReceive(loader.$events) { events in
             mappedEvents = mapEvents(events)
@@ -595,7 +589,7 @@ struct ScheduleView: View {
                     .foregroundStyle(TLITheme.accent(scheme))
 
                 Text(title.uppercased())
-                    .font(.caption2.weight(.bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(TLITheme.textSecondary(scheme))
                     .lineLimit(1)
             }
@@ -605,7 +599,7 @@ struct ScheduleView: View {
                 .foregroundStyle(TLITheme.textPrimary(scheme))
 
             Text(title == "Live" ? "Happening now" : title == "Saved" ? "Bookmarked plan" : "Filtered sessions")
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(TLITheme.textSecondary(scheme))
                 .lineLimit(1)
         }
@@ -626,7 +620,7 @@ struct ScheduleView: View {
                     ProgressView()
                     Text("Synchronizing convention manifest…")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 24)
@@ -635,10 +629,10 @@ struct ScheduleView: View {
                 VStack(spacing: 10) {
                     Image(systemName: "exclamationmark.triangle")
                         .imageScale(.large)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                     Text(RisaTheme.isLCARSThemeEnabled ? "No mission timeline data is available at the moment." : "No schedule data is available at the moment.")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
@@ -670,10 +664,10 @@ struct ScheduleView: View {
         VStack(spacing: 8) {
             Image(systemName: "text.magnifyingglass")
                 .imageScale(.large)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text(RisaTheme.isLCARSThemeEnabled ? "No timeline entries match the current scan, Captain." : "No events match your current scan, Captain.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
         }
@@ -690,7 +684,7 @@ struct ScheduleView: View {
                 Spacer(minLength: 8)
                 Text("\(favoriteEvents.count) saved")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if let next = upcomingFavoriteEvents.first {
@@ -701,7 +695,7 @@ struct ScheduleView: View {
                         .lineLimit(2)
                     Text(relativeStartText(for: next))
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                     if shouldLeaveNow(for: next) {
                         Text("Leave now to reach \(next.room) on time.")
                             .font(.footnote.weight(.semibold))
@@ -711,7 +705,7 @@ struct ScheduleView: View {
             } else {
                 Text("No upcoming favorites in the current schedule window.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if !favoriteConflicts.isEmpty {
@@ -733,7 +727,7 @@ struct ScheduleView: View {
                             .lineLimit(2)
                         Text("overlaps \(conflict.second.title)")
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                             .lineLimit(2)
                     }
                 }
@@ -741,7 +735,7 @@ struct ScheduleView: View {
                 Divider().overlay(TLITheme.border(scheme))
                 Text("No conflicts detected in your saved itinerary.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
         .padding(14)
@@ -764,7 +758,7 @@ struct ScheduleView: View {
                 Spacer(minLength: 8)
                 Text(timelineSummary)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             VStack(alignment: .leading, spacing: 14) {
@@ -834,6 +828,35 @@ struct ScheduleView: View {
 
     // MARK: - Actions
 
+    /// Refetch the live schedule when the app returns to foreground or the user
+    /// re-opens this tab — but only while the schedule can still change, when
+    /// online, not already loading, and no more often than the throttle allows.
+    /// Initial population is handled by `.task`; this only refreshes a loaded grid.
+    private func maybeAutoRefresh() {
+        guard Date() <= conventionEndDate else { return }
+        guard !loader.events.isEmpty else { return }
+        guard networkMonitor.isConnected else { return }
+        guard !loader.isLoading else { return }
+        guard Date().timeIntervalSince(lastAutoRefresh) >= autoRefreshMinInterval else { return }
+
+        lastAutoRefresh = Date()
+        loader.retry() // all feeds, so newly added rooms and any edits both appear
+    }
+
+    /// Pull-to-refresh: always refetch all feeds and keep the spinner up until
+    /// the loader settles (bounded so it can't hang).
+    private func pullToRefresh() async {
+        guard networkMonitor.isConnected else { return }
+
+        lastAutoRefresh = Date()
+        loader.retry()
+
+        let deadline = Date().addingTimeInterval(8)
+        while loader.isLoading && Date() < deadline {
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+    }
+
     private func toggleFavorite(_ event: RisaScheduleEvent) {
         if favorites.contains(event.id) {
             favorites.remove(event.id)
@@ -902,7 +925,7 @@ private struct TimelineGroupCard: View {
             if events.isEmpty {
                 Text(emptyMessage)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 10)
@@ -927,7 +950,7 @@ private struct TimelineGroupCard: View {
 
                                     if favoriteIDs.contains(event.id) {
                                         Text("Saved")
-                                            .font(.caption2.weight(.bold))
+                                            .font(.caption.weight(.bold))
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 3)
                                             .background(
@@ -939,7 +962,7 @@ private struct TimelineGroupCard: View {
                                 }
                                 Text("\(event.startDate.formatted(date: .omitted, time: .shortened)) - \(event.endDate.formatted(date: .omitted, time: .shortened)) • \(event.room)")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.primary.opacity(0.72))
                                     .lineLimit(2)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -974,17 +997,19 @@ private struct DayChipsRow: View {
     let days: [DayFilter]
     @Binding var selectedDay: DayFilter
 
+    private let columns = [
+        GridItem(.adaptive(minimum: 112), spacing: 10)
+    ]
+
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(days) { filter in
-                    DayChip(
-                        filter: filter,
-                        isSelected: selectedDay == filter,
-                        scheme: scheme
-                    ) {
-                        selectedDay = filter
-                    }
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+            ForEach(days) { filter in
+                DayChip(
+                    filter: filter,
+                    isSelected: selectedDay == filter,
+                    scheme: scheme
+                ) {
+                    selectedDay = filter
                 }
             }
         }
@@ -1017,12 +1042,15 @@ private struct DayChip: View {
                         .imageScale(.small)
                 }
                 Text(filter.label)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 if differentiateWithoutColor {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .imageScale(.small)
                         .accessibilityHidden(true)
                 }
             }
+            .frame(maxWidth: .infinity)
             .font(.subheadline.weight(.semibold))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -1069,6 +1097,9 @@ private struct FeedChipsRow: View {
     let scheme: ColorScheme
 
     private var allSelected: Bool { !feeds.isEmpty && selected.count == feeds.count }
+    private let columns = [
+        GridItem(.adaptive(minimum: 142), spacing: 10)
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -1089,19 +1120,17 @@ private struct FeedChipsRow: View {
                 .foregroundStyle(TLITheme.accent(scheme))
             }
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(feeds, id: \.self) { feed in
-                        SelectableChip(
-                            title: feed,
-                            isOn: selected.contains(feed),
-                            scheme: scheme
-                        ) {
-                            if selected.contains(feed) {
-                                selected.remove(feed)
-                            } else {
-                                selected.insert(feed)
-                            }
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+                ForEach(feeds, id: \.self) { feed in
+                    SelectableChip(
+                        title: feed,
+                        isOn: selected.contains(feed),
+                        scheme: scheme
+                    ) {
+                        if selected.contains(feed) {
+                            selected.remove(feed)
+                        } else {
+                            selected.insert(feed)
                         }
                     }
                 }
@@ -1132,6 +1161,7 @@ private struct SelectableChip: View {
                         .accessibilityHidden(true)
                 }
             }
+            .frame(maxWidth: .infinity)
             .font(.subheadline.weight(.semibold))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -1172,7 +1202,7 @@ private struct ThemedSearchField: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
             TextField("Scan manifest…", text: $text)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
@@ -1221,7 +1251,7 @@ private struct EventDetailSheet: View {
                         Spacer()
                     }
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
 
                     if !event.room.isEmpty || !event.location.isEmpty {
                         HStack(spacing: 8) {
@@ -1230,7 +1260,7 @@ private struct EventDetailSheet: View {
                             Spacer()
                         }
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                     }
 
                     Divider()
@@ -1240,14 +1270,15 @@ private struct EventDetailSheet: View {
                         .trimmingCharacters(in: .whitespacesAndNewlines)
 
                     if !trimmedDescription.isEmpty {
-                        Text(trimmedDescription)
-                            .font(.body)
-                            .foregroundStyle(TLITheme.textPrimary(scheme))
-                            .multilineTextAlignment(.leading)
+                        LinkifiedText(
+                            text: trimmedDescription,
+                            font: .body,
+                            foregroundStyle: TLITheme.textPrimary(scheme)
+                        )
                     } else {
                         Text("No additional description is available for this event.")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                             .multilineTextAlignment(.leading)
                     }
 
@@ -1295,7 +1326,7 @@ private struct EventDetailSheet: View {
                 if let existing = existingSubmission {
                     Text("Your response was submitted \(existing.submittedAt.formatted(date: .abbreviated, time: .shortened)).")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                     HStack(spacing: 6) {
                         ForEach(1...5, id: \.self) { idx in
                             Image(systemName: idx <= existing.rating ? "star.fill" : "star")
@@ -1304,7 +1335,7 @@ private struct EventDetailSheet: View {
                     }
                     Text("Feedback edits are available for 15 minutes after submitting.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             } else {
                 ratingControl
@@ -1339,12 +1370,12 @@ private struct EventDetailSheet: View {
             if let feedbackMessage, !feedbackMessage.isEmpty {
                 Text(feedbackMessage)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .fixedSize(horizontal: false, vertical: true)
             } else if !hasLockedSubmission {
                 Text("One response per session per device. You can edit for 15 minutes after submitting.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
     }

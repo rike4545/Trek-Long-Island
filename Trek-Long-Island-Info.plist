@@ -8,6 +8,14 @@
 	<false/>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-9917450718827221~7251531255</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Trek Long Island uses Bluetooth to scan nearby low-energy signals for the Bluetooth Tricorder feature.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Trek Long Island uses the camera for QR scanning and the Bridge Viewscreen feature.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Trek Long Island uses the microphone for optional Hello, Computer voice commands.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Trek Long Island uses speech recognition to turn optional Hello, Computer voice commands into text.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_tlircounter._tcp</string>
@@ -33,15 +41,19 @@
 	<key>TLI_SQUARE_ENVIRONMENT</key>
 	<string>sandbox</string>
 	<key>TLI_ADS_DISABLED</key>
-	<true/>
+	<false/>
 	<key>TLI_DISABLE_CUSTOM_SPLASH</key>
-	<true/>
+	<false/>
 	<key>TLI_DISABLE_WELCOME_POPUP</key>
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Fonts/AtkinsonHyperlegible-Regular.ttf</string>
 		<string>Fonts/AtkinsonHyperlegible-Bold.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

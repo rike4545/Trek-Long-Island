@@ -76,9 +76,9 @@ enum TLIColorTheme: String, CaseIterable, Identifiable {
         case .starfleet:
             "A cinematic bridge look with command reds, instrumentation blues, and deep console shadows."
         case .lcars:
-            "Black-backed LCARS panels with yellow, blue, red, and warm console color."
+            "Black-backed LCARS with signal-green glow, blue shadow, and bold rounded category rails."
         case .risa:
-            "Vacation-world brightness with tropical color and relaxed resort energy."
+            "Teal skies, electric lime glow, hot-pink suns, and coral promo rails."
         }
     }
 
@@ -311,71 +311,71 @@ enum TLIColorTheme: String, CaseIterable, Identifiable {
             TLIThemePalette(
                 textPrimaryDark: RisaPalette.lcarsSpaceWhite,
                 textPrimaryLight: RisaPalette.lcarsPanelBlack,
-                textSecondaryDark: RisaPalette.lcarsAlmond.opacity(0.92),
+                textSecondaryDark: RisaPalette.lcarsPromoGreen.opacity(0.92),
                 textSecondaryLight: RisaPalette.lcarsGray.opacity(0.90),
                 textMutedDark: RisaPalette.lcarsGray.opacity(0.86),
                 textMutedLight: RisaPalette.lcarsC52.opacity(0.78),
-                textTertiaryDark: RisaPalette.lcarsIce.opacity(0.90),
-                textTertiaryLight: RisaPalette.lcarsBluey.opacity(0.82),
-                accentDark: RisaPalette.lcarsOrange,
-                accentLight: RisaPalette.lcarsOrange,
-                accentSecondaryDark: RisaPalette.lcarsBluey,
-                accentSecondaryLight: RisaPalette.lcarsSky,
-                accentGoldDark: RisaPalette.lcarsGold,
-                accentGoldLight: RisaPalette.lcarsSunflower,
+                textTertiaryDark: RisaPalette.lcarsPromoBlue.opacity(0.92),
+                textTertiaryLight: RisaPalette.lcarsPromoBlue.opacity(0.82),
+                accentDark: RisaPalette.lcarsPromoGreen,
+                accentLight: RisaPalette.lcarsPromoGreen,
+                accentSecondaryDark: RisaPalette.lcarsPromoBlue,
+                accentSecondaryLight: RisaPalette.lcarsPromoBlue,
+                accentGoldDark: RisaPalette.lcarsPromoYellow,
+                accentGoldLight: RisaPalette.lcarsPromoYellow,
                 backgroundTopDark: RisaPalette.lcarsVoid,
                 backgroundMidDark: RisaPalette.lcarsPanelBlack,
-                backgroundBottomDark: RisaPalette.lcarsC51,
+                backgroundBottomDark: Color.black,
                 backgroundTopLight: RisaPalette.lcarsSpaceWhite,
                 backgroundMidLight: RisaPalette.lcarsVioletCreme,
                 backgroundBottomLight: RisaPalette.lcarsAlmondCreme,
-                cardBackgroundDark: RisaPalette.lcarsVoid.opacity(0.98),
+                cardBackgroundDark: Color.black.opacity(0.96),
                 cardBackgroundLight: RisaPalette.lcarsAlmondCreme.opacity(0.96),
-                cardStrokeDark: RisaPalette.lcarsBluey.opacity(0.44),
+                cardStrokeDark: RisaPalette.lcarsPromoBlue.opacity(0.50),
                 cardStrokeLight: RisaPalette.lcarsAfricanViolet.opacity(0.34),
-                chipBackgroundDark: RisaPalette.lcarsC52.opacity(0.90),
+                chipBackgroundDark: RisaPalette.lcarsPanelBlack.opacity(0.94),
                 chipBackgroundLight: RisaPalette.lcarsVioletCreme.opacity(0.78),
-                navBarDark: RisaPalette.lcarsPanelBlack,
+                navBarDark: Color.black,
                 navBarLight: RisaPalette.lcarsSpaceWhite,
                 tabBarDark: RisaPalette.lcarsVoid,
                 tabBarLight: RisaPalette.lcarsVioletCreme,
-                tabInactiveDark: RisaPalette.lcarsBluey.opacity(0.76),
+                tabInactiveDark: RisaPalette.lcarsPromoBlue.opacity(0.78),
                 tabInactiveLight: Color.black.opacity(0.62)
             )
         case .risa:
             TLIThemePalette(
                 textPrimaryDark: .white,
-                textPrimaryLight: Color(red: 10/255, green: 16/255, blue: 30/255),
+                textPrimaryLight: RisaPalette.risaInk,
                 textSecondaryDark: Color.white.opacity(0.82),
-                textSecondaryLight: Color(red: 20/255, green: 32/255, blue: 56/255).opacity(0.86),
+                textSecondaryLight: RisaPalette.risaInk.opacity(0.82),
                 textMutedDark: Color.white.opacity(0.66),
-                textMutedLight: Color.black.opacity(0.55),
+                textMutedLight: RisaPalette.risaInk.opacity(0.58),
                 textTertiaryDark: Color.white.opacity(0.50),
-                textTertiaryLight: Color.black.opacity(0.44),
-                accentDark: Color(red: 1.00, green: 0.41, blue: 0.75),
-                accentLight: Color(red: 1.00, green: 0.41, blue: 0.75),
-                accentSecondaryDark: Color(red: 0.26, green: 0.78, blue: 1.00),
-                accentSecondaryLight: Color(red: 0.26, green: 0.78, blue: 1.00),
-                accentGoldDark: Color(red: 0.81, green: 1.00, blue: 0.00),
-                accentGoldLight: Color(red: 0.81, green: 1.00, blue: 0.00),
-                backgroundTopDark: RisaPalette.desiNightTop,
-                backgroundMidDark: RisaPalette.desiNightMid,
-                backgroundBottomDark: RisaPalette.desiNightBottom,
-                backgroundTopLight: Color(red: 0.03, green: 0.67, blue: 0.65),
-                backgroundMidLight: Color(red: 0.06, green: 0.78, blue: 0.74),
-                backgroundBottomLight: Color(red: 0.74, green: 1.00, blue: 0.03),
-                cardBackgroundDark: RisaPalette.desiCardDark,
+                textTertiaryLight: RisaPalette.risaInk.opacity(0.46),
+                accentDark: RisaPalette.risaHotPink,
+                accentLight: RisaPalette.risaHotPink,
+                accentSecondaryDark: RisaPalette.risaTeal,
+                accentSecondaryLight: RisaPalette.risaTeal,
+                accentGoldDark: RisaPalette.risaLime,
+                accentGoldLight: RisaPalette.risaLime,
+                backgroundTopDark: Color(red: 7/255, green: 9/255, blue: 12/255),
+                backgroundMidDark: RisaPalette.risaCocoa,
+                backgroundBottomDark: Color(red: 8/255, green: 10/255, blue: 8/255),
+                backgroundTopLight: RisaPalette.risaTeal,
+                backgroundMidLight: RisaPalette.risaTeal,
+                backgroundBottomLight: RisaPalette.risaLime,
+                cardBackgroundDark: RisaPalette.risaCocoa.opacity(0.94),
                 cardBackgroundLight: Color.white.opacity(0.90),
-                cardStrokeDark: RisaPalette.desiBorderDark,
-                cardStrokeLight: Color(red: 0.01, green: 0.30, blue: 0.56).opacity(0.30),
-                chipBackgroundDark: RisaPalette.desiChipDark,
-                chipBackgroundLight: Color(red: 0.85, green: 1.00, blue: 0.15).opacity(0.55),
-                navBarDark: RisaPalette.desiNavDark,
-                navBarLight: Color(red: 0.53, green: 0.90, blue: 0.89),
-                tabBarDark: RisaPalette.desiTabDark,
-                tabBarLight: Color(red: 0.75, green: 0.96, blue: 0.52),
-                tabInactiveDark: Color(red: 0.54, green: 1.00, blue: 0.78).opacity(0.74),
-                tabInactiveLight: Color.black.opacity(0.70)
+                cardStrokeDark: RisaPalette.risaCoral.opacity(0.62),
+                cardStrokeLight: RisaPalette.risaCocoa.opacity(0.30),
+                chipBackgroundDark: RisaPalette.risaCocoa.opacity(0.96),
+                chipBackgroundLight: RisaPalette.risaLime.opacity(0.50),
+                navBarDark: Color.black,
+                navBarLight: RisaPalette.risaTeal,
+                tabBarDark: Color.black,
+                tabBarLight: RisaPalette.risaLime,
+                tabInactiveDark: RisaPalette.risaTeal.opacity(0.78),
+                tabInactiveLight: RisaPalette.risaInk.opacity(0.70)
             )
         }
     }
@@ -497,6 +497,15 @@ private enum RisaPalette {
     static let desiNavDark       = Color(red: 1/255, green: 24/255, blue: 31/255)
     static let desiTabDark       = Color(red: 1/255, green: 18/255, blue: 24/255)
 
+    // Risa marketing palette sampled from current convention creative.
+    static let risaTeal    = Color(red: 0/255, green: 166/255, blue: 158/255)
+    static let risaLime    = Color(red: 203/255, green: 255/255, blue: 0/255)
+    static let risaHotPink = Color(red: 238/255, green: 82/255, blue: 166/255)
+    static let risaCoral   = Color(red: 255/255, green: 76/255, blue: 77/255)
+    static let risaBlue    = Color(red: 45/255, green: 97/255, blue: 232/255)
+    static let risaCocoa   = Color(red: 55/255, green: 31/255, blue: 27/255)
+    static let risaInk     = Color(red: 7/255, green: 10/255, blue: 12/255)
+
     // LCARS reference tones aligned to the public LCARS color guide.
     static let lcarsVoid        = Color(red: 1/255, green: 1/255, blue: 5/255)
     static let lcarsPanelBlack  = Color(red: 17/255, green: 17/255, blue: 17/255)
@@ -541,6 +550,11 @@ private enum RisaPalette {
     static let lcarsSlate       = Color(red: 68/255, green: 74/255, blue: 119/255)
     static let lcarsCream       = Color(red: 246/255, green: 238/255, blue: 246/255)
     static let lcarsLightPanel  = Color(red: 255/255, green: 235/255, blue: 222/255)
+    static let lcarsPromoGreen  = Color(red: 29/255, green: 255/255, blue: 33/255)
+    static let lcarsPromoBlue   = Color(red: 32/255, green: 86/255, blue: 219/255)
+    static let lcarsPromoYellow = Color(red: 255/255, green: 201/255, blue: 101/255)
+    static let lcarsPromoCoral  = Color(red: 238/255, green: 106/255, blue: 108/255)
+    static let lcarsPromoLilac  = Color(red: 224/255, green: 151/255, blue: 238/255)
 
     // Card / chip helpers
     static let cardDark   = Color.white.opacity(0.11)
@@ -638,7 +652,7 @@ enum RisaTheme {
         }
         let base = activeColorTheme.palette.textSecondary(for: scheme)
         let target = textPrimary(scheme)
-        let amount: CGFloat = scheme == .dark ? 0.18 : 0.24
+        let amount: CGFloat = scheme == .dark ? 0.30 : 0.38
         return blend(base, toward: target, amount: amount)
     }
 
@@ -647,7 +661,7 @@ enum RisaTheme {
         if let asset = Color.tliAsset(named: "TextMuted") { return asset }
         let base = activeColorTheme.palette.textMuted(for: scheme)
         let target = textPrimary(scheme)
-        let amount: CGFloat = scheme == .dark ? 0.14 : 0.20
+        let amount: CGFloat = scheme == .dark ? 0.26 : 0.34
         return blend(base, toward: target, amount: amount)
     }
 
@@ -656,7 +670,7 @@ enum RisaTheme {
         if let asset = Color.tliAsset(named: "TextTertiary") { return asset }
         let base = activeColorTheme.palette.textTertiary(for: scheme)
         let target = textPrimary(scheme)
-        let amount: CGFloat = scheme == .dark ? 0.10 : 0.16
+        let amount: CGFloat = scheme == .dark ? 0.22 : 0.30
         return blend(base, toward: target, amount: amount)
     }
 
@@ -777,8 +791,10 @@ enum RisaTheme {
         switch activeColorTheme {
         case .tos:
             return accentGold(scheme)
-        case .tng, .lcars:
+        case .tng:
             return accent(scheme).opacity(0.94)
+        case .lcars:
+            return RisaPalette.lcarsPromoGreen.opacity(0.94)
         case .ds9:
             return accent(scheme).opacity(0.92)
         case .voyager:
@@ -788,7 +804,7 @@ enum RisaTheme {
         case .starfleet:
             return accent(scheme).opacity(0.92)
         case .risa:
-            return accentSecondary(scheme).opacity(0.92)
+            return accentGold(scheme).opacity(0.94)
         }
     }
 
@@ -1006,6 +1022,10 @@ enum TLITheme {
                     endPoint: .bottomTrailing
                 )
                 .blendMode(.multiply)
+            }
+
+            if theme == .risa {
+                RisaMarketingWallpaperOverlay(scheme: scheme)
             }
 
             StarfieldOverlay(scheme: scheme)
@@ -1268,8 +1288,20 @@ enum TLITheme {
         switch RisaTheme.currentTheme {
         case .tos:
             return LinearGradient(colors: [RisaTheme.accent(scheme), RisaTheme.accentGold(scheme), RisaTheme.accentSecondary(scheme)], startPoint: .leading, endPoint: .trailing)
-        case .tng, .lcars:
+        case .tng:
             return LinearGradient(colors: [RisaTheme.accent(scheme), RisaTheme.accentSecondary(scheme)], startPoint: .leading, endPoint: .trailing)
+        case .lcars:
+            return LinearGradient(
+                colors: [
+                    RisaPalette.lcarsPromoGreen,
+                    RisaPalette.lcarsPromoBlue,
+                    RisaPalette.lcarsPromoYellow,
+                    RisaPalette.lcarsPromoCoral,
+                    RisaPalette.lcarsPromoLilac
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
         case .ds9:
             return LinearGradient(colors: [RisaTheme.accentGold(scheme), RisaTheme.accent(scheme)], startPoint: .leading, endPoint: .trailing)
         case .voyager:
@@ -1287,7 +1319,16 @@ enum TLITheme {
                 endPoint: .trailing
             )
         case .risa:
-            return LinearGradient(colors: [RisaTheme.accent(scheme), RisaTheme.accentSecondary(scheme), RisaTheme.accentGold(scheme)], startPoint: .leading, endPoint: .trailing)
+            return LinearGradient(
+                colors: [
+                    RisaPalette.risaHotPink,
+                    RisaPalette.risaCoral,
+                    RisaPalette.risaLime,
+                    RisaPalette.risaTeal
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
         }
     }
 
@@ -1319,9 +1360,10 @@ enum TLITheme {
         case .risa:
             return LinearGradient(
                 colors: [
-                    RisaTheme.accent(scheme),
-                    RisaTheme.accentSecondary(scheme),
-                    RisaTheme.accentGold(scheme)
+                    RisaPalette.risaHotPink,
+                    RisaPalette.risaLime,
+                    RisaPalette.risaTeal,
+                    RisaPalette.risaCoral
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -1329,10 +1371,11 @@ enum TLITheme {
         case .lcars:
             return LinearGradient(
                 colors: [
-                    RisaPalette.lcarsBluey,
-                    RisaPalette.lcarsPeach,
-                    RisaPalette.lcarsOrange,
-                    RisaPalette.lcarsRoseblush
+                    RisaPalette.lcarsPromoGreen,
+                    RisaPalette.lcarsPromoBlue,
+                    RisaPalette.lcarsPromoYellow,
+                    RisaPalette.lcarsPromoCoral,
+                    RisaPalette.lcarsPromoLilac
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -1379,9 +1422,9 @@ enum TLITheme {
                 colors: [
                     base,
                     middle,
-                    scheme == .dark ? RisaPalette.lcarsC51.opacity(0.86) : accentTint,
-                    scheme == .dark ? RisaPalette.lcarsBluey.opacity(0.07) : RisaPalette.lcarsAfricanViolet.opacity(0.08),
-                    scheme == .dark ? RisaPalette.lcarsOrange.opacity(0.05) : RisaPalette.lcarsPeach.opacity(0.06)
+                    scheme == .dark ? RisaPalette.lcarsPromoBlue.opacity(0.16) : accentTint,
+                    scheme == .dark ? RisaPalette.lcarsPromoGreen.opacity(0.08) : RisaPalette.lcarsAfricanViolet.opacity(0.08),
+                    scheme == .dark ? RisaPalette.lcarsPromoCoral.opacity(0.06) : RisaPalette.lcarsPeach.opacity(0.06)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -1607,25 +1650,26 @@ struct LCARSPanelDecoration: View {
                         Text("LCARS")
                             .font(.system(size: 8, weight: .black, design: .monospaced))
                             .tracking(1.4)
-                            .foregroundStyle(TLITheme.textTertiary(scheme))
+                            .foregroundStyle(RisaPalette.lcarsPromoGreen)
+                            .shadow(color: RisaPalette.lcarsPromoBlue.opacity(0.90), radius: 0, x: 2, y: 2)
 
                         HStack(spacing: 4) {
-                            lcarsMetadataBar(width: 68, color: RisaPalette.lcarsLavender)
-                            lcarsMetadataBar(width: 18, color: RisaPalette.lcarsRoseblush)
+                            lcarsMetadataBar(width: 74, color: RisaPalette.lcarsPromoYellow)
+                            lcarsMetadataBar(width: 18, color: RisaPalette.lcarsPromoCoral)
                         }
 
                         HStack(spacing: 4) {
-                            lcarsMetadataBar(width: 30, color: RisaPalette.lcarsBluey)
-                            lcarsMetadataBar(width: 42, color: RisaPalette.lcarsGold)
+                            lcarsMetadataBar(width: 30, color: RisaPalette.lcarsPromoLilac)
+                            lcarsMetadataBar(width: 50, color: RisaPalette.lcarsPromoBlue)
                         }
                     }
 
                     Spacer(minLength: 0)
 
                     VStack(alignment: .trailing, spacing: 6) {
-                        lcarsMetadataBar(width: 24, color: RisaPalette.lcarsHoney)
-                        lcarsMetadataBar(width: 52, color: RisaPalette.lcarsPeach)
-                        lcarsMetadataBar(width: 34, color: RisaPalette.lcarsLavender)
+                        lcarsMetadataBar(width: 24, color: RisaPalette.lcarsPromoGreen)
+                        lcarsMetadataBar(width: 58, color: RisaPalette.lcarsPromoCoral)
+                        lcarsMetadataBar(width: 40, color: RisaPalette.lcarsPromoLilac)
                     }
                 }
                 .padding(.top, 12)
@@ -1657,16 +1701,16 @@ struct LCARSPanelDecoration: View {
     private var lcarsStackedRail: some View {
         ZStack(alignment: .top) {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(RisaPalette.lcarsLavender)
+                .fill(RisaPalette.lcarsPromoGreen)
                 .frame(width: 16)
 
             VStack(spacing: 6) {
                 Color.clear.frame(height: 12)
-                railSegment(color: RisaPalette.lcarsBluey, height: 24)
-                railSegment(color: RisaPalette.lcarsRoseblush, height: 38)
-                railSegment(color: RisaPalette.lcarsGold, height: 22)
-                railSegment(color: RisaPalette.lcarsOrange, height: 56)
-                railSegment(color: RisaPalette.lcarsAfricanViolet, height: 28)
+                railSegment(color: RisaPalette.lcarsPromoBlue, height: 24)
+                railSegment(color: RisaPalette.lcarsPromoYellow, height: 38)
+                railSegment(color: RisaPalette.lcarsPromoCoral, height: 22)
+                railSegment(color: RisaPalette.lcarsPromoLilac, height: 56)
+                railSegment(color: RisaPalette.lcarsPromoGreen, height: 28)
                 Spacer(minLength: 10)
             }
             .frame(width: 8)
@@ -1901,33 +1945,159 @@ struct RisaPanelDecoration: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Circle()
-                .fill(RisaTheme.accentGold(scheme).opacity(scheme == .dark ? 0.18 : 0.14))
-                .frame(width: 42, height: 42)
-                .padding(.top, 10)
-                .padding(.trailing, 16)
+                .fill(RisaPalette.risaHotPink.opacity(scheme == .dark ? 0.30 : 0.22))
+                .frame(width: 46, height: 46)
+                .overlay(
+                    Circle()
+                        .stroke(RisaPalette.risaCocoa.opacity(scheme == .dark ? 0.20 : 0.10), lineWidth: 1)
+                )
+                .padding(.top, 8)
+                .padding(.trailing, 14)
 
             VStack {
                 Spacer()
                 HStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    RisaTheme.accent(scheme).opacity(scheme == .dark ? 0.80 : 0.60),
-                                    RisaTheme.accentSecondary(scheme).opacity(scheme == .dark ? 0.72 : 0.52)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: 72, height: 8)
-                        .padding(.leading, 16)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Capsule(style: .continuous)
+                            .fill(RisaPalette.risaCoral.opacity(scheme == .dark ? 0.78 : 0.62))
+                            .frame(width: 86, height: 4)
+                        Capsule(style: .continuous)
+                            .fill(RisaPalette.risaLime.opacity(scheme == .dark ? 0.88 : 0.74))
+                            .frame(width: 68, height: 4)
+                        Capsule(style: .continuous)
+                            .fill(RisaPalette.risaTeal.opacity(scheme == .dark ? 0.76 : 0.56))
+                            .frame(width: 42, height: 4)
+                    }
+                    .padding(.leading, 16)
                     Spacer()
                 }
                 .padding(.bottom, 12)
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+struct RisaMarketingWallpaperOverlay: View {
+    let scheme: ColorScheme
+
+    var body: some View {
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            let height = proxy.size.height
+            ZStack {
+                VStack(spacing: 0) {
+                    Color.clear
+                        .frame(height: height * 0.21)
+
+                    risaStripeBand(width: width, opacity: scheme == .dark ? 0.46 : 0.34)
+
+                    Spacer()
+
+                    risaLowerRails(width: width, opacity: scheme == .dark ? 0.58 : 0.44)
+                        .padding(.bottom, max(72, height * 0.11))
+                }
+
+                Circle()
+                    .fill(RisaPalette.risaHotPink.opacity(scheme == .dark ? 0.24 : 0.34))
+                    .frame(width: min(width * 0.30, 146), height: min(width * 0.30, 146))
+                    .position(x: width * 0.86, y: height * 0.13)
+
+                Circle()
+                    .fill(RisaPalette.risaHotPink.opacity(scheme == .dark ? 0.20 : 0.28))
+                    .frame(width: min(width * 0.22, 96), height: min(width * 0.22, 96))
+                    .position(x: width * 0.05, y: height * 0.26)
+
+                RisaPalmShadow()
+                    .fill((scheme == .dark ? Color.black : RisaPalette.risaCocoa).opacity(scheme == .dark ? 0.18 : 0.12))
+                    .frame(width: min(width * 0.58, 260), height: min(height * 0.52, 420))
+                    .rotationEffect(.degrees(-5))
+                    .position(x: width * 0.98, y: height * 0.50)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private func risaStripeBand(width: CGFloat, opacity: Double) -> some View {
+        VStack(spacing: 5) {
+            Rectangle()
+                .fill(RisaPalette.risaLime.opacity(opacity))
+                .frame(width: width, height: 8)
+            Rectangle()
+                .fill(RisaPalette.risaTeal.opacity(opacity * 0.72))
+                .frame(width: width, height: 7)
+            Rectangle()
+                .fill(RisaPalette.risaLime.opacity(opacity * 1.15))
+                .frame(width: width, height: 18)
+        }
+    }
+
+    @ViewBuilder
+    private func risaLowerRails(width: CGFloat, opacity: Double) -> some View {
+        VStack(spacing: 4) {
+            Rectangle()
+                .fill(RisaPalette.risaCoral.opacity(opacity))
+                .frame(width: width, height: 4)
+            Rectangle()
+                .fill(RisaPalette.risaLime.opacity(opacity * 0.90))
+                .frame(width: width, height: 4)
+            Rectangle()
+                .fill(RisaPalette.risaCoral.opacity(opacity * 0.82))
+                .frame(width: width, height: 4)
+        }
+    }
+}
+
+struct RisaPalmShadow: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let trunkWidth = rect.width * 0.12
+        let trunkX = rect.midX + rect.width * 0.12
+
+        path.move(to: CGPoint(x: trunkX - trunkWidth, y: rect.maxY))
+        path.addQuadCurve(
+            to: CGPoint(x: trunkX + trunkWidth * 0.7, y: rect.minY + rect.height * 0.18),
+            control: CGPoint(x: trunkX - rect.width * 0.16, y: rect.midY)
+        )
+        path.addLine(to: CGPoint(x: trunkX + trunkWidth * 1.8, y: rect.minY + rect.height * 0.20))
+        path.addQuadCurve(
+            to: CGPoint(x: trunkX + trunkWidth * 0.9, y: rect.maxY),
+            control: CGPoint(x: trunkX + rect.width * 0.03, y: rect.midY)
+        )
+        path.closeSubpath()
+
+        let crown = CGPoint(x: trunkX + trunkWidth, y: rect.minY + rect.height * 0.20)
+        let frondEnds = [
+            CGPoint(x: rect.minX + rect.width * 0.18, y: rect.minY + rect.height * 0.07),
+            CGPoint(x: rect.minX + rect.width * 0.26, y: rect.minY + rect.height * 0.23),
+            CGPoint(x: rect.minX + rect.width * 0.42, y: rect.minY + rect.height * 0.34),
+            CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.04),
+            CGPoint(x: rect.maxX - rect.width * 0.03, y: rect.minY + rect.height * 0.22),
+            CGPoint(x: rect.maxX - rect.width * 0.10, y: rect.minY + rect.height * 0.38)
+        ]
+
+        for end in frondEnds {
+            path.move(to: crown)
+            path.addQuadCurve(
+                to: end,
+                control: CGPoint(
+                    x: (crown.x + end.x) / 2,
+                    y: min(crown.y, end.y) - rect.height * 0.10
+                )
+            )
+            path.addQuadCurve(
+                to: CGPoint(x: crown.x + trunkWidth * 0.55, y: crown.y + rect.height * 0.035),
+                control: CGPoint(
+                    x: (crown.x + end.x) / 2,
+                    y: max(crown.y, end.y) + rect.height * 0.055
+                )
+            )
+            path.closeSubpath()
+        }
+
+        return path
     }
 }
 
@@ -2029,8 +2199,8 @@ struct LCARSWallpaperOverlay: View {
 
                 LinearGradient(
                     colors: [
-                        RisaPalette.lcarsOrange.opacity(scheme == .dark ? 0.12 : 0.08),
-                        RisaPalette.lcarsBluey.opacity(scheme == .dark ? 0.08 : 0.05),
+                        RisaPalette.lcarsPromoGreen.opacity(scheme == .dark ? 0.14 : 0.08),
+                        RisaPalette.lcarsPromoBlue.opacity(scheme == .dark ? 0.12 : 0.05),
                         .clear
                     ],
                     startPoint: .topLeading,
@@ -2041,13 +2211,13 @@ struct LCARSWallpaperOverlay: View {
                 VStack(spacing: 0) {
                     HStack(spacing: 6) {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(RisaPalette.lcarsBluey)
-                            .frame(width: min(proxy.size.width * 0.18, 132), height: 12)
+                            .fill(RisaPalette.lcarsPromoGreen)
+                            .frame(width: min(proxy.size.width * 0.20, 148), height: 12)
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(RisaPalette.lcarsOrange)
-                            .frame(width: min(proxy.size.width * 0.09, 72), height: 12)
+                            .fill(RisaPalette.lcarsPromoBlue)
+                            .frame(width: min(proxy.size.width * 0.12, 86), height: 12)
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(RisaPalette.lcarsAfricanViolet)
+                            .fill(RisaPalette.lcarsPromoLilac)
                             .frame(width: min(proxy.size.width * 0.16, 124), height: 12)
                         Spacer(minLength: 0)
                     }
@@ -2055,12 +2225,27 @@ struct LCARSWallpaperOverlay: View {
                     .padding(.leading, 112)
 
                     Spacer(minLength: 0)
+
+                    VStack(alignment: .trailing, spacing: 18) {
+                        lcarsPromoRail(width: proxy.size.width * 0.88, color: RisaPalette.lcarsPromoYellow)
+                        lcarsPromoRail(width: proxy.size.width * 0.78, color: RisaPalette.lcarsPromoCoral)
+                        lcarsPromoRail(width: proxy.size.width * 0.70, color: RisaPalette.lcarsPromoLilac)
+                        lcarsPromoRail(width: proxy.size.width * 0.82, color: RisaPalette.lcarsPromoBlue)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.bottom, max(88, proxy.size.height * 0.18))
                 }
                 .opacity(scheme == .dark ? 0.26 : 0.14)
             }
             .ignoresSafeArea()
         }
         .allowsHitTesting(false)
+    }
+
+    private func lcarsPromoRail(width: CGFloat, color: Color) -> some View {
+        Capsule(style: .continuous)
+            .fill(color)
+            .frame(width: min(width, 520), height: 18)
     }
 }
 

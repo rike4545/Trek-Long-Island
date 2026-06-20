@@ -42,11 +42,11 @@ struct TLIOfflineStatusCard: View {
                         : "Last sync \(lastSyncDate.formatted(date: .abbreviated, time: .shortened))"
                     )
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                 } else {
                     Text(loadedFromCache ? "Using cached data" : "No sync timestamp available")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
 
                 Spacer(minLength: 8)

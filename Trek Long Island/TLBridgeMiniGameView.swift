@@ -401,7 +401,7 @@ struct TLBridgeMiniGameView: View {
     private func bridgeCapsule(_ title: String, value: String) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(title)
-                .font(.caption2.bold())
+                .font(.caption.bold())
                 .foregroundStyle(BridgePalette.textDim)
             Text(value)
                 .font(.caption.weight(.bold))
@@ -415,7 +415,7 @@ struct TLBridgeMiniGameView: View {
     private func statusNode(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
-                .font(.caption2.bold())
+                .font(.caption.bold())
                 .foregroundStyle(BridgePalette.textDim)
             Text(value)
                 .font(.subheadline.weight(.bold))

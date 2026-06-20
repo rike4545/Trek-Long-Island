@@ -161,7 +161,9 @@ private struct TLITypographyModifier: ViewModifier {
     let preference: TLITypographyPreference
 
     func body(content: Content) -> some View {
-        content.font(preference.bodyFont)
+        content
+            .font(preference.bodyFont)
+            .lineSpacing(2)
     }
 }
 

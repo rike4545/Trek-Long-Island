@@ -2,13 +2,6 @@
 // ExploreLink.swift
 
 import SwiftUI
-import WebKit
-
-// MARK: - Wrapper for WebView URLs
-struct WebViewItem: Identifiable {
-    let id = UUID()
-    let url: URL
-}
 
 // MARK: - Expand/Collapse All Toggle Button
 struct ExpandCollapseAllButton: View {
@@ -65,12 +58,9 @@ struct ExploreLink: View {
         let category: String
     }
 
-    @State private var selectedWebView: WebViewItem?
     @State private var expandedSections: Set<String> = []
     @State private var allExpanded: Bool = false
-    @State private var isLoadingWebView: Bool = false
     @State private var searchText: String = ""
-    @State private var webLoadError: String?
 
     private let itemsByCategory: [String: [ExploreItem]] = [
         "People": [
@@ -86,6 +76,12 @@ struct ExploreLink: View {
                 title: "Schedule",
                 url: "https://treklongisland.com/wp-content/uploads/2025/05/Schedule-2025.pdf",
                 systemImage: "calendar.circle.fill",
+                category: "Events"
+            ),
+            .init(
+                title: "Photo Op Schedule",
+                url: TicketPurchaseLinks.photoOpScheduleURLString,
+                systemImage: "camera.viewfinder",
                 category: "Events"
             ),
             .init(
@@ -174,7 +170,7 @@ struct ExploreLink: View {
                     if let lastURL = lastViewedURL,
                        let url = URL(string: lastURL) {
                         Button(action: {
-                            selectedWebView = WebViewItem(url: url)
+                            openURL(url)
                         }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "arrow.uturn.backward.circle.fill")
@@ -247,7 +243,7 @@ struct ExploreLink: View {
                             openURL: { urlString in
                                 if let url = URL(string: urlString) {
                                     lastViewedURL = url.absoluteString
-                                    selectedWebView = WebViewItem(url: url)
+                                    openURL(url)
                                 }
                             },
                             isFavorited: { url in
@@ -284,68 +280,6 @@ struct ExploreLink: View {
                 if syncedSections != expandedSections {
                     expandedSections = syncedSections
                     allExpanded = expandedSections.count == filteredItemsByCategory.count
-                }
-            }
-            // Present the WebView sheet
-            .sheet(item: $selectedWebView) { item in
-                ZStack {
-                    NavigationStack {
-                        ExploreWebView(url: item.url, isLoading: $isLoadingWebView, loadError: $webLoadError)
-                            .navigationTitle("Trek Long Island")
-                            .navigationBarTitleDisplayMode(.inline)
-                            .toolbar {
-                                ToolbarItem(placement: .primaryAction) {
-                                    Button {
-                                        openURL(item.url)
-                                    } label: {
-                                        Image(systemName: "arrow.up.forward.square")
-                                    }
-                                    .accessibilityLabel("Open in Safari")
-                                }
-                                ToolbarItem(placement: .cancellationAction) {
-                                    Button("Close") {
-                                        selectedWebView = nil
-                                        webLoadError = nil
-                                    }
-                                }
-                            }
-                    }
-                    if isLoadingWebView {
-                        ProgressView("Loading…")
-                            .progressViewStyle(CircularProgressViewStyle(tint: Color("AccentPrimary")))
-                            .padding()
-                            .background(Color("PrimaryBackground").opacity(0.85))
-                            .cornerRadius(12)
-                    }
-                    if let webLoadError {
-                        VStack(spacing: 10) {
-                            Image(systemName: "wifi.exclamationmark")
-                                .font(.title2)
-                                .foregroundColor(.secondary)
-                            Text("Could not load this link.")
-                                .font(.headline)
-                            Text(webLoadError)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(3)
-                            HStack(spacing: 10) {
-                                Button("Open in Safari") {
-                                    openURL(item.url)
-                                }
-                                .buttonStyle(.borderedProminent)
-                                Button("Close") {
-                                    selectedWebView = nil
-                                    self.webLoadError = nil
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                        }
-                        .padding(16)
-                        .background(Color("PrimaryBackground").opacity(0.94))
-                        .cornerRadius(14)
-                        .padding()
-                    }
                 }
             }
         }
@@ -561,55 +495,6 @@ struct ExploreItemCard: View {
                     .fill(Color("CardBackground"))
                     .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
             )
-        }
-    }
-}
-
-// MARK: - WebView Renderer
-struct ExploreWebView: UIViewRepresentable {
-    let url: URL
-    @Binding var isLoading: Bool
-    @Binding var loadError: String?
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.navigationDelegate = context.coordinator
-        webView.allowsBackForwardNavigationGestures = true
-        webView.scrollView.contentInsetAdjustmentBehavior = .always
-        return webView
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        if uiView.url != url {
-            isLoading = true
-            loadError = nil
-            uiView.load(URLRequest(url: url))
-        }
-    }
-
-    class Coordinator: NSObject, WKNavigationDelegate {
-        var parent: ExploreWebView
-
-        init(_ parent: ExploreWebView) {
-            self.parent = parent
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            parent.isLoading = false
-        }
-
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            parent.loadError = error.localizedDescription
-        }
-
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            parent.loadError = error.localizedDescription
         }
     }
 }

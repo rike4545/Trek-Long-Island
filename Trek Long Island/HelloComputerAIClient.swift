@@ -36,13 +36,37 @@ struct HelloComputerCoreMLClient: HelloComputerAIClient {
             return "Please share a question so I can help."
         }
 
+        if let retrievalAnswer = HelloComputerEngine.semanticFallbackAnswer(for: trimmed) {
+            return """
+            \(retrievalAnswer.text)
+
+            — Source: On-device semantic retrieval
+            """
+        }
+
         if model != nil {
             // Model is present and ready; this is intentionally conservative until
             // model I/O schema is finalized.
-            return "Core ML assistant is online. I received: \"\(trimmed)\". I can answer with local schedule and FAQ context."
+            let recentContext = conversation
+                .suffix(3)
+                .map(\.text)
+                .joined(separator: " | ")
+
+            if recentContext.isEmpty {
+                return "Core ML assistant is online. I received: \"\(trimmed)\". I can answer with local schedule and FAQ context."
+            }
+
+            return """
+            Core ML assistant is online. I received: "\(trimmed)".
+            Recent context: \(recentContext)
+            I can answer with local schedule and FAQ context.
+            """
         }
 
-        return "AI Agent is running in offline mode right now. I can still help with schedule and FAQ guidance."
+        return """
+        AI Agent is running in offline mode right now. I could not find a strong semantic match for that question yet.
+        Try asking with one or two concrete keywords like a guest name, room, event type, or “what’s next”.
+        """
     }
 
     private static func loadModel(named name: String) -> MLModel? {

@@ -6,7 +6,7 @@
 //  “Hello, Computer” curated answers.
 //  - Helpful, scannable, friendly
 //  - Avoid guessing (no invented guests / prices / policies)
-//  - HARD RULE: purchase/checkout questions → tickets site (https://treklongislandtickets.square.site/)
+//  - HARD RULE: purchase/checkout questions → official admission ticket link
 //  - Everything else → official website (https://treklongisland.com/)
 //
 //  Swift 6 • iOS 17+
@@ -19,10 +19,11 @@ enum HelloComputerFAQBank {
     // Official sources (embed as plain URLs so the UI can detect and open them)
     static let ticketsURL: String = TicketPurchaseLinks.ticketsURLString
     static let photoOpsURL: String = TicketPurchaseLinks.photoOpsURLString
+    static let photoOpScheduleURL: String = TicketPurchaseLinks.photoOpScheduleURLString
     static let websiteURL: String = "https://treklongisland.com/"
     static let scheduleURL: String = "https://treklongisland.com/programs/"
     static let hotelURL: String = "https://treklongisland.com/hotel/"
-    static let contactURL: String = "https://treklongisland.com/contact/"
+    static let contactURL: String = "https://qualtricsxmm8q5gxrhq.qualtrics.com/jfe/form/SV_1TvkCrIKgaEYHPM"
 
     // Short prompts used for “Quick questions” chips.
     static let suggestedQuestions: [String] = [
@@ -51,21 +52,21 @@ enum HelloComputerFAQBank {
     static let faqs: [HelloComputerFAQ] = [
         .init(
             question: "Where do I buy tickets?",
-            answer: "Tickets and paid add-ons are sold on the official ticket site:\\nhttps://treklongislandtickets.square.site/\\n\\nIf your question is about pricing, checkout, receipts, confirmations, or what’s included, that page is: .",
+            answer: "Admission tickets are sold on the official Square ticket page:\\n\(ticketsURL)\\n\\nFor other paid add-ons, use the official ticket site:\\n\(TicketPurchaseLinks.ticketStoreURLString)\\n\\nIf your question is about pricing, checkout, receipts, confirmations, or what’s included, start with the admission ticket page above.",
             tags: ["tickets", "buy", "purchase", "passes", "badge", "checkout", "receipt", "confirmation", "square"],
             source: .officialFAQ
         ),
 
         .init(
             question: "I have a ticket purchase problem (checkout/receipt/confirmation).",
-            answer: "For anything purchase-related (checkout, receipts, confirmation emails, what’s included, add-ons), use:\\nhttps://treklongislandtickets.square.site/\\n\\nIf you still need help after checking there, use Contact:\\nhttps://treklongisland.com/contact/",
+            answer: "For admission ticket purchase help (checkout, receipts, confirmation emails, or what’s included), use:\\n\(ticketsURL)\\n\\nFor other add-ons, use:\\n\(TicketPurchaseLinks.ticketStoreURLString)\\n\\nIf you still need help after checking there, use the support form:\\n\(contactURL)",
             tags: ["purchase", "checkout", "receipt", "confirmation", "email", "problem", "refund", "transfer"],
             source: .officialFAQ
         ),
 
         .init(
             question: "Are tickets available at the door?",
-            answer: "Availability can change. The safest answer is to check the official ticket site for current options:\\nhttps://treklongislandtickets.square.site/",
+            answer: "Availability can change. The safest answer is to check the official admission ticket page for current options:\\n\(ticketsURL)",
             tags: ["tickets", "door", "walk-up", "availability"],
             source: .officialFAQ
         ),
@@ -107,21 +108,21 @@ enum HelloComputerFAQBank {
 
         .init(
             question: "Do I need anything for check-in?",
-            answer: "Have your confirmation available (email or screenshot). If you purchased paid add-ons, keep those confirmations handy too.\\n\\nFor purchase/receipt issues:\\nhttps://treklongislandtickets.square.site/\\n\\nFor venue/program info:\\nhttps://treklongisland.com/",
+            answer: "Have your confirmation available (email or screenshot). If you purchased paid add-ons, keep those confirmations handy too.\\n\\nFor admission purchase/receipt issues:\\n\(ticketsURL)\\n\\nFor venue/program info:\\nhttps://treklongisland.com/",
             tags: ["check-in", "confirmation", "email", "badge", "entry"],
             source: .officialFAQ
         ),
 
         .init(
             question: "How do photo ops work?",
-            answer: "Photo ops are typically time-slotted.\\n\\nTo purchase photo-op tickets:\\n\(photoOpsURL)\\n\\nTips:\\n• Arrive a bit early\\n• Keep your confirmation ready\\n• Watch Announcements for time changes\\n\\nOfficial updates live on:\\nhttps://treklongisland.com/programs/",
+            answer: "Photo ops are typically time-slotted.\\n\\nTo purchase photo-op tickets:\\n\(photoOpsURL)\\n\\nFor the official photo-op schedule:\\n\(photoOpScheduleURL)\\n\\nTips:\\n• Arrive a bit early\\n• Keep your confirmation ready\\n• Watch Announcements for time changes",
             tags: ["photo ops", "photos", "time slot", "line", "schedule"],
             source: .officialFAQ
         ),
 
         .init(
             question: "How do autographs work?",
-            answer: "Autographs are usually handled at guest tables. Availability and rules can vary by guest.\\n\\nBest approach:\\n• Check guest times when posted\\n• Ask table staff/handler for the current process\\n• Watch for schedule changes\\n\\nOfficial updates:\\nhttps://treklongisland.com/",
+            answer: "Autographs are usually handled at guest tables. Availability and rules can vary by guest.\\n\\n\(TicketPurchaseLinks.autographPreSalesStatusText())\\n\\nBest approach:\\n• Check guest times when posted\\n• Ask table staff/handler for the current process\\n• Watch for schedule changes\\n\\nOfficial updates:\\nhttps://treklongisland.com/",
             tags: ["autographs", "signing", "guest table", "rules", "updates"],
             source: .officialFAQ
         ),
@@ -149,7 +150,7 @@ enum HelloComputerFAQBank {
 
         .init(
             question: "How do I contact Trek Long Island?",
-            answer: "Official contact page:\\nhttps://treklongisland.com/contact/\\n\\nIf you’re onsite, Registration / the Information Desk is your best first stop.",
+            answer: "Use the support and feedback form:\\n\(contactURL)\\n\\nIf you’re onsite, Registration / the Information Desk is your best first stop.",
             tags: ["contact", "email", "help", "support"],
             source: .officialFAQ
         ),
@@ -219,7 +220,7 @@ enum HelloComputerFAQBank {
 
         .init(
             question: "Red alert",
-            answer: "Red alert acknowledged. Quick triage:\\n• Tickets/purchases → https://treklongislandtickets.square.site/\\n• Schedule/updates → https://treklongisland.com/programs/\\n• Onsite confusion → Information Desk",
+            answer: "Red alert acknowledged. Quick triage:\\n• Admission tickets/purchases → \(ticketsURL)\\n• Schedule/updates → https://treklongisland.com/programs/\\n• Onsite confusion → Information Desk",
             tags: ["red", "alert"],
             source: .generalGuidance
         ),
@@ -254,7 +255,7 @@ enum HelloComputerFAQBank {
 
         .init(
             question: "Computer, open hailing frequencies",
-            answer: "Hailing frequencies open. Official contact:\\nhttps://treklongisland.com/contact/",
+            answer: "Hailing frequencies open. Support and feedback form:\\n\(contactURL)",
             tags: ["computer", "open", "hailing", "frequencies"],
             source: .generalGuidance
         ),

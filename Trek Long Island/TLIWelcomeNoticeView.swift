@@ -8,7 +8,6 @@ struct TLIWelcomeNoticeView: View {
 
     let onContinue: () -> Void
 
-    private let supportURL = URL(string: "https://treklongisland.com/contact/")!
     private let feedbackURL = URL(string: "https://qualtricsxmm8q5gxrhq.qualtrics.com/jfe/form/SV_1TvkCrIKgaEYHPM")!
 
     var body: some View {
@@ -54,12 +53,11 @@ struct TLIWelcomeNoticeView: View {
 
     private var noticeCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            noticeParagraph("Welcome to the official Trek Long Island mobile app, your real-time digital guide to Trek Long Island 2026, built to help you plan your weekend, stay informed, and enjoy the convention.")
+            noticeParagraph("Welcome to the Trek Long Island mobile companion, a real-time guide built to help fans plan the weekend, follow updates, and enjoy Trek Long Island 2026.")
 
-            noticeParagraph("This is a fan-driven companion app built independently to help keep the community supported and informed.")
-            noticeParagraph("Stefanie Gangone paid this developer to produce this app and this developer was severely underpaid $290 for his work. The developer spent 94 hours on this project while Stefanie Gangone raised over $1500 for the app funding and failed to pay for final settlement for labor. Stefanie Gangone further disrepected the developer with allowing Conor Heights to insult the developers graphical illustrations as 'AI slop'. Ticket information is official and valid and can be found via any google search. Fans should not hindered in their experiance because of bad faith or poor management. ")
+            noticeParagraph("This app is built as a companion guide for the Trek Long Island community. For ticket purchases, schedule changes, policies, and event confirmations, please use the Trek Long Island website and on-site announcements as the source of record.")
 
-            noticeParagraph("Please contact our support team if you have questions or concerns. Reviews that are spam, fraudulent, or contain personal information may be reported for removal.")
+            noticeParagraph("If something looks wrong or you have a concern, please contact support or send feedback so it can be reviewed quickly.")
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Feedback is welcomed here:")
@@ -77,7 +75,7 @@ struct TLIWelcomeNoticeView: View {
                 .buttonStyle(.plain)
             }
 
-            noticeParagraph("The term and graphical illustration called \"Trek Long Island\" is copyrighted, 2026, B. Carroll. 1-15133681261. The Trek Long Island App codebase is also copyrighted 2026, B. Carroll. All Rights Reserved.")
+            noticeParagraph("Star Trek and related marks belong to their respective owners. This app celebrates the fan community and does not replace event credentials, purchases, or on-site instructions.")
         }
         .padding(18)
         .background(
@@ -93,7 +91,7 @@ struct TLIWelcomeNoticeView: View {
     private var actionButtons: some View {
         VStack(spacing: 12) {
             Button {
-                openURL(supportURL)
+                openURL(feedbackURL)
             } label: {
                 Label("Contact Support", systemImage: "cross.case.fill")
                     .frame(maxWidth: .infinity)

@@ -20,6 +20,7 @@ final class HelloComputerStore: ObservableObject {
     @Published var lastSource: HelloComputerAnswerSource? = nil
     @Published var audience: HelloComputerAudience = .attendee
     @Published var mode: HelloComputerMode = .computer
+    @Published var persona: HelloComputerPersona = .scotty
     @Published var pendingAction: HelloComputerPendingAction? = nil
 
     private let aiClient: HelloComputerAIClient
@@ -37,7 +38,7 @@ final class HelloComputerStore: ObservableObject {
         messages = [
             HelloComputerMessage(
                 role: .assistant,
-                text: "System Online."
+                text: greeting(for: persona)
             )
         ]
     }
@@ -46,13 +47,21 @@ final class HelloComputerStore: ObservableObject {
         messages = [
             HelloComputerMessage(
                 role: .assistant,
-                text: "System Online."
+                text: greeting(for: persona)
             )
         ]
         inputText = ""
         isThinking = false
         lastSource = nil
         pendingAction = nil
+    }
+
+    func setPersona(_ newPersona: HelloComputerPersona) {
+        guard persona != newPersona else { return }
+        persona = newPersona
+        if messages.count == 1, messages.first?.role == .assistant {
+            messages = [.init(role: .assistant, text: greeting(for: newPersona))]
+        }
     }
 
     /// Public entry point from the UI.
@@ -73,6 +82,7 @@ final class HelloComputerStore: ObservableObject {
         let allowAISnapshot = allowAIIfUncertain
         let aiClientSnapshot = aiClient
         let agentSnapshot = agent
+        let personaSnapshot = persona
         let useAgentRoute = shouldRouteToAgent(for: trimmed)
         let guestAnswerSnapshot = HelloComputerGuestDirectory.answer(for: trimmed)
         let starTrekSnapshot = starTrekKnowledgeAnswer(for: trimmed)
@@ -97,7 +107,7 @@ final class HelloComputerStore: ObservableObject {
                let assistant = await agentSnapshot.answer(for: trimmed, audience: audienceSnapshot) {
                 await MainActor.run {
                     self.lastSource = assistant.source
-                    self.messages.append(.init(role: .assistant, text: self.decorate(assistant)))
+                    self.messages.append(.init(role: .assistant, text: self.decorate(assistant, persona: personaSnapshot)))
                     self.isThinking = false
                 }
                 return
@@ -106,7 +116,7 @@ final class HelloComputerStore: ObservableObject {
             if let guestAnswer = guestAnswerSnapshot {
                 await MainActor.run {
                     self.lastSource = guestAnswer.source
-                    self.messages.append(.init(role: .assistant, text: self.decorate(guestAnswer)))
+                    self.messages.append(.init(role: .assistant, text: self.decorate(guestAnswer, persona: personaSnapshot)))
                     self.isThinking = false
                 }
                 return
@@ -116,7 +126,7 @@ final class HelloComputerStore: ObservableObject {
             if let starTrek = starTrekSnapshot {
                 await MainActor.run {
                     self.lastSource = starTrek.source
-                    self.messages.append(.init(role: .assistant, text: self.decorate(starTrek)))
+                    self.messages.append(.init(role: .assistant, text: self.decorate(starTrek, persona: personaSnapshot)))
                     self.isThinking = false
                 }
                 return
@@ -126,7 +136,7 @@ final class HelloComputerStore: ObservableObject {
                let memoryAlpha = await MemoryAlphaClient.shared.answer(for: guestLoreQuerySnapshot ?? trimmed) {
                 await MainActor.run {
                     self.lastSource = memoryAlpha.source
-                    self.messages.append(.init(role: .assistant, text: self.decorate(memoryAlpha)))
+                    self.messages.append(.init(role: .assistant, text: self.decorate(memoryAlpha, persona: personaSnapshot)))
                     self.isThinking = false
                 }
                 return
@@ -138,7 +148,7 @@ final class HelloComputerStore: ObservableObject {
             if let local {
                 await MainActor.run {
                     self.lastSource = local.source
-                    self.messages.append(.init(role: .assistant, text: self.decorate(local)))
+                    self.messages.append(.init(role: .assistant, text: self.decorate(local, persona: personaSnapshot)))
                     self.isThinking = false
                 }
                 return
@@ -178,7 +188,7 @@ final class HelloComputerStore: ObservableObject {
                     }
                     self.messages.append(.init(
                         role: .assistant,
-                        text: fallback
+                        text: self.applyPersona(to: fallback, persona: personaSnapshot)
                     ))
                     self.isThinking = false
                 }
@@ -193,7 +203,7 @@ final class HelloComputerStore: ObservableObject {
                 )
                 await MainActor.run {
                     self.lastSource = .aiAssist
-                    self.messages.append(.init(role: .assistant, text: reply))
+                    self.messages.append(.init(role: .assistant, text: self.applyPersona(to: reply, persona: personaSnapshot)))
                     self.isThinking = false
                 }
             } catch {
@@ -201,7 +211,10 @@ final class HelloComputerStore: ObservableObject {
                     self.lastSource = .generalGuidance
                     self.messages.append(.init(
                         role: .assistant,
-                        text: "AI isn’t available right now. Check Schedule/Announcements or try a different question."
+                        text: self.applyPersona(
+                            to: "AI isn’t available right now. Check Schedule/Announcements or try a different question.",
+                            persona: personaSnapshot
+                        )
                     ))
                     self.isThinking = false
                 }
@@ -350,16 +363,36 @@ final class HelloComputerStore: ObservableObject {
         return loreTerms.contains { q.contains($0) }
     }
 
-    private func decorate(_ answer: HelloComputerAnswer) -> String {
+    private func decorate(_ answer: HelloComputerAnswer, persona: HelloComputerPersona) -> String {
         // Keep it subtle; don’t spam.
         // You can remove the suffix if you prefer.
+        let text = applyPersona(to: answer.text, persona: persona)
         switch answer.source {
         case .officialFAQ:
-            return "\(answer.text)\n\n— Source: Convention FAQ"
+            return "\(text)\n\n— Source: Convention FAQ"
         case .generalGuidance:
-            return "\(answer.text)\n\n— Source: General guidance"
+            return "\(text)\n\n— Source: General guidance"
         case .aiAssist:
-            return "\(answer.text)\n\n— Source: AI assistant"
+            return "\(text)\n\n— Source: AI assistant"
+        }
+    }
+
+    private func applyPersona(to text: String, persona: HelloComputerPersona) -> String {
+        guard persona == .scotty else { return text }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return text }
+        if trimmed.hasPrefix("Engineering note:") || trimmed.hasPrefix("Aye.") {
+            return trimmed
+        }
+        return "Aye. \(trimmed)\n\nEngineering note: I’ll keep the warp core steady, but please verify final room changes and ticket details with official convention updates."
+    }
+
+    private func greeting(for persona: HelloComputerPersona) -> String {
+        switch persona {
+        case .computer:
+            return "System Online."
+        case .scotty:
+            return "Engineering console online. Scotty persona standing by."
         }
     }
 
@@ -374,12 +407,13 @@ final class HelloComputerStore: ObservableObject {
         switch action.kind {
         case .addFavorite(let eventID, let title):
             favorites.insert(eventID)
-            output = "Added to favorites: \(title)\n\n— Source: AI assistant"
+            output = applyPersona(to: "Added to favorites: \(title)", persona: persona) + "\n\n— Source: AI assistant"
         case .removeFavorite(let eventID, let title):
             favorites.remove(eventID)
-            output = "Removed from favorites: \(title)\n\n— Source: AI assistant"
+            output = applyPersona(to: "Removed from favorites: \(title)", persona: persona) + "\n\n— Source: AI assistant"
         case .scheduleReminder(let title, let room, let startDate, let minutesBefore):
             pendingAction = nil
+            let personaSnapshot = persona
             Task { [weak self] in
                 guard let self else { return }
                 do {
@@ -392,14 +426,20 @@ final class HelloComputerStore: ObservableObject {
                     await MainActor.run {
                         self.messages.append(.init(
                             role: .assistant,
-                            text: "Reminder scheduled: \(minutesBefore) minutes before \(title).\n\n— Source: AI assistant"
+                            text: self.applyPersona(
+                                to: "Reminder scheduled: \(minutesBefore) minutes before \(title).",
+                                persona: personaSnapshot
+                            ) + "\n\n— Source: AI assistant"
                         ))
                     }
                 } catch {
                     await MainActor.run {
                         self.messages.append(.init(
                             role: .assistant,
-                            text: "I could not schedule that reminder: \(error.localizedDescription)\n\n— Source: AI assistant"
+                            text: self.applyPersona(
+                                to: "I could not schedule that reminder: \(error.localizedDescription)",
+                                persona: personaSnapshot
+                            ) + "\n\n— Source: AI assistant"
                         ))
                     }
                 }

@@ -147,7 +147,7 @@ struct TLBridgeViewscreenView: View {
 
                     if cameraStatus == .authorized {
                         Label("CAMERA LIVE", systemImage: "checkmark.circle.fill")
-                            .font(.caption2.weight(.bold))
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(BridgeViewscreenPalette.green)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 5)
@@ -160,7 +160,7 @@ struct TLBridgeViewscreenView: View {
             .overlay(alignment: .bottomLeading) {
                 if cameraStatus == .authorized {
                     Text("MAIN VIEWSCREEN")
-                        .font(.caption2.weight(.bold))
+                        .font(.caption.weight(.bold))
                         .tracking(1.8)
                         .foregroundStyle(BridgeViewscreenPalette.textMuted)
                         .padding(.leading, 28)

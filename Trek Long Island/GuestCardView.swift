@@ -63,7 +63,7 @@ struct GuestCardView: View {
                     if let series = guest.displaySeries {
                         Text(series)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                             .lineLimit(2)
                             .minimumScaleFactor(0.9)
                     }

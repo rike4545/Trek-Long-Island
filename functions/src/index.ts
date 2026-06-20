@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import {URL, URLSearchParams} from "node:url";
 import * as admin from "firebase-admin";
+import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 
@@ -50,6 +51,20 @@ type CRMCustomerSyncBody = {
 type TicketOrderSyncBody = {
   conventionID?: string;
   daysBack?: number;
+};
+
+type PublishedNotification = {
+  title?: unknown;
+  message?: unknown;
+  body?: unknown;
+  role?: unknown;
+  category?: unknown;
+  track?: unknown;
+  isPriority?: unknown;
+  showAsBanner?: unknown;
+  priority?: unknown;
+  timestamp?: unknown;
+  pushDisabled?: unknown;
 };
 
 type SquarePayment = {
@@ -232,6 +247,70 @@ function splitName(fullName: string) {
 
 function normalizeText(value: string | undefined | null): string {
   return (value ?? "").trim();
+}
+
+function normalizeUnknownText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function parseBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "yes" || normalized === "1";
+  }
+  if (typeof value === "number") {
+    return value === 1;
+  }
+  return false;
+}
+
+function parsePriority(value: PublishedNotification): boolean {
+  if (parseBoolean(value.isPriority) || parseBoolean(value.showAsBanner)) {
+    return true;
+  }
+
+  const priority = normalizeUnknownText(value.priority).toLowerCase();
+  return priority === "high" || priority === "critical" || priority === "priority";
+}
+
+function topicForNotificationRole(role: string): string {
+  switch (role.trim().toLowerCase()) {
+  case "guest":
+    return "trekli_2026_guest";
+  case "qvip":
+  case "vip":
+  case "premium":
+    return "trekli_2026_qvip";
+  case "staff":
+    return "trekli_2026_staff";
+  case "ops":
+  case "operations":
+    return "trekli_2026_ops";
+  case "vendor":
+  case "vendors":
+    return "trekli_2026_vendor";
+  case "all":
+  case "public":
+  default:
+    return "trekli_2026";
+  }
+}
+
+function timestampDate(value: unknown): Date | null {
+  if (value instanceof admin.firestore.Timestamp) {
+    return value.toDate();
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : new Date(parsed);
+  }
+  return null;
 }
 
 function parseQuantity(value: string | undefined): number {
@@ -770,5 +849,111 @@ export const squareWebhook = onRequest(
     }
 
     response.status(200).send("OK");
+  }
+);
+
+export const sendPushForPublishedNotification = onDocumentCreated(
+  "conventions/{conventionID}/notifications/{notificationID}",
+  async (event) => {
+    const snapshot = event.data;
+    if (!snapshot) {
+      return;
+    }
+
+    const data = snapshot.data() as PublishedNotification;
+    if (parseBoolean(data.pushDisabled)) {
+      await snapshot.ref.set(
+        {
+          pushStatus: "disabled",
+          pushUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        {merge: true}
+      );
+      return;
+    }
+
+    const title = normalizeUnknownText(data.title);
+    const body = normalizeUnknownText(data.message) || normalizeUnknownText(data.body);
+    if (!title || !body) {
+      await snapshot.ref.set(
+        {
+          pushStatus: "skipped_missing_content",
+          pushUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        {merge: true}
+      );
+      return;
+    }
+
+    const scheduledAt = timestampDate(data.timestamp);
+    if (scheduledAt && scheduledAt.getTime() > Date.now() + 5 * 60 * 1000) {
+      await snapshot.ref.set(
+        {
+          pushStatus: "skipped_future_timestamp",
+          pushUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        {merge: true}
+      );
+      return;
+    }
+
+    const role = normalizeUnknownText(data.role) || "all";
+    const category = normalizeUnknownText(data.category) || normalizeUnknownText(data.track) || "General";
+    const isPriority = parsePriority(data);
+    const topic = topicForNotificationRole(role);
+    const sentAt = new Date();
+
+    const message: admin.messaging.Message = {
+      topic,
+      notification: {
+        title,
+        body: body.length > 180 ? `${body.slice(0, 177)}...` : body
+      },
+      data: {
+        title,
+        message: body,
+        body,
+        role,
+        category,
+        isPriority: isPriority ? "true" : "false",
+        notificationID: snapshot.id,
+        documentID: snapshot.id,
+        conventionID: event.params.conventionID,
+        timestamp: scheduledAt?.toISOString() ?? sentAt.toISOString()
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+            "content-available": 1
+          }
+        }
+      }
+    };
+
+    try {
+      const messageID = await admin.messaging().send(message);
+      await snapshot.ref.set(
+        {
+          pushStatus: "sent",
+          pushTopic: topic,
+          pushMessageID: messageID,
+          pushSentAt: admin.firestore.FieldValue.serverTimestamp(),
+          pushUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        {merge: true}
+      );
+    } catch (error) {
+      await snapshot.ref.set(
+        {
+          pushStatus: "failed",
+          pushErrorMessage: error instanceof Error ? error.message : "Unknown push error",
+          pushUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        {merge: true}
+      );
+      throw error;
+    }
   }
 );

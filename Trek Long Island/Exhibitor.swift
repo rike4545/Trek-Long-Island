@@ -13,7 +13,7 @@ struct ExhibitorListView: View {
     @State private var searchText: String = ""
 
     private let signUpURL = URL(string: "https://treklongisland.com/participate/")!
-    private let vendorTicketsURL = URL(string: "https://treklongislandtickets.square.site/vendor")!
+    private let vendorTicketsURL = TicketPurchaseLinks.vendorTablingURL
 
     // Try common hero asset names; first one found is used
     private let heroCandidates = [
@@ -118,7 +118,7 @@ struct ExhibitorListView: View {
                     VStack(spacing: 12) {
                         HStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                             TextField(RisaTheme.isLCARSThemeEnabled ? "Search registry…" : "Search exhibitors…", text: $searchText)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
@@ -127,7 +127,7 @@ struct ExhibitorListView: View {
                                     searchText = ""
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Color.primary.opacity(0.72))
                                 }
                                 .accessibilityLabel("Clear search")
                             }

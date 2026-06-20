@@ -270,7 +270,7 @@ struct SquareSetupWizardView: View {
 
             if let copiedSnippet {
                 Text("Copied: \(copiedSnippet)")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(TLITheme.textSecondary(scheme))
             }
         }
@@ -322,7 +322,7 @@ struct SquareSetupWizardView: View {
     private func badge(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.caption2.weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(TLITheme.textSecondary(scheme))
             Text(value)
                 .font(.caption.weight(.bold))

@@ -63,7 +63,7 @@ struct SplashWelcomeView: View {
 
                         Text("Own your EV costs. Track sessions, forecast spend, and optimize charging.")
                             .multilineTextAlignment(.center)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                             .frame(maxWidth: 560)
                             .padding(.horizontal)
                     }
@@ -117,9 +117,9 @@ struct SplashWelcomeView: View {
                     // Onboarding tips (compact, optional)
                     VStack(spacing: 8) {
                         Label("Tip: Set your seasonal home rate for accurate forecasts.", systemImage: "lightbulb")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                         Label("Privacy first: your data stays on device unless you export it.", systemImage: "lock.shield")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                     }
                     .font(.callout)
                     .padding(.bottom, 24)
@@ -148,7 +148,7 @@ private struct StatChip: View {
                 .imageScale(.large)
                 .frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.subheadline).foregroundStyle(.secondary)
+                Text(title).font(.subheadline).foregroundStyle(Color.primary.opacity(0.72))
                 Text(value).font(.title3.weight(.semibold))
                     .minimumScaleFactor(0.8)
                     .lineLimit(1)
@@ -178,12 +178,12 @@ private struct ActionTile: View {
                 Image(systemName: icon).imageScale(.large)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.headline)
-                    Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
+                    Text(subtitle).font(.subheadline).foregroundStyle(Color.primary.opacity(0.72))
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
             .padding(14)
             .background(

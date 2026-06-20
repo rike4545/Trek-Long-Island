@@ -5,9 +5,6 @@
 //
 
 import SwiftUI
-#if canImport(SafariServices)
-import SafariServices
-#endif
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -17,6 +14,7 @@ struct TricorderMiniGameView: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+    @Environment(\.openURL) private var openURL
 
     @AppStorage("TLI.EasterEggs.tricorderRecoveredSignal") private var recoveredSignalUnlocked = false
 
@@ -29,7 +27,6 @@ struct TricorderMiniGameView: View {
     @State private var missionComplete = false
     @State private var statusText = "Tricorder calibrated. Begin a sector sweep."
     @State private var showingRecoveredSignal = false
-    @State private var presentedSignal: TricorderRecoveredSignal?
 
     private let totalRounds = 3
     private let gridSize = 5
@@ -53,10 +50,9 @@ struct TricorderMiniGameView: View {
         .background(tricorderBackground.ignoresSafeArea())
         .navigationTitle("Tricorder Scan")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $presentedSignal, content: TricorderRecoveredSignalView.init)
         .alert("Recovered signal detected", isPresented: $showingRecoveredSignal) {
             Button("Open Signal") {
-                presentedSignal = TricorderRecoveredSignal(recoveredSignalURL)
+                openURL(recoveredSignalURL)
             }
             Button("Later", role: .cancel) {}
         } message: {
@@ -362,7 +358,7 @@ struct TricorderMiniGameView: View {
                     .foregroundStyle(TricorderPalette.textBright)
 
                 Button {
-                    presentedSignal = TricorderRecoveredSignal(recoveredSignalURL)
+                    openURL(recoveredSignalURL)
                 } label: {
                     Label("Open Recovered Signal", systemImage: "sparkles.tv")
                         .frame(maxWidth: .infinity)
@@ -706,7 +702,7 @@ private struct TricorderSectorCell: View {
                         .font(.body.bold())
                     if differentiateWithoutColor {
                         Text(reading.shortCode)
-                            .font(.caption2.bold())
+                            .font(.caption.bold())
                     }
                 }
                 .foregroundStyle(reading.foreground)
@@ -942,49 +938,3 @@ private enum TricorderReading: Hashable, CaseIterable {
         }
     }
 }
-
-private struct TricorderRecoveredSignal: Identifiable {
-    let url: URL
-    var id: URL { url }
-
-    init(_ url: URL) {
-        self.url = url
-    }
-}
-
-#if canImport(SafariServices)
-private struct TricorderRecoveredSignalView: UIViewControllerRepresentable {
-    let item: TricorderRecoveredSignal
-
-    init(_ item: TricorderRecoveredSignal) {
-        self.item = item
-    }
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let controller = SFSafariViewController(url: item.url)
-        controller.dismissButtonStyle = .close
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
-}
-#else
-private struct TricorderRecoveredSignalView: View {
-    let item: TricorderRecoveredSignal
-
-    init(_ item: TricorderRecoveredSignal) {
-        self.item = item
-    }
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Recovered signal URL")
-                .font(.headline)
-            Text(item.url.absoluteString)
-                .font(.footnote)
-                .textSelection(.enabled)
-        }
-        .padding()
-    }
-}
-#endif

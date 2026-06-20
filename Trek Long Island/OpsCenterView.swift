@@ -59,10 +59,6 @@ struct OpsCenterView: View {
 
     @AppStorage(TLIAdSettings.adsEnabledKey) private var adsEnabled: Bool = true
     @AppStorage(TLIAdSettings.hideForStaffKey) private var hideAdsWhenStaffUnlocked: Bool = true
-    @AppStorage(TLIAdSettings.interstitialEnabledKey) private var interstitialEnabled: Bool = true
-    @AppStorage(TLIAdSettings.interstitialCooldownSecondsKey) private var interstitialCooldownSeconds: Double = 180
-    @AppStorage(TLIAdSettings.appOpenEnabledKey) private var appOpenEnabled: Bool = true
-    @AppStorage(TLIAdSettings.appOpenCooldownSecondsKey) private var appOpenCooldownSeconds: Double = 900
 
     @AppStorage("TLI.OpsCenter.handoffNote") private var handoffNote: String = ""
     @AppStorage("TLI.OpsCenter.handoff.roomsChecked") private var handoffRoomsChecked: Bool = false
@@ -221,7 +217,7 @@ struct OpsCenterView: View {
 
                         Text(headerSummaryText)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -317,7 +313,7 @@ struct OpsCenterView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Current focus")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
 
                         Text(overviewPrioritySummary)
                             .font(.subheadline.weight(.semibold))
@@ -335,7 +331,7 @@ struct OpsCenterView: View {
                     HStack {
                         Text("Shift handoff")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                         Spacer(minLength: 8)
                         Text(handoffIncompleteCount == 0 ? "Complete" : "\(handoffIncompleteCount) remaining")
                             .font(.caption.monospacedDigit().weight(.semibold))
@@ -350,7 +346,7 @@ struct OpsCenterView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Critical rooms")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
 
                         ForEach(criticalRooms.prefix(3)) { room in
                             HStack {
@@ -359,7 +355,7 @@ struct OpsCenterView: View {
                                     .foregroundStyle(TLITheme.textPrimary(scheme))
                                 Spacer(minLength: 8)
                                 Text(room.status.title)
-                                    .font(.caption2.weight(.bold))
+                                    .font(.caption.weight(.bold))
                                     .foregroundStyle(.red)
                             }
                             .padding(.horizontal, 10)
@@ -408,7 +404,7 @@ struct OpsCenterView: View {
                             Spacer(minLength: 8)
                             Text("\(item.count)")
                                 .font(.caption.monospacedDigit().weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                 }
@@ -428,8 +424,8 @@ struct OpsCenterView: View {
                                     height: CGFloat(max(6, Int((Double(point.count) / Double(maxDaily)) * 56.0)))
                                 )
                             Text(point.label)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -457,17 +453,17 @@ struct OpsCenterView: View {
                     .font(.subheadline.weight(.semibold))
                 Text(usageSnapshot.deviceModel)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                 Text("OS: \(usageSnapshot.systemVersion)")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                 Text("App: \(usageSnapshot.appVersion) (\(usageSnapshot.buildNumber))")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                 if let lastActiveAt = usageSnapshot.lastActiveAt {
                     Text("Last active \(lastActiveAt, style: .relative)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             }
 
@@ -482,7 +478,7 @@ struct OpsCenterView: View {
                             Spacer(minLength: 8)
                             Text("\(item.count)")
                                 .font(.caption.monospacedDigit().weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                 }
@@ -493,8 +489,8 @@ struct OpsCenterView: View {
     private func metricChip(title: String, value: String, systemImage: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Label(title, systemImage: systemImage)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text(value)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(TLITheme.textPrimary(scheme))
@@ -520,7 +516,7 @@ struct OpsCenterView: View {
                         .font(.subheadline.weight(.semibold))
                     Text("Convention: \(notifications.conventionID)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
 
                 Spacer(minLength: 8)
@@ -540,7 +536,7 @@ struct OpsCenterView: View {
                 Label("Tickets \(opsStore.activeTickets(limit: 200).count)", systemImage: "cross.case")
             }
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.primary.opacity(0.72))
         }
     }
 
@@ -599,12 +595,12 @@ struct OpsCenterView: View {
         Section("Unlock") {
             Text("Coordinator tools require Firebase sign-in with an approved allowlisted account.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
 
             if let email = adminAuth.signedInEmail, !email.isEmpty {
                 Label(email, systemImage: "person.crop.circle.badge.checkmark")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if adminAuth.isApproved {
@@ -636,7 +632,7 @@ struct OpsCenterView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(workspaceSummary(for: workspace))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -693,14 +689,14 @@ struct OpsCenterView: View {
             if criticalRooms.isEmpty && notifications.pendingNotifications.isEmpty && criticalTicketCount == 0 {
                 Text("All key command signals are stable. Use Quick Launch to jump into the area you want to monitor.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Priority focus")
                         .font(.subheadline.weight(.semibold))
                     Text(overviewPrioritySummary)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -782,7 +778,7 @@ struct OpsCenterView: View {
                         .font(.subheadline.weight(.semibold))
                     Text("Convention: \(notifications.conventionID)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             }
 
@@ -792,7 +788,7 @@ struct OpsCenterView: View {
                 Label("Tickets \(opsStore.activeTickets(limit: 200).count)", systemImage: "cross.case")
             }
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(14)
         .background(TLITheme.cardBackground(scheme), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -858,8 +854,8 @@ struct OpsCenterView: View {
     private func dashboardBadge(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
-                .font(.caption2.weight(.bold))
-                .foregroundStyle(.secondary)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Color.primary.opacity(0.72))
 
             Text(value)
                 .font(.caption.weight(.semibold))
@@ -879,8 +875,8 @@ struct OpsCenterView: View {
     private func priorityTag(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title.uppercased())
-                .font(.caption2.weight(.bold))
-                .foregroundStyle(.secondary)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text(value)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(TLITheme.textPrimary(scheme))
@@ -905,7 +901,7 @@ struct OpsCenterView: View {
             HStack {
                 Label(title, systemImage: symbol)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                 Spacer(minLength: 8)
                 Circle()
                     .fill(tint.opacity(0.9))
@@ -918,7 +914,7 @@ struct OpsCenterView: View {
 
             Text(subtitle)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
@@ -962,7 +958,7 @@ struct OpsCenterView: View {
 
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1020,7 +1016,7 @@ struct OpsCenterView: View {
             } else {
                 Text("Notifier or Master access is required to draft alerts.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         }
     }
@@ -1040,7 +1036,7 @@ struct OpsCenterView: View {
             if criticalRooms.isEmpty {
                 Text("No rooms currently marked at capacity or over compliance limits.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 ForEach(criticalRooms.prefix(6)) { room in
                     HStack {
@@ -1049,7 +1045,7 @@ struct OpsCenterView: View {
                                 .font(.subheadline.weight(.semibold))
                             Text("\(room.status.title) • CO \(room.occupancyLabel)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                         Spacer(minLength: 8)
                         Image(systemName: "exclamationmark.octagon.fill")
@@ -1104,7 +1100,7 @@ struct OpsCenterView: View {
             if let lastSquareImportMessage = ticketStore.lastSquareImportMessage {
                 Text(lastSquareImportMessage)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             Button {
@@ -1142,12 +1138,12 @@ struct OpsCenterView: View {
             Label(squareIntegrationStore.connection.status.title, systemImage: squareStatusSymbol)
             Text(squareIntegrationStore.connection.statusSummary)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
 
             if !notifications.isSuperAdminUnlocked {
                 Text("Master role required to change Square integration state.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             Button {
@@ -1185,38 +1181,14 @@ struct OpsCenterView: View {
             Section("Master Controls") {
                 Text("Master role required for monetization and sensitive operator controls.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
         } else {
             if !TLIAdAvailability.areAdsDisabledForCurrentTarget {
                 Section("Monetization") {
-                    Toggle("Show sponsored ads", isOn: $adsEnabled)
-                    Toggle("Hide ads while staff mode is unlocked", isOn: $hideAdsWhenStaffUnlocked)
+                    Toggle("Show banner ads", isOn: $adsEnabled)
+                    Toggle("Hide banner ads while staff mode is unlocked", isOn: $hideAdsWhenStaffUnlocked)
                         .disabled(!adsEnabled)
-
-                    Toggle("Enable interstitial ads", isOn: $interstitialEnabled)
-                        .disabled(!adsEnabled)
-
-                    HStack {
-                        Text("Interstitial cooldown")
-                        Spacer(minLength: 8)
-                        Text("\(Int(interstitialCooldownSeconds)) sec")
-                            .foregroundStyle(.secondary)
-                    }
-                    Slider(value: $interstitialCooldownSeconds, in: 120...900, step: 60)
-                        .disabled(!adsEnabled || !interstitialEnabled)
-
-                    Toggle("Enable app-open ads", isOn: $appOpenEnabled)
-                        .disabled(!adsEnabled)
-
-                    HStack {
-                        Text("App-open cooldown")
-                        Spacer(minLength: 8)
-                        Text("\(Int(appOpenCooldownSeconds)) sec")
-                            .foregroundStyle(.secondary)
-                    }
-                    Slider(value: $appOpenCooldownSeconds, in: 300...21600, step: 300)
-                        .disabled(!adsEnabled || !appOpenEnabled)
                 }
             }
 
@@ -1264,7 +1236,7 @@ struct OpsCenterView: View {
                 } else {
                     Text("Convention security tokens are only visible during the convention window.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             }
         }
@@ -1281,7 +1253,7 @@ struct OpsCenterView: View {
 
             Text("Use this note for operator-to-operator handoff at shift change.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
     }
 
@@ -1290,7 +1262,7 @@ struct OpsCenterView: View {
             if auditStore.entries.isEmpty {
                 Text("No audit entries yet.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 ForEach(auditStore.entries.prefix(20)) { entry in
                     VStack(alignment: .leading, spacing: 2) {
@@ -1298,11 +1270,11 @@ struct OpsCenterView: View {
                             .font(.subheadline.weight(.semibold))
                         Text("\(entry.actor) • \(entry.timestamp, style: .time)")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                         if !entry.details.isEmpty {
                             Text(entry.details)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                 }

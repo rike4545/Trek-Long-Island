@@ -122,16 +122,17 @@ struct ConEconomicsPressurePointsView: View {
     // Blended avg across buyer mix (~55% 3-day, ~30% Sat-only, ~15% child) ≈ $58
     // Square fee: ~2.9% + $0.30/txn → ~3.4% effective on $58 → net ~97%
     //
+    // Square vendor page checked Apr 23, 2026:
     // Vendor tables (2026): Booth $425–450 · Exhibitor $325–350
     //   Crafter $225–250 · Hallway/Fan $200 · Artist Alley $150
     //   $50 price increase after May 1, 2026. Each table includes 2 passes.
     //
-    // Sponsorship (10 tiers, 5 already sold / committed as of Mar 18, 2026):
+    // Sponsorship page checked Apr 23, 2026:
     //   SOLD: Main Stage $4,000 · Signage $2,000 · Panel Room $2,000
     //         Phone App $1,500 · Kid's Track Ops $300 = $9,800 confirmed
     //   OPEN: DEI $6,000 · Vendor Room $4,000 · Room Pkg 2 $1,500
     //         Info Desk Ops $500 · Fan $25+
-    //   Published ceiling is now ~$21,800 before any Fan Package support.
+    //   Published package ceiling remains ~$21,800 before any Fan Package support.
     //   NOTE: Packages ≥$500 include a free hallway table — not independent of vendor revenue.
     //
     // Hyatt venue: Grand Ballroom 9,779 sq ft / 1,000 cap (8 divisible salons)
@@ -257,7 +258,7 @@ struct ConEconomicsPressurePointsView: View {
                 .foregroundStyle(TLI.gold)
             Text("Fiction & illustrative only — figures are estimates for educational use, not actual Trek Long Island financials.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -274,6 +275,7 @@ struct ConEconomicsPressurePointsView: View {
             admissionComparisonSection
             pressurePointsSection
             riskReducersSection
+            vendorPricingSection
             sponsorshipSection
             scenarioInsightSection
         }
@@ -326,7 +328,7 @@ struct ConEconomicsPressurePointsView: View {
                         Spacer()
                         Text("\(Int(maxDisplay))")
                     }
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.tertiary)
                 }
 
@@ -348,8 +350,8 @@ struct ConEconomicsPressurePointsView: View {
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -362,7 +364,7 @@ struct ConEconomicsPressurePointsView: View {
         VStack(spacing: 8) {
             Text("Scenario margin")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 10) {
                 marginPill(attendees: 400, margin: marginAt(400))
@@ -430,7 +432,7 @@ struct ConEconomicsPressurePointsView: View {
 
             Text("Real budgets may also include room-block penalties, gratuities, union labor minimums, sales tax obligations on admission or membership fees, per-attendee variable costs (badges, lanyards, printing), and ticket refunds.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .padding(.top, 8)
                 .padding(.horizontal, 4)
         }
@@ -499,7 +501,7 @@ struct ConEconomicsPressurePointsView: View {
 
             Text("This timeline is illustrative and should be checked against the official ticket site for exact live pricing.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .padding(.top, 8)
                 .padding(.horizontal, 4)
         }
@@ -515,7 +517,7 @@ struct ConEconomicsPressurePointsView: View {
 
                 Text(detail)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 14)
@@ -541,7 +543,7 @@ struct ConEconomicsPressurePointsView: View {
 
             Text("Snapshot checked April 2, 2026. Prices and on-sale status can change.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .padding(.top, 8)
                 .padding(.horizontal, 4)
         }
@@ -555,7 +557,7 @@ struct ConEconomicsPressurePointsView: View {
                         .font(.subheadline.weight(.semibold))
                     Text(entry.edition)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
 
                 Spacer(minLength: 8)
@@ -574,7 +576,7 @@ struct ConEconomicsPressurePointsView: View {
 
             Text(entry.note)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .fixedSize(horizontal: false, vertical: true)
 
             Link("Source", destination: entry.sourceURL)
@@ -589,8 +591,8 @@ struct ConEconomicsPressurePointsView: View {
     private func admissionPricePill(_ label: String, price: String) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.primary.opacity(0.72))
             Text(price)
                 .font(.caption.weight(.bold).monospacedDigit())
                 .foregroundStyle(price == "TBD" ? .secondary : .primary)
@@ -623,7 +625,7 @@ struct ConEconomicsPressurePointsView: View {
                     "Square charges ~2.9% + $0.30/transaction. If a headline guest cancels, refund volume can spike dramatically.",
                     color: .orange)
                 pressureCard("🎯", "Sponsor concentration",
-                    "Trek LI's top 3 tiers ($6k + $4k + $4k) represent ~$14,000. One no-show creates an immediate gap. Main Stage and Phone App are already sold, which is a good sign.",
+                    "Trek LI's top published tiers ($6k + $4k + $4k) represent ~$14,000. One no-show creates an immediate gap. The sponsorship page already shows Main Stage, Signage, Panel Room, Phone App, and Kid's Track Operations sold, which is a strong early-risk reducer.",
                     color: .purple)
                 pressureCard("⏱", "Cash-flow timing",
                     "Venue deposits, insurance premiums, and AV commitments are due months before ticket revenue peaks. Plan for 60–90 days of float.",
@@ -645,7 +647,7 @@ struct ConEconomicsPressurePointsView: View {
                     .font(.subheadline.weight(.semibold))
                 Text(body)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -678,13 +680,72 @@ struct ConEconomicsPressurePointsView: View {
                 Text(emoji).font(.body).frame(width: 26)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.subheadline.weight(.semibold))
-                    Text(body).font(.caption).foregroundStyle(.secondary)
+                    Text(body).font(.caption).foregroundStyle(Color.primary.opacity(0.72))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
             Divider().padding(.leading, 50)
+        }
+    }
+
+    // MARK: - Vendor pricing
+    private var vendorPricingSection: some View {
+        VStack(spacing: 0) {
+            sectionHeader("2026 Vendor Pricing", icon: "shippingbox.fill")
+
+            VStack(spacing: 0) {
+                vendorPriceRow("$425–450", "Vendor Booth", "Premium booth option from the Square vendor page.")
+                vendorPriceRow("$325–350", "Exhibitor Table", "Standard exhibitor table pricing band.")
+                vendorPriceRow("$225–250", "Crafter Table", "Lower-cost maker and crafter table option.")
+                vendorPriceRow("$200", "Hallway / Fan Table", "Hallway table option; also overlaps with some sponsor benefits.")
+                vendorPriceRow("$150", "Artist Alley", "Lowest published vendor table tier.")
+            }
+            .background(TLI.cardBG)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                    Text("$50 increase after May 1, 2026. Each table includes 2 passes.")
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: "envelope")
+                    Text("Vendor questions: brothersgrimgames@gmail.com with “Vendor” in the subject.")
+                }
+
+                Link("Source: Square vendor page", destination: TicketPurchaseLinks.vendorTablingURL)
+            }
+            .font(.caption)
+            .foregroundStyle(Color.primary.opacity(0.72))
+            .padding(.top, 8)
+            .padding(.horizontal, 4)
+        }
+    }
+
+    private func vendorPriceRow(_ price: String, _ name: String, _ description: String) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 10) {
+                Text(price)
+                    .font(.subheadline.weight(.bold).monospacedDigit())
+                    .foregroundStyle(TLI.gold)
+                    .frame(width: 78, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name)
+                        .font(.subheadline.weight(.semibold))
+                    Text(description)
+                        .font(.caption)
+                        .foregroundStyle(Color.primary.opacity(0.72))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+
+            Divider().padding(.leading, 14)
         }
     }
 
@@ -697,8 +758,8 @@ struct ConEconomicsPressurePointsView: View {
                 sponsorRow("$6,000", "DEI Package",              "ASL interpreter + inclusivity resources. 6 passes + sponsor pin.", soldOut: false)
                 sponsorRow("$4,000", "Main Stage",               "Sold to Coolwaters Productions. Main stage banner, table, bag flyer.", soldOut: true)
                 sponsorRow("$4,000", "Vendor Room",              "Banner at vendor room entrance. 4 passes, hallway table, bag flyer.", soldOut: false)
-                sponsorRow("$2,000", "Panel Room",               "Diversity room sold to PMA Consulting from the panel room package.", soldOut: true)
                 sponsorRow("$2,000", "Signage Package",          "Sold to TrekAtecture. Logo placed across convention signage.", soldOut: true)
+                sponsorRow("$2,000", "Panel Room",               "Diversity Room sold to PMA Consulting from the panel room package.", soldOut: true)
                 sponsorRow("$1,500", "Room Package 2",           "Kid's Track or Photo Studio room rental. Sponsor chooses.", soldOut: false)
                 sponsorRow("$1,500", "Phone App",                "Sold to Transporter Room Podcast. Logo appears on app opening screen.", soldOut: true)
                 sponsorRow("$500",   "Operations (Info Desk)",   "Offsets Information Desk and convention operations costs.", soldOut: false)
@@ -713,7 +774,7 @@ struct ConEconomicsPressurePointsView: View {
                 Text("Packages ≥$500 include a free hallway table — these are not independent of vendor revenue.")
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.primary.opacity(0.72))
             .padding(.top, 8)
             .padding(.horizontal, 4)
         }
@@ -731,7 +792,7 @@ struct ConEconomicsPressurePointsView: View {
                         Text(name).font(.subheadline.weight(.semibold))
                         if soldOut {
                             Text("SOLD OUT")
-                                .font(.caption2.weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)
@@ -741,7 +802,7 @@ struct ConEconomicsPressurePointsView: View {
                     }
                     Text(description)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .opacity(soldOut ? 0.7 : 1)
@@ -759,7 +820,7 @@ struct ConEconomicsPressurePointsView: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 insightBlock("Confirmed revenue head start",
-                    "Five sponsorship commitments are already visible on the live sponsorship page: Main Stage ($4,000), Signage ($2,000), Panel Room ($2,000), Phone App ($1,500), and Kid's Track Operations ($300). That's \(fmt(9_800)) locked in before a single ticket is sold, which meaningfully lowers the break-even attendee count.")
+                    "The sponsorship page shows five sold package commitments: Main Stage ($4,000) to Coolwaters Productions, Signage ($2,000) to TrekAtecture, Diversity/Panel Room ($2,000) to PMA Consulting, Phone App ($1,500) to The Transporter Room Podcast, and Kid's Track Operations ($300) to Beadle & Grimm's. That's \(fmt(9_800)) locked in before a single ticket is sold, which meaningfully lowers the break-even attendee count.")
 
                 insightBlock("The hallway table offset",
                     "Every sponsorship package ≥$500 includes a complimentary hallway table. Each sponsor who takes one displaces a paid vendor slot. Vendor and sponsorship revenue are partially linked — don't count both independently.")
@@ -783,7 +844,7 @@ struct ConEconomicsPressurePointsView: View {
                 .foregroundStyle(TLI.gold)
             Text(body)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -882,7 +943,7 @@ private struct PercentField: View {
                     text = value == 0 ? "" : String(Int(value))
                 } else if isEditing { commit() }
             }
-            Text("%").font(.subheadline).foregroundStyle(.secondary)
+            Text("%").font(.subheadline).foregroundStyle(Color.primary.opacity(0.72))
         }
     }
 

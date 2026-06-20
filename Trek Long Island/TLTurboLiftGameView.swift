@@ -323,7 +323,7 @@ struct TLTurboLiftGameView: View {
     private func liftBadge(_ title: String, value: String) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(title)
-                .font(.caption2.bold())
+                .font(.caption.bold())
                 .foregroundStyle(LiftPalette.textDim)
             Text(value)
                 .font(.caption.weight(.bold))
@@ -337,7 +337,7 @@ struct TLTurboLiftGameView: View {
     private func liftPill(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
-                .font(.caption2.bold())
+                .font(.caption.bold())
                 .foregroundStyle(LiftPalette.textDim)
             Text(value)
                 .font(.subheadline.weight(.bold))

@@ -925,7 +925,7 @@ fileprivate struct TLTRBadge: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label.uppercased())
-                .font(.caption2.weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .tracking(1.0)
                 .foregroundStyle(TLTRColors.muted)
 
@@ -971,7 +971,7 @@ fileprivate struct TLTRLogRow: View {
             Spacer()
 
             Text(entry.date, style: .time)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(TLTRColors.muted)
                 .monospacedDigit()
         }

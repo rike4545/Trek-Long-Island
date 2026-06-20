@@ -55,7 +55,7 @@ struct SupportCenterView: View {
 
                 Text(privacy.helpText)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
 
                 TextField("Short title", text: $title)
                 TextField("Location", text: $location)
@@ -87,7 +87,7 @@ struct SupportCenterView: View {
             Section("Recent Tickets (Public)") {
                 if publicRecentTickets.isEmpty {
                     Text("No public tickets yet.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 } else {
                     ForEach(publicRecentTickets.prefix(10)) { ticket in
                         VStack(alignment: .leading, spacing: 6) {
@@ -104,11 +104,11 @@ struct SupportCenterView: View {
 
                             Text("\(ticket.category.title) • \(ticket.location)")
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
 
                             Text(ticket.updatedAt, style: .relative)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                         .padding(.vertical, 3)
                     }
@@ -117,7 +117,7 @@ struct SupportCenterView: View {
                 if hiddenTicketCount > 0 {
                     Text("\(hiddenTicketCount) ticket(s) are private and only visible to staff operations.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             }
         }
@@ -139,7 +139,7 @@ struct SupportCenterView: View {
                 .font(.headline)
             Text(body)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(.vertical, 3)
     }

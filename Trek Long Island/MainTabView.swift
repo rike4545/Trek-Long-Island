@@ -27,8 +27,6 @@ struct MainTabView: View {
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @EnvironmentObject private var usageInsightsStore: TLIUsageInsightsStore
-    @ObservedObject private var notificationManager = NotificationManager.shared
-    @ObservedObject private var interstitialAds = AdMobInterstitialManager.shared
     @AppStorage(TLITypographyPreference.storageKey) private var typographyRaw: String = TLITypographyPreference.defaultPreference.rawValue
     private let sfx = ZenSFX.shared
     @SceneStorage("MainTabView.selectedTab") private var selectedTabRaw: String = TrekTab.today.rawValue
@@ -62,22 +60,15 @@ struct MainTabView: View {
         // Use RisaTheme accent to keep tab + controls consistent app-wide.
         .tint(RisaTheme.accent(scheme))
         .onAppear {
-            interstitialAds.preloadIfEligible()
             usageInsightsStore.noteSelectedTab(selectedTab.rawValue)
         }
         .onChange(of: selectedTabRaw) { oldValue, newValue in
             let oldTab = TrekTab(rawValue: oldValue) ?? .today
             let newTab = TrekTab(rawValue: newValue) ?? .today
             guard oldTab != newTab else { return }
+            dismissKeyboard()
             usageInsightsStore.noteSelectedTab(newTab.rawValue)
             playNavigationFeedback()
-            interstitialAds.noteTopLevelNavigationEvent()
-
-            // Policy-safe placement: only after user-driven transitions
-            // into non-critical browsing tabs.
-            if newTab == .guests || newTab == .map {
-                interstitialAds.maybePresentAfterTopLevelNavigation()
-            }
         }
         .onAppear {
             syncSplitVisibility(for: hSizeClass)
@@ -166,15 +157,7 @@ struct MainTabView: View {
                 }
 
                 Section(RisaTheme.isLCARSThemeEnabled ? "Active Feed" : "Now") {
-                    HStack {
-                        Label(RisaTheme.isLCARSThemeEnabled ? "Priority Alerts" : "Unread Alerts", systemImage: "bell.badge.fill")
-                        Spacer(minLength: 8)
-                        Text("\(notificationManager.unreadCount)")
-                            .font(.caption.weight(.bold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(TLITheme.lcarsPanelFill(scheme).opacity(0.92), in: Capsule())
-                    }
+                    SidebarUnreadAlertRow(scheme: scheme)
 
                     Text(
                         RisaTheme.isLCARSThemeEnabled
@@ -182,7 +165,7 @@ struct MainTabView: View {
                             : "Pick any section from the sidebar and keep moving without losing your place."
                     )
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                 }
             }
             .listStyle(.sidebar)
@@ -235,6 +218,7 @@ struct MainTabView: View {
     private func sidebarButton(_ title: String, icon: String, tab: TrekTab) -> some View {
         let isSelected = selectedTab == tab
         return Button {
+            dismissKeyboard()
             selectedTab = tab
         } label: {
             HStack(spacing: 10) {
@@ -247,12 +231,8 @@ struct MainTabView: View {
                             : selectedTypography.font(.subheadline, weight: .semibold)
                     )
                 Spacer(minLength: 8)
-                if tab == .today && notificationManager.unreadCount > 0 {
-                    Text("\(notificationManager.unreadCount)")
-                        .font(.caption2.weight(.bold))
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 4)
-                        .background(TLITheme.lcarsPanelFill(scheme).opacity(0.92), in: Capsule())
+                if tab == .today {
+                    SidebarUnreadBadge(scheme: scheme)
                 } else if differentiateWithoutColor {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .font(.footnote.weight(.bold))
@@ -279,6 +259,12 @@ struct MainTabView: View {
         sfx.play("lcars_tap_soft", ext: "wav", volume: 0.12)
         #if canImport(UIKit)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        #endif
+    }
+
+    private func dismissKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
     }
 
@@ -317,6 +303,38 @@ struct MainTabView: View {
     }
 }
 
+private struct SidebarUnreadAlertRow: View {
+    @ObservedObject private var notificationManager = NotificationManager.shared
+    let scheme: ColorScheme
+
+    var body: some View {
+        HStack {
+            Label(RisaTheme.isLCARSThemeEnabled ? "Priority Alerts" : "Unread Alerts", systemImage: "bell.badge.fill")
+            Spacer(minLength: 8)
+            Text("\(notificationManager.unreadCount)")
+                .font(.caption.weight(.bold))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(TLITheme.lcarsPanelFill(scheme).opacity(0.92), in: Capsule())
+        }
+    }
+}
+
+private struct SidebarUnreadBadge: View {
+    @ObservedObject private var notificationManager = NotificationManager.shared
+    let scheme: ColorScheme
+
+    var body: some View {
+        if notificationManager.unreadCount > 0 {
+            Text("\(notificationManager.unreadCount)")
+                .font(.caption.weight(.bold))
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(TLITheme.lcarsPanelFill(scheme).opacity(0.92), in: Capsule())
+        }
+    }
+}
+
 @MainActor
 private struct MoreHubView: View {
     @Environment(\.colorScheme) private var scheme
@@ -329,6 +347,8 @@ private struct MoreHubView: View {
                 title: "Holodeck",
                 subtitle: "Low-stakes relaxation and personal log tools between missions.",
                 items: [
+                    .init(title: "My Mission Plan", subtitle: "Saved events, must-meet guests, and your next move.", icon: "list.bullet.clipboard.fill", accent: .cyan, destination: .missionPlan),
+                    .init(title: "Photo & Autographs", subtitle: "Track purchased ops, signing stops, selfies, and table notes.", icon: "camera.on.rectangle.fill", accent: .pink, destination: .photoAutographs),
                     .init(title: "Captain’s Chair", subtitle: "A calm ambient bridge escape with zero admin energy.", icon: "moon.stars.fill", accent: .indigo, destination: nil, triggersZen: true),
                     .init(title: "Mini Journal", subtitle: "Capture thoughts, sightings, and con memories quickly.", icon: "book.closed", accent: .mint, destination: .journal)
                 ]
@@ -342,7 +362,8 @@ private struct MoreHubView: View {
                     .init(title: "Discounts & Deals", subtitle: "Quick access to partner offers and related savings.", icon: "tag.fill", accent: .teal, destination: .discounts),
                     .init(title: "Fan Media & Culture", subtitle: "Podcasts, media, and behind-the-scenes community energy.", icon: "film.stack", accent: .pink, destination: .fanMedia),
                     .init(title: "Ferengi Rules", subtitle: "A playful lore detour when the promenade gets chaotic.", icon: "list.number", accent: .orange, destination: .ferengiRules),
-                    .init(title: "Convention Economics", subtitle: "Read the business side of events, fandom, and sustainability.", icon: "dollarsign.circle", accent: .yellow, destination: .conEconomics)
+                    .init(title: "Convention Economics", subtitle: "Explore the break-even math behind fan-run convention planning.", icon: "chart.line.uptrend.xyaxis", accent: .green, destination: .conEconomics),
+                    .init(title: "Section 31", subtitle: "Transparency notes and supporting evidence.", icon: "checkmark.seal.fill", accent: .yellow, destination: .section31)
                 ]
             ),
             .init(
@@ -350,7 +371,7 @@ private struct MoreHubView: View {
                 subtitle: "Operational tools for support, staffing, and floor awareness.",
                 items: [
                     .init(title: "Ops Center", subtitle: "Mission-control tools for staffing, issues, and response.", icon: "person.crop.rectangle.stack.fill", accent: .red, destination: .opsCenter),
-                    .init(title: "Crowd Measurement", subtitle: "Check attendance pressure points and room flow quickly.", icon: "person.3.fill", accent: .purple, destination: .crowdMeasurement),
+                    .init(title: "Crowd Management", subtitle: "Track room flow with manual counts, nearby app sharing, and Bluetooth signal sweeps.", icon: "person.3.fill", accent: .purple, destination: .crowdMeasurement),
                     .init(title: "Support Center", subtitle: "Reach the help surface for logistics and attendee care.", icon: "cross.case.fill", accent: .green, destination: .supportCenter),
                     .init(title: "Settings", subtitle: "Tune theme, identity, notifications, and app behavior.", icon: "gearshape", accent: .gray, destination: .settings)
                 ]
@@ -380,6 +401,7 @@ private struct MoreHubView: View {
         .scrollIndicators(.hidden)
         .background(TLITheme.backgroundGradient(scheme).ignoresSafeArea())
         .tint(RisaTheme.accent(scheme))
+        .tliFixedBottomAdSlot()
         .sheet(isPresented: $isShowingZen) {
             ZenCaptainsChairRisaView()
                 .tint(RisaTheme.accent(scheme))
@@ -424,6 +446,7 @@ private struct MoreHubView: View {
             shadowY: 8
         )
     }
+
 }
 
 private struct MoreHubSection: Identifiable {
@@ -460,12 +483,15 @@ private struct MoreHubItem: Identifiable {
 }
 
 private enum MoreHubDestination {
+    case missionPlan
+    case photoAutographs
     case journal
     case ussLongIsland
     case trekNews
     case discounts
     case fanMedia
     case ferengiRules
+    case section31
     case conEconomics
     case opsCenter
     case crowdMeasurement
@@ -528,6 +554,10 @@ private struct MoreHubSectionCard: View {
     @ViewBuilder
     private func destinationView(for destination: MoreHubDestination) -> some View {
         switch destination {
+        case .missionPlan:
+            MyMissionPlanView()
+        case .photoAutographs:
+            PhotoAutographTrackerView()
         case .journal:
             MiniJournalView()
         case .ussLongIsland:
@@ -540,6 +570,8 @@ private struct MoreHubSectionCard: View {
             TrekFanMediaView()
         case .ferengiRules:
             FerengiRulesView()
+        case .section31:
+            Section31View()
         case .conEconomics:
             ConEconomicsPressurePointsView()
         case .opsCenter:

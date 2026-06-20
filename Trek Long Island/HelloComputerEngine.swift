@@ -13,8 +13,15 @@
 //
 
 import Foundation
+import NaturalLanguage
 
 enum HelloComputerEngine {
+    private struct RankedFAQ {
+        let faq: HelloComputerFAQ
+        let semantic: Double
+        let lexical: Double
+        let neural: Double
+    }
 
     static func answer(for query: String, audience: HelloComputerAudience = .attendee) -> HelloComputerAnswer? {
         let q = normalize(query)
@@ -33,24 +40,29 @@ enum HelloComputerEngine {
             )
         }
 
-        // Score each FAQ by keyword overlap and phrase hits
-        var best: (faq: HelloComputerFAQ, score: Double)? = nil
+        // Blend lexical matching, semantic similarity, and a tiny neural reranker.
+        var best: (faq: HelloComputerFAQ, score: Double, lexical: Double, semantic: Double, neural: Double)? = nil
 
         for faq in HelloComputerFAQBank.allFAQs {
-            let score = scoreFAQ(faq, against: q)
+            let features = faqFeatures(for: faq, against: q)
+            let lexicalScore = features.lexical
+            let semanticScore = features.semantic
+            let neuralScore = HelloComputerFAQNeuralNetwork.shared.predict(features: features.vector).confidence
+            let score = lexicalScore + (semanticScore * 2.4) + (neuralScore * 3.4)
             if let b = best {
-                if score > b.score { best = (faq, score) }
+                if score > b.score { best = (faq, score, lexicalScore, semanticScore, neuralScore) }
             } else {
-                best = (faq, score)
+                best = (faq, score, lexicalScore, semanticScore, neuralScore)
             }
         }
 
         guard let chosen = best else { return nil }
 
-        // Confidence heuristic
-        let confidence = min(max(chosen.score / 10.0, 0.0), 1.0)
+        let lexicalConfidence = min(max(chosen.lexical / 10.0, 0.0), 1.0)
+        let confidence = max(lexicalConfidence, max(chosen.semantic, chosen.neural))
 
-        // Only return if it passes a minimum threshold
+        // Require at least one strong signal before we answer.
+        if chosen.lexical < 2.25 && chosen.semantic < 0.63 && chosen.neural < 0.60 { return nil }
         if confidence < 0.28 { return nil }
 
         return HelloComputerAnswer(
@@ -60,33 +72,101 @@ enum HelloComputerEngine {
         )
     }
 
-    private static func scoreFAQ(_ faq: HelloComputerFAQ, against normalizedQuery: String) -> Double {
+    static func semanticFallbackAnswer(for query: String, audience: HelloComputerAudience = .attendee) -> HelloComputerAnswer? {
+        let q = normalize(query)
+        guard q.count >= 2 else { return nil }
+
+        if let direct = answer(for: query, audience: audience) {
+            return direct
+        }
+
+        let ranked = HelloComputerFAQBank.allFAQs
+            .map { faq in
+                let features = faqFeatures(for: faq, against: q)
+                return RankedFAQ(
+                    faq: faq,
+                    semantic: features.semantic,
+                    lexical: features.lexical,
+                    neural: HelloComputerFAQNeuralNetwork.shared.predict(features: features.vector).confidence
+                )
+            }
+            .sorted(by: { (lhs: RankedFAQ, rhs: RankedFAQ) -> Bool in
+                if lhs.neural == rhs.neural {
+                    if lhs.semantic == rhs.semantic {
+                        return lhs.lexical > rhs.lexical
+                    }
+                    return lhs.semantic > rhs.semantic
+                }
+                return lhs.neural > rhs.neural
+            })
+
+        guard let candidate = ranked.first,
+              candidate.semantic >= 0.56 || candidate.neural >= 0.62 else {
+            return nil
+        }
+
+        return HelloComputerAnswer(
+            text: candidate.faq.answer,
+            source: candidate.faq.source,
+            confidence: max(candidate.semantic, candidate.neural)
+        )
+    }
+
+    private static func faqFeatures(for faq: HelloComputerFAQ, against normalizedQuery: String) -> FAQFeatureSet {
         let queryTokens = Set(tokens(normalizedQuery))
         let tagTokens = Set(faq.tags.flatMap { tokens(normalize($0)) })
         let questionTokens = Set(tokens(normalize(faq.question)))
 
-        let tagOverlap = Double(queryTokens.intersection(tagTokens).count) * 2.0
-        let questionOverlap = Double(queryTokens.intersection(questionTokens).count) * 1.5
+        let tagOverlapCount = queryTokens.intersection(tagTokens).count
+        let questionOverlapCount = queryTokens.intersection(questionTokens).count
 
         // Bonus if the query contains a full tag phrase
         var phraseBonus: Double = 0
+        var matchedTagPhrases = 0
         for tag in faq.tags {
             let t = normalize(tag)
             if t.count >= 3 && normalizedQuery.contains(t) {
                 phraseBonus += 1.25
+                matchedTagPhrases += 1
             }
         }
 
         // Bonus if query contains meaningful parts of question
         let questionPhrase = normalize(faq.question)
-        if questionPhrase.count >= 6 && normalizedQuery.contains(questionPhrase) {
+        let containsQuestionPhrase = questionPhrase.count >= 6 && normalizedQuery.contains(questionPhrase)
+        if containsQuestionPhrase {
             phraseBonus += 2.0
         }
 
-        // Small bonus for official FAQ items (keeps results stable)
         let sourceBonus: Double = (faq.source == .officialFAQ) ? 0.35 : 0.0
+        let lexical = (Double(tagOverlapCount) * 2.0) + (Double(questionOverlapCount) * 1.5) + phraseBonus + sourceBonus
+        let semantic = semanticFAQScore(faq, against: normalizedQuery)
 
-        return tagOverlap + questionOverlap + phraseBonus + sourceBonus
+        let vector: [Double] = [
+            min(Double(tagOverlapCount) / 6.0, 1.0),
+            min(Double(questionOverlapCount) / 8.0, 1.0),
+            min(phraseBonus / 4.5, 1.0),
+            semantic,
+            min(Double(matchedTagPhrases) / 3.0, 1.0),
+            containsQuestionPhrase ? 1.0 : 0.0,
+            faq.source == .officialFAQ ? 1.0 : 0.0,
+            min(Double(queryTokens.count) / 14.0, 1.0)
+        ]
+
+        return FAQFeatureSet(lexical: lexical, semantic: semantic, vector: vector)
+    }
+
+    private static func scoreFAQ(_ faq: HelloComputerFAQ, against normalizedQuery: String) -> Double {
+        faqFeatures(for: faq, against: normalizedQuery).lexical
+    }
+
+    private static func semanticFAQScore(_ faq: HelloComputerFAQ, against normalizedQuery: String) -> Double {
+        let semanticCorpus = ([faq.question] + faq.tags)
+            .joined(separator: ". ")
+        return HelloComputerSemanticRetrieval.similarity(
+            normalizedQuery,
+            normalize(semanticCorpus)
+        )
     }
 
     private static func tokens(_ s: String) -> [String] {
@@ -109,6 +189,138 @@ enum HelloComputerEngine {
         let trimmed = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
         let parts = trimmed.split(whereSeparator: { $0.isWhitespace })
         return parts.joined(separator: " ")
+    }
+}
+
+private struct FAQFeatureSet {
+    let lexical: Double
+    let semantic: Double
+    let vector: [Double]
+}
+
+private enum HelloComputerSemanticRetrieval {
+    private static let embedding = NLEmbedding.sentenceEmbedding(for: .english)
+
+    static func similarity(_ lhs: String, _ rhs: String) -> Double {
+        guard let embedding else { return 0 }
+
+        let left = lhs.trimmingCharacters(in: .whitespacesAndNewlines)
+        let right = rhs.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !left.isEmpty, !right.isEmpty else { return 0 }
+
+        let distance = embedding.distance(between: left, and: right)
+        guard distance.isFinite else { return 0 }
+
+        return max(0, min(1, 1 / (1 + distance)))
+    }
+}
+
+private struct HelloComputerDenseLayer {
+    let name: String
+    let weights: [[Double]]
+    let biases: [Double]
+    let activation: HelloComputerActivation
+
+    func forward(_ inputs: [Double]) -> [Double] {
+        guard !weights.isEmpty,
+              weights.count == biases.count,
+              weights.allSatisfy({ $0.count == inputs.count }) else {
+            return []
+        }
+
+        return zip(weights, biases).map { row, bias in
+            activation.apply(dot(row, inputs) + bias)
+        }
+    }
+
+    private func dot(_ lhs: [Double], _ rhs: [Double]) -> Double {
+        zip(lhs, rhs).reduce(0) { $0 + ($1.0 * $1.1) }
+    }
+}
+
+private enum HelloComputerActivation {
+    case tanh
+    case sigmoid
+
+    func apply(_ x: Double) -> Double {
+        switch self {
+        case .tanh:
+            return Foundation.tanh(x)
+        case .sigmoid:
+            return 1 / (1 + exp(-x))
+        }
+    }
+}
+
+private struct HelloComputerNeuralNetwork {
+    let layers: [HelloComputerDenseLayer]
+
+    func predict(_ inputs: [Double]) -> [Double] {
+        layers.reduce(inputs) { activations, layer in
+            layer.forward(activations)
+        }
+    }
+}
+
+private struct HelloComputerNeuralInference: Hashable {
+    let hiddenActivations: [Double]
+    let output: [Double]
+
+    var confidence: Double {
+        output.first ?? 0
+    }
+}
+
+private struct HelloComputerFAQNeuralNetwork {
+    static let shared = HelloComputerFAQNeuralNetwork()
+
+    // Generated by scripts/train_hello_computer_nn.py after supervised warmstart
+    // and offline preference optimization on the curated Hello Computer dataset.
+    private let hiddenLayer = HelloComputerDenseLayer(
+        name: "faq_hidden_1",
+        weights: [
+            [1.3727, 0.9632, 0.8927, 1.3099, 0.5806, 0.3011, -0.1484, -0.3143],
+            [0.4940, 1.3808, 0.7536, 1.1496, 0.4937, 0.4512, -0.1260, -0.2340],
+            [0.3553, 0.4000, 1.5537, 0.7308, 1.0441, 0.6006, -0.0347, -0.2898],
+            [0.8342, 0.7156, 0.6004, 1.7627, 0.4478, 0.1049, -0.2354, -0.1013],
+            [0.9169, 0.5154, 0.4260, 0.8990, 0.3078, 0.2063, 0.1612, -0.4168],
+            [0.3027, 0.3618, 0.3070, 0.8853, 0.2763, 0.3538, 0.3206, -0.0098]
+        ],
+        biases: [-0.8931, -0.7665, -0.6258, -0.9228, -0.6182, -0.5108],
+        activation: .tanh
+    )
+
+    private let outputLayer = HelloComputerDenseLayer(
+        name: "faq_output",
+        weights: [
+            [2.2431, 1.8976, 1.8010, 2.3069, 1.4648, 1.1514]
+        ],
+        biases: [-1.3402],
+        activation: .sigmoid
+    )
+
+    private var network: HelloComputerNeuralNetwork {
+        HelloComputerNeuralNetwork(
+            layers: [hiddenLayer, outputLayer]
+        )
+    }
+
+    func predict(features: [Double]) -> HelloComputerNeuralInference {
+        guard features.count == hiddenLayer.weights.first?.count else {
+            return HelloComputerNeuralInference(hiddenActivations: [], output: [0])
+        }
+
+        let hidden = hiddenLayer.forward(features)
+        let output = outputLayer.forward(hidden)
+        return HelloComputerNeuralInference(hiddenActivations: hidden, output: output)
+    }
+
+    func outputForDebug(features: [Double]) -> [String: [Double]] {
+        let inference = predict(features: features)
+        return [
+            hiddenLayer.name: inference.hiddenActivations,
+            outputLayer.name: inference.output
+        ]
     }
 }
 
@@ -361,16 +573,19 @@ enum HelloComputerAssistantEngine {
             .map { String($0) }
             .filter { $0.count >= 2 && !stopWords.contains($0) }
 
-        let matches: [ICSParsedEvent]
-        if tokens.isEmpty {
-            matches = events.sorted { $0.startDate < $1.startDate }
-        } else {
-            matches = events.filter { event in
-                let haystack = "\(event.title) \(event.description) \(event.room)".lowercased()
-                return tokens.allSatisfy { haystack.contains($0) }
+        let ranked = events
+            .map { event in
+                (event: event, score: eventSearchScore(for: event, normalizedQuery: query, tokens: tokens))
             }
-            .sorted { $0.startDate < $1.startDate }
-        }
+            .filter { $0.score > 0.45 }
+            .sorted {
+                if $0.score == $1.score {
+                    return $0.event.startDate < $1.event.startDate
+                }
+                return $0.score > $1.score
+            }
+
+        let matches = ranked.map(\.event)
 
         let top = Array(matches.prefix(5))
         guard !top.isEmpty else {
@@ -396,14 +611,11 @@ enum HelloComputerAssistantEngine {
 
         guard !tokens.isEmpty else { return nil }
 
-        let ranked = events.map { event -> (ICSParsedEvent, Int) in
-            let haystack = "\(event.title) \(event.description) \(event.room)".lowercased()
-            let score = tokens.reduce(into: 0) { partial, token in
-                if haystack.contains(token) { partial += 1 }
-            }
+        let ranked = events.map { event -> (ICSParsedEvent, Double) in
+            let score = eventSearchScore(for: event, normalizedQuery: normalizedQuery, tokens: tokens)
             return (event, score)
         }
-        .filter { $0.1 > 0 }
+        .filter { $0.1 > 0.65 }
         .sorted {
             if $0.1 == $1.1 {
                 return $0.0.startDate < $1.0.startDate
@@ -440,6 +652,16 @@ enum HelloComputerAssistantEngine {
 
     private static func containsAny(_ text: String, _ phrases: [String]) -> Bool {
         phrases.contains(where: { text.contains($0) })
+    }
+
+    private static func eventSearchScore(for event: ICSParsedEvent, normalizedQuery: String, tokens: [String]) -> Double {
+        let haystack = normalize("\(event.title) \(event.description) \(event.room)")
+        let tokenHits = Double(tokens.reduce(into: 0) { partial, token in
+            if haystack.contains(token) { partial += 1 }
+        })
+        let phraseBoost = haystack.contains(normalizedQuery) ? 1.75 : 0
+        let semanticBoost = HelloComputerSemanticRetrieval.similarity(normalizedQuery, haystack) * 2.6
+        return tokenHits + phraseBoost + semanticBoost
     }
 
     private static func normalize(_ s: String) -> String {

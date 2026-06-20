@@ -51,7 +51,9 @@ private struct HeroSlide: Identifiable, Hashable {
         .init(imageName: "yoga",          title: "Holodeck Wellness",          subtitle: "Stretch, breathe, and return to duty refreshed."),
         .init(imageName: "glass1",        title: "Holodeck Art",               subtitle: "Come enjoy making your own Risian artifact."),
         .init(imageName: "glass2",        title: "Holodeck Art",               subtitle: "Come enjoy making your own Risian artifact."),
-        .init(imageName: "moustache",     title: "Holodeck Fun",               subtitle: "'Mad Libs' and so much more.")
+        .init(imageName: "moustache",     title: "Holodeck Fun",               subtitle: "'Mad Libs' and so much more."),
+        .init(imageName: "FoodTrucks",     title: "Working Replicators",               subtitle: "'Food, Food, Food."),
+        .init(imageName: "Hanging",     title: "Guest Fun",               subtitle: "'Paradise.")
     ]
 }
 
@@ -105,7 +107,7 @@ private struct ConventionDayContext {
         }
         let start = cal.date(from: DateComponents(timeZone: .current, year: 2026, month: 6, day: 12)) ?? reference
         if reference < start {
-            return .init(label: "Before the con", detail: "Schedule unlocks closer to June 12.")
+            return .init(label: "Convention schedule", detail: "Browse panels, guests, and events.")
         } else {
             return .init(label: "After the con",  detail: "Thanks for joining us at Trek Long Island!")
         }
@@ -175,12 +177,13 @@ struct HomeView: View {
 
     @AppStorage("TLI.Profile.displayName") private var displayName: String = ""
     @AppStorage("TLI.Profile.rank") private var rankRaw: String = TLIProfileRank.captain.rawValue
+    @AppStorage("TLI.Profile.division") private var divisionRaw: String = TLIProfileDivision.command.rawValue
     @AppStorage("TLI.Profile.role") private var roleRaw: String = TLIProfileRole.firstTimer.rawValue
     @AppStorage("TLI.Profile.objectives") private var objectivesRaw: String = ""
     @AppStorage("TLI.Schedule.favoriteIDsCSV")  private var favoriteEventIDsCSV:   String = ""
     @AppStorage("TLI.Guests.favoriteSlugsCSV")  private var favoriteGuestSlugsCSV: String = ""
     @AppStorage("TLI.Home.showMissionControl") private var showMissionControl: Bool = true
-    @AppStorage("TLI.Home.dismissedPicardDayBanner") private var dismissedPicardDayBanner = false
+    @AppStorage("TLI.Home.dismissedPicardDayYear") private var dismissedPicardDayYear = 0
     @AppStorage("TLI.EasterEggs.welcome") private var foundWelcomeSignal = false
     @AppStorage("TLI.EasterEggs.stardate") private var foundStardateSignal = false
     @AppStorage("TLI.EasterEggs.picardDay") private var foundPicardDaySignal = false
@@ -217,6 +220,7 @@ struct HomeView: View {
     }
     private var isIPadLayout: Bool { hSizeClass == .regular }
     private var selectedRank: TLIProfileRank { TLIProfileRank(rawValue: rankRaw) ?? .captain }
+    private var selectedDivision: TLIProfileDivision { TLIProfileDivision(rawValue: divisionRaw) ?? .command }
     private var selectedRole: TLIProfileRole { TLIProfileRole(rawValue: roleRaw) ?? .firstTimer }
     private var selectedObjectives: Set<TLIProfileObjective> { TLIProfilePreferences.objectives(from: objectivesRaw) }
     private var captainName: String { TLIProfilePreferences.captainName(from: displayName) }
@@ -256,7 +260,15 @@ struct HomeView: View {
             .sorted { $0.startDate < $1.startDate }
     }
     private var nextGeneralEvent: RisaScheduleEvent? {
-        upcomingEvents.first
+        upcomingEvents.first(where: { !isVendorRoomOpening($0) }) ?? upcomingEvents.first
+    }
+    private var nextAdditionalEvents: [RisaScheduleEvent] {
+        guard let primary = nextGeneralEvent else { return [] }
+        return upcomingEvents
+            .filter { $0.id != primary.id }
+            .filter { !isVendorRoomOpening($0) || upcomingEvents.count <= 3 }
+            .prefix(3)
+            .map { $0 }
     }
     private var shouldShowTicketPresaleBanner: Bool {
         let calendar = Calendar.current
@@ -264,9 +276,10 @@ struct HomeView: View {
         return Date.now < cutoff
     }
     private var shouldShowPicardDayBanner: Bool {
-        let components = Calendar.current.dateComponents([.month, .day], from: .now)
-        let isPicardDay = components.month == 6 && components.day == 16
-        return (isPicardDay && !dismissedPicardDayBanner) || foundPicardDaySignal
+        (TLIConventionDates.isCaptainPicardDay() && dismissedPicardDayYear != currentYear) || foundPicardDaySignal
+    }
+    private var currentYear: Int {
+        Calendar.current.component(.year, from: .now)
     }
     private var isConventionWeekend: Bool {
         switch dayContext.label {
@@ -287,7 +300,8 @@ struct HomeView: View {
                 if isConventionWeekend {
                     nasaSignalSection
                 }
-                starfleetAcademyPetitionBanner
+                strangeNewWorldsPremiereBanner
+                conDayEssentialsSection
                 if showMissionControl {
                     missionControlSection
                 }
@@ -348,10 +362,6 @@ struct HomeView: View {
             Text(easterEggMessage)
         }
         .onAppear {
-            let components = Calendar.current.dateComponents([.month, .day], from: .now)
-            if !(components.month == 6 && components.day == 16) {
-                dismissedPicardDayBanner = false
-            }
             isCarouselRunning = true
             missionDirective = activeMissionPresets.randomElement() ?? activeMissionPresets[0]
             recomputeReadiness()
@@ -393,7 +403,7 @@ struct HomeView: View {
         let dayBonus: Int
         switch dayContext.label {
         case "Day 1 • Friday", "Day 2 • Saturday", "Day 3 • Sunday": dayBonus = 20
-        case "Before the con":                                         dayBonus = 8
+        case "Convention schedule":                                    dayBonus = 12
         default:                                                       dayBonus = 5
         }
         cachedReadinessScore = min(100, max(8, (favoriteEvents * 12) + (favoriteGuests * 8) + min(unread, 5) * 4 + dayBonus))
@@ -410,9 +420,7 @@ struct HomeView: View {
     }
 
     private func personalizedMissionPresets() -> [HomeMissionDirective] {
-        var directives = dayContext.label == "Before the con"
-            ? HomeMissionDirective.preConPresets
-            : HomeMissionDirective.livePresets
+        var directives = HomeMissionDirective.livePresets
 
         if activeObjectives.contains(.neverMissPanels) {
             directives.append(
@@ -510,6 +518,11 @@ struct HomeView: View {
         return "\(relative) • \(eventTimeRange(event)) • \(event.room)"
     }
 
+    private func isVendorRoomOpening(_ event: RisaScheduleEvent) -> Bool {
+        let normalizedTitle = event.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return normalizedTitle == "vendor room opening" || normalizedTitle == "vendor hall opening"
+    }
+
     private func happeningNowSummary(for events: [RisaScheduleEvent]) -> String {
         guard let first = events.first else {
             return "No sessions are live right now."
@@ -581,6 +594,21 @@ private extension HomeView {
                     .font(.caption)
                     .foregroundStyle(RisaTheme.textSecondary(colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
+
+                if nextFavoriteEvent == nil, !nextAdditionalEvents.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Also upcoming")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(RisaTheme.textPrimary(colorScheme))
+
+                        ForEach(nextAdditionalEvents) { additionalEvent in
+                            Text("\(additionalEvent.startDate.formatted(date: .omitted, time: .shortened)) • \(additionalEvent.title)")
+                                .font(.caption)
+                                .foregroundStyle(RisaTheme.textSecondary(colorScheme))
+                                .lineLimit(2)
+                        }
+                    }
+                }
 
                 NavigationLink {
                     ScheduleView()
@@ -682,19 +710,19 @@ private extension HomeView {
                         .font(.caption.weight(.bold))
                         .foregroundStyle(RisaTheme.accent(colorScheme))
 
-                    Text("2026 Presale")
+                    Text("2027 Tickets")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(RisaTheme.accent(colorScheme))
 
-                    Text("Before Jun 9, 2025")
-                        .font(.caption2.weight(.bold))
+                    Text("On sale")
+                        .font(.caption.weight(.bold))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Capsule().fill(RisaTheme.chipBackground(colorScheme).opacity(0.92)))
                         .foregroundStyle(RisaTheme.chipForeground(colorScheme))
                 }
 
-                Text("Use Programmable matter today to get your 3-day adult badge.")
+                Text("Buy 2027 Trek Long Island tickets on the official Square ticket site.")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(RisaTheme.textPrimary(colorScheme))
                     .lineLimit(2)
@@ -703,10 +731,10 @@ private extension HomeView {
             Spacer(minLength: 8)
 
             Button {
-                UIApplication.shared.open(TicketPurchaseLinks.presaleURL)
+                UIApplication.shared.open(TicketPurchaseLinks.admissionURL)
             } label: {
                 HStack(spacing: 6) {
-                    Text("Buy")
+                    Text("Tickets")
                     Image(systemName: "arrow.up.right")
                 }
                 .font(.footnote.weight(.semibold))
@@ -745,22 +773,22 @@ private extension HomeView {
         )
     }
 
-    var starfleetAcademyPetitionBanner: some View {
+    var strangeNewWorldsPremiereBanner: some View {
         Group {
             if isIPadLayout {
                 HStack(alignment: .center, spacing: 12) {
-                    petitionCopy
+                    premiereCopy
 
                     Spacer(minLength: 8)
 
-                    petitionButton
+                    premiereDateBadge
                 }
             } else {
                 VStack(alignment: .leading, spacing: 12) {
-                    petitionCopy
+                    premiereCopy
 
                     HStack(spacing: 10) {
-                        petitionButton
+                        premiereDateBadge
                         Spacer(minLength: 0)
                     }
                 }
@@ -798,7 +826,7 @@ private extension HomeView {
     private var picardDaySection: some View {
         PicardDayBannerView {
             withAnimation(.easeInOut(duration: 0.25)) {
-                dismissedPicardDayBanner = true
+                dismissedPicardDayYear = currentYear
             }
         }
         .onTapGesture {
@@ -806,8 +834,13 @@ private extension HomeView {
             if picardDayTapCount >= 4 {
                 revealEasterEgg(from: .picardDay)
                 picardDayTapCount = 0
-                dismissedPicardDayBanner = false
+                dismissedPicardDayYear = 0
             }
+        }
+        .onLongPressGesture(minimumDuration: 1.0) {
+            revealEasterEgg(from: .picardDay)
+            dismissedPicardDayYear = 0
+            picardDayTapCount = 0
         }
         .accessibilityHint("Tap several times for a hidden Captain Picard Day signal")
     }
@@ -853,7 +886,7 @@ private extension HomeView {
             HStack {
                 Spacer(minLength: 0)
                 Text("LIVE")
-                    .font(.caption2.weight(.bold))
+                    .font(.caption.weight(.bold))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(
@@ -898,7 +931,7 @@ private extension HomeView {
         .accessibilityHint("Tap or long-press for a hidden NASA-related transmission")
     }
 
-    private var petitionCopy: some View {
+    private var premiereCopy: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 ZStack {
@@ -911,46 +944,48 @@ private extension HomeView {
                         .foregroundStyle(RisaTheme.accent(colorScheme))
                 }
 
-                Text("Fan Action")
+                Text("Premiere Date")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(RisaTheme.accent(colorScheme))
 
-                Text("Starfleet Academy")
-                    .font(.caption2.weight(.bold))
+                Text("Strange New Worlds")
+                    .font(.caption.weight(.bold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Capsule().fill(RisaTheme.chipBackground(colorScheme).opacity(0.92)))
                     .foregroundStyle(RisaTheme.chipForeground(colorScheme))
             }
 
-            Text("Renew 'Star Trek: Starfleet Academy' and help push for a third season.")
+            Text("'Star Trek: Strange New Worlds' returns July 23.")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(RisaTheme.textPrimary(colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Support the campaign on Change.org and share it with your crew.")
+            Text("Mark your calendar for the next transmission from the Enterprise crew.")
                 .font(.footnote)
                 .foregroundStyle(RisaTheme.textSecondary(colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    private var petitionButton: some View {
-        Button {
-            if let url = URL(string: "https://www.change.org/p/renew-star-trek-starfleet-academy-for-a-third-season") {
-                UIApplication.shared.open(url)
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Text("Sign Petition")
-                Image(systemName: "arrow.up.right")
-            }
-            .font(.footnote.weight(.semibold))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 11)
+    private var premiereDateBadge: some View {
+        HStack(spacing: 7) {
+            Image(systemName: "calendar.badge.clock")
+                .imageScale(.small)
+            Text("July 23")
         }
-        .buttonStyle(.borderedProminent)
-        .tint(RisaTheme.accentSecondary(colorScheme))
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(RisaTheme.textPrimary(colorScheme))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .background(
+            Capsule(style: .continuous)
+                .fill(RisaTheme.accentSecondary(colorScheme).opacity(0.18))
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(RisaTheme.accentSecondary(colorScheme).opacity(0.55), lineWidth: 1)
+        )
         .fixedSize()
     }
 
@@ -996,7 +1031,7 @@ private extension HomeView {
                 .foregroundStyle(textPrimary)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("\(selectedRank.title) • \(selectedRole.title) • Hyatt Regency Long Island • June 12–14")
+            Text("\(selectedRank.title) • \(selectedDivision.title) • \(selectedRole.title) • Hyatt Regency Long Island • June 12–14")
                 .font(
                     RisaTheme.isLCARSThemeEnabled
                         ? .system(size: 13, weight: .semibold, design: .monospaced)
@@ -1005,7 +1040,7 @@ private extension HomeView {
                 .foregroundStyle(textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     Image(systemName: "calendar.badge.clock")
                         .imageScale(.medium)
@@ -1044,7 +1079,7 @@ private extension HomeView {
                     } label: {
                         Label {
                             Text("Stardate \(stardate)")
-                                .font(.caption2.weight(.medium))
+                                .font(.caption.weight(.medium))
                         } icon: {
                             Image(systemName: "sparkles")
                                 .imageScale(.small)
@@ -1267,7 +1302,8 @@ private extension HomeView {
     // - HeroSlideCard wrapped in EquatableView to skip re-renders on unrelated state changes
 
     var heroCarouselSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // Progress bar overlaid inside the carousel frame — no separate dots row below.
+        ZStack(alignment: .bottom) {
             TabView(selection: $currentSlideIndex) {
                 ForEach(Array(heroSlides.enumerated()), id: \.element.id) { index, slide in
                     EquatableView(content: HeroSlideCard(slide: slide, scheme: colorScheme))
@@ -1276,12 +1312,11 @@ private extension HomeView {
                         .accessibilityLabel("\(slide.title). \(slide.subtitle)")
                 }
             }
-            .tabViewStyle(.page(indexDisplayMode: .automatic))
+            .tabViewStyle(.page(indexDisplayMode: .never))
             .frame(maxWidth: .infinity)
             .aspectRatio(heroAspectRatio, contentMode: .fit)
             .frame(maxHeight: hSizeClass == .regular ? 520 : (isCompactPhoneLayout ? 280 : 360))
             .task(id: isCarouselRunning) {
-                // Task is automatically cancelled by SwiftUI when isCarouselRunning flips.
                 guard isCarouselRunning, heroSlides.count > 1, !reduceMotion else { return }
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .milliseconds(4500))
@@ -1292,41 +1327,116 @@ private extension HomeView {
                 }
             }
 
-            HStack(spacing: 8) {
+            // Thin segmented progress bar — sits on top of the image near the bottom
+            HStack(spacing: 4) {
                 ForEach(Array(heroSlides.enumerated()), id: \.element.id) { index, _ in
                     Capsule()
                         .fill(
                             index == currentSlideIndex
-                                ? AnyShapeStyle(
-                                    LinearGradient(
-                                        colors: [
-                                            RisaTheme.accent(colorScheme),
-                                            RisaTheme.accentSecondary(colorScheme)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                : AnyShapeStyle(RisaTheme.cardStroke(colorScheme).opacity(0.45))
+                                ? AnyShapeStyle(Color.white)
+                                : AnyShapeStyle(Color.white.opacity(0.35))
                         )
-                        .frame(width: index == currentSlideIndex ? 28 : 8, height: 8)
+                        .frame(height: 3)
                         .animation(.easeInOut(duration: 0.22), value: currentSlideIndex)
-                        .accessibilityHidden(true)
                 }
-
-                Spacer()
-
-                Text("\(currentSlideIndex + 1) / \(heroSlides.count)")
-                    .font(.caption.monospacedDigit().weight(.medium))
-                    .foregroundStyle(RisaTheme.textSecondary(colorScheme))
             }
-            .padding(.horizontal, 6)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+            .accessibilityHidden(true)
         }
     }
 
     // MARK: Primary Actions
     // NotificationBadgeView is a separate @ObservedObject child so badge updates
     // do not trigger a full HomeView body re-evaluation.
+
+    var conDayEssentialsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(
+                title: RisaTheme.isLCARSThemeEnabled ? "Con Day Essentials" : "Con day essentials",
+                flavor: RisaTheme.isLCARSThemeEnabled ? "High-priority convention channels" : "The things you will reach for fastest"
+            )
+
+            LazyVGrid(columns: TLILayout.quickLinkColumns(for: hSizeClass, availableWidth: layoutWidth), spacing: 12) {
+                essentialLink(title: "My Plan", subtitle: "Next saved event", icon: "list.bullet.clipboard.fill") {
+                    MyMissionPlanView()
+                }
+
+                essentialLink(title: "Ops & Autos", subtitle: "Photo/signing reminders", icon: "camera.on.rectangle.fill") {
+                    PhotoAutographTrackerView()
+                }
+
+                essentialLink(title: "Map", subtitle: "Rooms and floor", icon: "map.fill") {
+                    MapsView()
+                }
+
+                HomeAlertsEssentialLink(scheme: colorScheme)
+
+                essentialLink(title: "Support", subtitle: "Help and lost items", icon: "cross.case.fill") {
+                    SupportCenterView()
+                }
+            }
+        }
+    }
+
+    private func essentialLink<Destination: View>(
+        title: String,
+        subtitle: String,
+        icon: String,
+        @ViewBuilder destination: () -> Destination
+    ) -> some View {
+        NavigationLink {
+            destination()
+        } label: {
+            HStack(alignment: .center, spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    RisaTheme.accent(colorScheme).opacity(0.28),
+                                    RisaTheme.accent(colorScheme).opacity(0.08)
+                                ],
+                                center: .center,
+                                startRadius: 2,
+                                endRadius: 20
+                            )
+                        )
+                    Image(systemName: icon)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(RisaTheme.accent(colorScheme))
+                }
+                .frame(width: 38, height: 38)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(RisaTheme.textPrimary(colorScheme))
+                        .lineLimit(1)
+
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(RisaTheme.textSecondary(colorScheme))
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(RisaTheme.textSecondary(colorScheme).opacity(0.55))
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
+            .background(TLITheme.controlShape(cornerRadius: 18).fill(RisaTheme.cardBackground(colorScheme)))
+            .overlay(
+                TLITheme.controlShape(cornerRadius: 18)
+                    .stroke(RisaTheme.cardStroke(colorScheme).opacity(0.62), lineWidth: TLITheme.hairline)
+            )
+            .contentShape(TLITheme.controlShape(cornerRadius: 18))
+        }
+        .buttonStyle(EssentialLinkPressStyle())
+    }
 
     var primaryActionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1338,6 +1448,16 @@ private extension HomeView {
             let columns = TLILayout.quickLinkColumns(for: hSizeClass, availableWidth: layoutWidth)
 
             LazyVGrid(columns: columns, spacing: hSizeClass == .regular ? 16 : (isCompactPhoneLayout ? 12 : 14)) {
+
+                NavigationLink { MyMissionPlanView() } label: {
+                    PrimaryActionTile(
+                        icon: "list.bullet.clipboard.fill",
+                        title: "My Mission Plan",
+                        subtitle: "Saved events, guests, and your next move",
+                        badge: RisaTheme.isLCARSThemeEnabled ? "Priority" : "Personal plan",
+                        scheme: colorScheme
+                    )
+                }
 
                 NavigationLink { ScheduleView() } label: {
                     PrimaryActionTile(
@@ -1379,6 +1499,26 @@ private extension HomeView {
                     )
                 }
 
+                NavigationLink { Section31View() } label: {
+                    PrimaryActionTile(
+                        icon: "checkmark.seal.fill",
+                        title: "Section 31",
+                        subtitle: "Transparency notes and supporting evidence",
+                        badge: RisaTheme.isLCARSThemeEnabled ? "Records" : "Evidence",
+                        scheme: colorScheme
+                    )
+                }
+
+                NavigationLink { SpecialEventsView() } label: {
+                    PrimaryActionTile(
+                        icon: "sparkles.rectangle.stack.fill",
+                        title: "Special Events",
+                        subtitle: "Featured experiences, parties, and ticketed extras",
+                        badge: RisaTheme.isLCARSThemeEnabled ? "Highlights" : "Official",
+                        scheme: colorScheme
+                    )
+                }
+
                 NavigationLink { NotificationsView() } label: {
                     // Badge count displayed via isolated child view
                     PrimaryActionTileWithBadge(
@@ -1411,12 +1551,12 @@ private extension HomeView {
                 }
 
                 Button {
-                    UIApplication.shared.open(TicketPurchaseLinks.ticketsURL)
+                    UIApplication.shared.open(TicketPurchaseLinks.admissionURL)
                 } label: {
                     PrimaryActionTile(
                         icon: "ticket.fill",
                         title: RisaTheme.isLCARSThemeEnabled ? "Access Passes" : "Tickets",
-                        subtitle: "Buy passes on the official ticket site",
+                        subtitle: "Buy 2027 tickets on the official ticket site",
                         badge: RisaTheme.isLCARSThemeEnabled ? "Authorization" : "On sale",
                         scheme: colorScheme
                     )
@@ -1430,6 +1570,28 @@ private extension HomeView {
                         title: "Photo Ops",
                         subtitle: "Buy photo-op tickets on the official site",
                         badge: RisaTheme.isLCARSThemeEnabled ? "Imaging" : "Book now",
+                        scheme: colorScheme
+                    )
+                }
+
+                if TicketPurchaseLinks.areAutographPreSalesAvailable() {
+                    Button {
+                        UIApplication.shared.open(TicketPurchaseLinks.autographPreSalesURL)
+                    } label: {
+                        PrimaryActionTile(
+                            icon: "pencil.and.scribble",
+                            title: "Autograph Pre-Sales",
+                            subtitle: "Pre-order autographs through The Autograph Concierge",
+                            badge: RisaTheme.isLCARSThemeEnabled ? "Signatures" : "Pre-order",
+                            scheme: colorScheme
+                        )
+                    }
+                } else {
+                    PrimaryActionTile(
+                        icon: "pencil.slash",
+                        title: "Autograph Pre-Sales Closed",
+                        subtitle: "Check guest tables and autograph hall staff during the convention",
+                        badge: RisaTheme.isLCARSThemeEnabled ? "Closed" : "At event",
                         scheme: colorScheme
                     )
                 }
@@ -1579,7 +1741,7 @@ private extension HomeView {
             Image("RisaStarfieldBackground")
                 .resizable()
                 .scaledToFill()
-                .opacity(colorScheme == .dark ? 0.38 : 0.16)
+                .opacity(colorScheme == .dark ? 0.44 : 0.16)
         }
         .drawingGroup()
     }
@@ -1703,6 +1865,59 @@ private extension HomeView {
     }
 }
 
+private struct EssentialLinkPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.13), value: configuration.isPressed)
+    }
+}
+
+private struct HomeAlertsEssentialLink: View {
+    @ObservedObject private var notificationManager = NotificationManager.shared
+    let scheme: ColorScheme
+
+    var body: some View {
+        NavigationLink {
+            NotificationsView()
+        } label: {
+            HStack(alignment: .center, spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(RisaTheme.accent(scheme).opacity(0.14))
+                    Image(systemName: "bell.badge.fill")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(RisaTheme.accent(scheme))
+                }
+                .frame(width: 36, height: 36)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Alerts")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(RisaTheme.textPrimary(scheme))
+                        .lineLimit(1)
+
+                    Text(notificationManager.unreadCount > 0 ? "\(notificationManager.unreadCount) unread" : "Staff updates")
+                        .font(.caption)
+                        .foregroundStyle(RisaTheme.textSecondary(scheme))
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
+            .background(TLITheme.controlShape(cornerRadius: 18).fill(RisaTheme.cardBackground(scheme)))
+            .overlay(
+                TLITheme.controlShape(cornerRadius: 18)
+                    .stroke(RisaTheme.cardStroke(scheme).opacity(0.62), lineWidth: TLITheme.hairline)
+            )
+            .contentShape(TLITheme.controlShape(cornerRadius: 18))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Hero Slide Card
 // Conforms to Equatable so EquatableView can skip re-renders when slide + scheme unchanged.
 
@@ -1715,68 +1930,57 @@ private struct HeroSlideCard: View, Equatable {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let captionMaxHeight = min(140, geo.size.height * 0.36)
-
-            ZStack {
+        GeometryReader { proxy in
+            ZStack(alignment: .bottomLeading) {
+                // Image
                 Image(slide.imageName)
                     .resizable()
                     .scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
                     .clipped()
-                    .drawingGroup() // rasterise image layer to reduce overdraw
+                    .drawingGroup()
 
+                // Vignette — bottom-only, lighter than before
                 LinearGradient(
                     colors: [
-                        Color.black.opacity(0.00),
-                        Color.black.opacity(0.26),
-                        Color.black.opacity(scheme == .dark ? 0.92 : 0.82)
+                        .black.opacity(0),
+                        .black.opacity(0.08),
+                        .black.opacity(scheme == .dark ? 0.68 : 0.52)
                     ],
-                    startPoint: .top,
+                    startPoint: .center,
                     endPoint: .bottom
                 )
 
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "wave.3.right")
-                            .foregroundStyle(.white.opacity(0.95))
-
-                        Text(slide.title)
-                            .font(.headline.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.90)
-                    }
+                // Frosted-glass caption pill at bottom-leading
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(slide.title)
+                        .font(.system(.subheadline, design: .default).weight(.bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
 
                     Text(slide.subtitle)
-                        .font(.callout)
-                        .foregroundStyle(.white.opacity(0.95))
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.88))
                         .lineLimit(2)
-                        .truncationMode(.tail)
                 }
-                .padding(12)
-                .frame(maxWidth: .infinity, maxHeight: captionMaxHeight, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.ultraThinMaterial.opacity(scheme == .dark ? 0.22 : 0.18))
-                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                        .stroke(.white.opacity(0.18), lineWidth: 0.6)
                 )
-                .padding(.horizontal, 12)
-                .padding(.bottom, 10)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                .clipped()
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
         }
-        .mask(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(RisaTheme.cardStroke(scheme).opacity(0.80), lineWidth: 1)
+                .stroke(RisaTheme.cardStroke(scheme).opacity(0.65), lineWidth: 1)
         )
         .shadow(
-            color: Color.black.opacity(scheme == .dark ? 0.45 : 0.18),
+            color: Color.black.opacity(scheme == .dark ? 0.50 : 0.16),
             radius: scheme == .dark ? 16 : 10,
             x: 0, y: 6
         )
@@ -1823,32 +2027,33 @@ private struct SectionHeader: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 8) {
-                TLITheme.controlShape(cornerRadius: 6)
-                    .fill(TLITheme.sectionAccentGradient(scheme))
-                    .frame(width: 18, height: 6)
+        HStack(alignment: .center, spacing: 10) {
+            // Left accent stripe — replaces the small pill shapes
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(TLITheme.sectionAccentGradient(scheme))
+                .frame(width: 4, height: 22)
+                .accessibilityHidden(true)
 
-                TLITheme.controlShape(cornerRadius: 6)
-                    .fill(RisaTheme.chipBackground(scheme))
-                    .frame(width: 10, height: 6)
+            Text(title)
+                .font(
+                    RisaTheme.isLCARSThemeEnabled
+                        ? .system(size: 17, weight: .bold, design: .monospaced)
+                        : .headline.weight(.semibold)
+                )
+                .foregroundStyle(RisaTheme.textPrimary(scheme))
+                .accessibilityAddTraits(.isHeader)
 
-                Text(title)
-                    .font(
-                        RisaTheme.isLCARSThemeEnabled
-                            ? .system(size: 17, weight: .bold, design: .monospaced)
-                            : .headline.weight(.semibold)
-                    )
-                    .foregroundStyle(RisaTheme.textPrimary(scheme))
-                    .accessibilityAddTraits(.isHeader)
-
-                Spacer()
-            }
+            Spacer(minLength: 4)
 
             if let flavor {
                 Text(flavor)
-                    .font(.caption)
+                    .font(
+                        RisaTheme.isLCARSThemeEnabled
+                            ? .system(size: 10, weight: .semibold, design: .monospaced)
+                            : .caption2.weight(.medium)
+                    )
                     .foregroundStyle(RisaTheme.textMuted(scheme))
+                    .lineLimit(1)
             }
         }
     }
@@ -1965,91 +2170,100 @@ private struct PrimaryActionTile: View {
     var alertCount: Int = 0
 
     var body: some View {
-        let textPrimary   = RisaTheme.textPrimary(scheme)
-        let textSecondary = RisaTheme.textSecondary(scheme)
+        HStack(alignment: .top, spacing: 0) {
 
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    RisaTheme.accent(scheme).opacity(0.30),
-                                    RisaTheme.accentSecondary(scheme).opacity(0.18)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+            // Left accent stripe
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            RisaTheme.accent(scheme),
+                            RisaTheme.accentSecondary(scheme).opacity(0.55)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 3)
+                .padding(.vertical, 6)
+                .padding(.trailing, 11)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
+                    // Icon — larger, richer gradient
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        RisaTheme.accent(scheme).opacity(0.38),
+                                        RisaTheme.accentSecondary(scheme).opacity(0.20)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .frame(width: 42, height: 42)
-                        .overlay(
-                            Circle()
-                                .stroke(RisaTheme.cardStroke(scheme).opacity(0.45), lineWidth: 1)
-                        )
+                            .frame(width: 48, height: 48)
+                            .overlay(
+                                Circle()
+                                    .stroke(RisaTheme.accent(scheme).opacity(0.22), lineWidth: 1)
+                            )
 
-                    Image(systemName: icon)
-                        .font(.headline)
-                        .foregroundStyle(RisaTheme.accent(scheme))
-                }
-
-                Spacer(minLength: 0)
-
-                VStack(alignment: .trailing, spacing: 6) {
-                    if alertCount > 0 {
-                        Text(alertCount > 99 ? "99+" : "\(alertCount)")
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, alertCount > 9 ? 6 : 0)
-                            .frame(minWidth: 16, minHeight: 16)
-                            .background(Capsule().fill(Color.red))
-                            .accessibilityLabel("\(alertCount) unread announcements")
+                        Image(systemName: icon)
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(RisaTheme.accent(scheme))
                     }
 
-                    Text(badge.uppercased())
-                        .font(
-                            RisaTheme.isLCARSThemeEnabled
-                                ? .system(size: 11, weight: .bold, design: .monospaced)
-                                : .caption2.weight(.semibold)
-                        )
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(
-                            TLITheme.controlShape(cornerRadius: 12)
-                                .fill(RisaTheme.chipBackground(scheme).opacity(0.9))
-                                .overlay(
-                                    TLITheme.controlShape(cornerRadius: 12)
-                                        .stroke(RisaTheme.cardStroke(scheme).opacity(0.5), lineWidth: 0.6)
-                                )
-                        )
-                        .foregroundStyle(RisaTheme.chipForeground(scheme))
+                    Spacer(minLength: 0)
+
+                    VStack(alignment: .trailing, spacing: 6) {
+                        if alertCount > 0 {
+                            Text(alertCount > 99 ? "99+" : "\(alertCount)")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, alertCount > 9 ? 6 : 0)
+                                .frame(minWidth: 16, minHeight: 16)
+                                .background(Capsule().fill(Color.red))
+                                .accessibilityLabel("\(alertCount) unread announcements")
+                        }
+
+                        // Quieter badge
+                        Text(badge.uppercased())
+                            .font(.system(size: 10, weight: .semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(RisaTheme.chipBackground(scheme).opacity(0.80))
+                            )
+                            .foregroundStyle(RisaTheme.chipForeground(scheme).opacity(0.80))
+                    }
                 }
-            }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(textPrimary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(RisaTheme.textPrimary(scheme))
 
-                Text(subtitle)
-                    .font(.footnote)
-                    .foregroundStyle(textSecondary)
-                    .lineLimit(2)
-            }
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(RisaTheme.textSecondary(scheme))
+                        .lineLimit(2)
+                }
 
-            HStack(spacing: 6) {
-                Text(RisaTheme.isLCARSThemeEnabled ? "Access" : "Open")
-                    .font(
-                        RisaTheme.isLCARSThemeEnabled
-                            ? .system(size: 12, weight: .bold, design: .monospaced)
-                            : .caption.weight(.semibold)
-                    )
-                Image(systemName: "arrow.up.right")
-                    .font(.caption.weight(.bold))
+                HStack(spacing: 5) {
+                    Text(RisaTheme.isLCARSThemeEnabled ? "Access" : "Open")
+                        .font(.caption.weight(.medium))
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption2.weight(.bold))
+                }
+                .foregroundStyle(RisaTheme.accent(scheme).opacity(0.78))
             }
-            .foregroundStyle(RisaTheme.accent(scheme))
+            .padding(.trailing, 14)
         }
-        .padding(14)
+        .padding(.vertical, 14)
+        .padding(.leading, 10)
         .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
         .tliQuickActionCardStyle(scheme: scheme, cornerRadius: 22)
         .tliLCARSPanelChrome(accent: RisaTheme.accent(scheme))

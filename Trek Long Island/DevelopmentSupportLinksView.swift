@@ -16,6 +16,7 @@ struct DevelopmentSupportLinksView: View {
                     .foregroundStyle(RisaTheme.textSecondary(colorScheme))
 
                 attributionCard
+                supportCard
             }
             .adaptiveContentWidth(
                 maxWidth: TLILayout.defaultContentMaxWidth,
@@ -48,6 +49,53 @@ struct DevelopmentSupportLinksView: View {
             Text("This app is maintained as a companion for Trek Long Island attendees, with a focus on schedule access, venue guidance, and convention updates.")
                 .font(.subheadline)
                 .foregroundStyle(RisaTheme.textSecondary(colorScheme))
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(RisaTheme.cardBackground(colorScheme))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(colorScheme == .dark ? 0.14 : 0.07), lineWidth: 1)
+        )
+    }
+
+    private var supportCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Support The Developer", systemImage: "heart.circle.fill")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(RisaTheme.textPrimary(colorScheme))
+
+            Text("Using optional partner links helps support ongoing maintenance, updates, and response time for this independent companion app.")
+                .font(.subheadline)
+                .foregroundStyle(RisaTheme.textSecondary(colorScheme))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Link(destination: URL(string: "https://linktr.ee/teslafi")!) {
+                HStack(spacing: 10) {
+                    Image(systemName: "bolt.car.fill")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Developer Support Links")
+                            .font(.subheadline.weight(.bold))
+                        Text("Optional support link")
+                            .font(.caption.weight(.semibold))
+                            .opacity(0.78)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "arrow.up.right")
+                        .font(.footnote.weight(.bold))
+                }
+                .foregroundStyle(Color.black)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(RisaTheme.accent(colorScheme))
+                )
+            }
+            .buttonStyle(.plain)
         }
         .padding(16)
         .background(

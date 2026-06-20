@@ -57,8 +57,11 @@ struct TLIUsageSnapshot {
     var totalForegroundLabel: String { Self.durationLabel(for: totalForegroundSeconds) }
 
     private static func durationLabel(for duration: TimeInterval) -> String {
-        guard duration > 0 else { return "0m" }
-        let minutes = Int(duration / 60)
+        // Guard against NaN/infinite or absurd values before converting to Int,
+        // since Int(_:) traps on non-finite or out-of-range Doubles.
+        guard duration.isFinite, duration > 0 else { return "0m" }
+        let clamped = min(duration, 60 * 60 * 24 * 365 * 100) // cap at ~100 years
+        let minutes = Int(clamped / 60)
         let hours = minutes / 60
         let remainingMinutes = minutes % 60
         if hours > 0 {
@@ -87,7 +90,9 @@ final class TLIUsageInsightsStore: ObservableObject {
 
     private let maxSessions = 120
     private let defaults = UserDefaults.standard
-    private let db = Firestore.firestore()
+    // Lazily resolved so the store can be constructed before FirebaseApp.configure();
+    // Firestore is only accessed once remote sync starts (well after launch).
+    private lazy var db = Firestore.firestore()
     private let conventionID = "trekli-2026"
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -107,10 +112,10 @@ final class TLIUsageInsightsStore: ObservableObject {
     private var lastSyncedTabSelections: [String: Int] = [:]
     private var lastSyncedLaunches: Int = 0
     private var lastSyncedLastActiveAt: Date?
+    private var hasStartedListening = false
 
     private init() {
         load()
-        startListening()
     }
 
     deinit {
@@ -120,6 +125,13 @@ final class TLIUsageInsightsStore: ObservableObject {
     func noteLaunch() {
         totalLaunches += 1
         defaults.set(totalLaunches, forKey: StorageKeys.totalLaunches)
+        sync()
+    }
+
+    func startRemoteSyncIfNeeded() {
+        guard !hasStartedListening else { return }
+        hasStartedListening = true
+        startListening()
         sync()
     }
 
@@ -275,6 +287,7 @@ final class TLIUsageInsightsStore: ObservableObject {
     }
 
     private func sync() {
+        guard hasStartedListening else { return }
         guard !isApplyingRemoteSnapshot else { return }
         let sessionsBlob = encodedSessionsBlob(from: sessions)
         let tabSelections = self.tabSelections

@@ -183,6 +183,61 @@ final class PanelFeedbackStore: ObservableObject {
         insight.averageRating <= lowScoreThreshold
     }
 
+    func makeExportFile() throws -> URL {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmm"
+
+        let filename = "trek-long-island-panel-feedback-\(formatter.string(from: .now)).csv"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        try exportCSV().write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
+    func exportCSV() -> String {
+        let header = [
+            "event_id",
+            "event_title",
+            "room",
+            "rating",
+            "tags",
+            "comment",
+            "issue_reported",
+            "issue_resolved",
+            "comment_hidden",
+            "anonymous_attendee_id",
+            "submitted_at",
+            "updated_at"
+        ]
+
+        let rows = entries
+            .sorted { lhs, rhs in
+                if lhs.eventTitle == rhs.eventTitle {
+                    return lhs.updatedAt > rhs.updatedAt
+                }
+                return lhs.eventTitle < rhs.eventTitle
+            }
+            .map { entry in
+                [
+                    entry.eventID,
+                    entry.eventTitle,
+                    entry.room,
+                    "\(entry.rating)",
+                    entry.tags.map(\.title).joined(separator: "; "),
+                    entry.comment,
+                    entry.isIssueReported ? "yes" : "no",
+                    entry.isIssueResolved ? "yes" : "no",
+                    entry.isHidden ? "yes" : "no",
+                    entry.attendeeID,
+                    Self.exportDateFormatter.string(from: entry.submittedAt),
+                    Self.exportDateFormatter.string(from: entry.updatedAt)
+                ].map(Self.csvField).joined(separator: ",")
+            }
+
+        return ([header.map(Self.csvField).joined(separator: ",")] + rows).joined(separator: "\n")
+    }
+
     func submit(
         event: RisaScheduleEvent,
         rating: Int,
@@ -407,5 +462,15 @@ final class PanelFeedbackStore: ObservableObject {
         } catch {
             // Non-fatal: app should continue even if persistence fails.
         }
+    }
+
+    private static let exportDateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    private static func csvField(_ value: String) -> String {
+        "\"\(value.replacingOccurrences(of: "\"", with: "\"\""))\""
     }
 }

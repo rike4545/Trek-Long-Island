@@ -6,6 +6,7 @@ private struct TLISyncedPreferencesPayload: Equatable {
     var hasCompletedOnboarding: Bool = false
     var displayName: String = ""
     var rankRaw: String = TLIProfileRank.captain.rawValue
+    var divisionRaw: String = TLIProfileDivision.command.rawValue
     var roleRaw: String = TLIProfileRole.firstTimer.rawValue
     var objectivesRaw: String = ""
     var appAppearanceRaw: String = AppAppearance.system.rawValue
@@ -35,6 +36,7 @@ private struct TLISyncedPreferencesPayload: Equatable {
             "hasCompletedOnboarding": hasCompletedOnboarding,
             "displayName": displayName,
             "rankRaw": rankRaw,
+            "divisionRaw": divisionRaw,
             "roleRaw": roleRaw,
             "objectivesRaw": objectivesRaw,
             "appAppearanceRaw": appAppearanceRaw,
@@ -66,6 +68,7 @@ private struct TLISyncedPreferencesPayload: Equatable {
         payload.hasCompletedOnboarding = data["hasCompletedOnboarding"] as? Bool ?? false
         payload.displayName = data["displayName"] as? String ?? ""
         payload.rankRaw = data["rankRaw"] as? String ?? TLIProfileRank.captain.rawValue
+        payload.divisionRaw = data["divisionRaw"] as? String ?? TLIProfileDivision.command.rawValue
         payload.roleRaw = data["roleRaw"] as? String ?? TLIProfileRole.firstTimer.rawValue
         payload.objectivesRaw = data["objectivesRaw"] as? String ?? ""
         payload.appAppearanceRaw = data["appAppearanceRaw"] as? String ?? AppAppearance.system.rawValue
@@ -96,7 +99,9 @@ final class TLIPreferencesSyncStore: ObservableObject {
     static let shared = TLIPreferencesSyncStore()
 
     private let defaults = UserDefaults.standard
-    private let db = Firestore.firestore()
+    // Lazily resolved so the store can be constructed before FirebaseApp.configure()
+    // has run; Firestore is only touched once remote sync actually starts.
+    private lazy var db = Firestore.firestore()
     private let conventionID = "trekli-2026"
     private let profileIDKey = "TLI.Profile.syncProfileID.v1"
     private let legacyFeedbackAttendeeIDKey = "TLI.PanelFeedback.attendeeID.v1"
@@ -105,6 +110,7 @@ final class TLIPreferencesSyncStore: ObservableObject {
     private let appVisualPresetKey = "appVisualPreset"
     private let displayNameKey = "TLI.Profile.displayName"
     private let rankKey = "TLI.Profile.rank"
+    private let divisionKey = "TLI.Profile.division"
     private let roleKey = "TLI.Profile.role"
     private let objectivesKey = "TLI.Profile.objectives"
     private let appAppearanceKey = "appAppearance"
@@ -129,8 +135,10 @@ final class TLIPreferencesSyncStore: ObservableObject {
 
     private var listener: ListenerRegistration?
     private var defaultsObserver: NSObjectProtocol?
+    private var pendingSyncTask: Task<Void, Never>?
     private var isApplyingRemoteSnapshot = false
     private var lastSyncedPayload = TLISyncedPreferencesPayload()
+    private var hasStartedListening = false
 
     let profileID: String
 
@@ -143,10 +151,10 @@ final class TLIPreferencesSyncStore: ObservableObject {
             priorityOverridesQuietKey: true
         ])
         observeDefaults()
-        startListening()
     }
 
     deinit {
+        pendingSyncTask?.cancel()
         listener?.remove()
         if let defaultsObserver {
             NotificationCenter.default.removeObserver(defaultsObserver)
@@ -158,6 +166,12 @@ final class TLIPreferencesSyncStore: ObservableObject {
             .document(conventionID)
             .collection("crew_preferences")
             .document(profileID.lowercased())
+    }
+
+    func startRemoteSyncIfNeeded() {
+        guard !hasStartedListening else { return }
+        hasStartedListening = true
+        startListening()
     }
 
     private func startListening() {
@@ -193,8 +207,21 @@ final class TLIPreferencesSyncStore: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.syncCurrentPreferences()
+                self?.scheduleSync()
             }
+        }
+    }
+
+    /// Coalesces the burst of UserDefaults writes that happens during onboarding
+    /// (and any rapid settings changes) into a single payload rebuild + write.
+    private func scheduleSync() {
+        guard hasStartedListening else { return }
+        guard !isApplyingRemoteSnapshot else { return }
+        pendingSyncTask?.cancel()
+        pendingSyncTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            self?.syncCurrentPreferences()
         }
     }
 
@@ -204,6 +231,7 @@ final class TLIPreferencesSyncStore: ObservableObject {
         payload.appVisualPresetRaw = defaults.string(forKey: appVisualPresetKey) ?? TLIVisualPreset.defaultPreset.rawValue
         payload.displayName = defaults.string(forKey: displayNameKey) ?? ""
         payload.rankRaw = defaults.string(forKey: rankKey) ?? TLIProfileRank.captain.rawValue
+        payload.divisionRaw = defaults.string(forKey: divisionKey) ?? TLIProfileDivision.command.rawValue
         payload.roleRaw = defaults.string(forKey: roleKey) ?? TLIProfileRole.firstTimer.rawValue
         payload.objectivesRaw = defaults.string(forKey: objectivesKey) ?? ""
         payload.appAppearanceRaw = defaults.string(forKey: appAppearanceKey) ?? AppAppearance.system.rawValue
@@ -229,11 +257,20 @@ final class TLIPreferencesSyncStore: ObservableObject {
     }
 
     private func apply(_ payload: TLISyncedPreferencesPayload) {
+        var payload = payload
+        // Onboarding completion is a one-way latch. Once this device has finished
+        // onboarding, never let a stale or empty remote document set it back to
+        // false (which would re-trigger onboarding on every launch).
+        let remoteCompleted = payload.hasCompletedOnboarding
+        let localCompleted = defaults.bool(forKey: onboardingCompletedKey)
+        payload.hasCompletedOnboarding = localCompleted || remoteCompleted
+
         isApplyingRemoteSnapshot = true
         defaults.set(payload.hasCompletedOnboarding, forKey: onboardingCompletedKey)
         defaults.set(payload.appVisualPresetRaw, forKey: appVisualPresetKey)
         defaults.set(payload.displayName, forKey: displayNameKey)
         defaults.set(payload.rankRaw, forKey: rankKey)
+        defaults.set(payload.divisionRaw, forKey: divisionKey)
         defaults.set(payload.roleRaw, forKey: roleKey)
         defaults.set(payload.objectivesRaw, forKey: objectivesKey)
         defaults.set(payload.appAppearanceRaw, forKey: appAppearanceKey)
@@ -264,6 +301,7 @@ final class TLIPreferencesSyncStore: ObservableObject {
     }
 
     private func syncCurrentPreferences() {
+        guard hasStartedListening else { return }
         guard !isApplyingRemoteSnapshot else { return }
         let payload = currentPayload()
         guard payload != lastSyncedPayload else { return }

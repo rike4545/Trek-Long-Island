@@ -72,7 +72,9 @@ enum HelloComputerGuestDirectory {
 
     private static func profileSummary(_ profile: Profile) -> String {
         let seriesLine = profile.series.map { " Series: \($0)." } ?? ""
-        let autographLine = profile.autographNote.map { " \($0)" } ?? ""
+        let autographNote = TLIAutographPricing2026.note(for: profile.name) ?? profile.autographNote
+        let autographLine = autographNote.map { " \($0)" } ?? ""
+        let cancellationLine = cancellationNote(for: profile.name).map { "\n\n\($0)" } ?? ""
         let loreLine = if let firstCharacter = profile.characterAliases.first {
             "\n\nFor character lore, ask about \(firstCharacter) by name."
         } else {
@@ -81,8 +83,17 @@ enum HelloComputerGuestDirectory {
         return """
         \(profile.name) is a Trek Long Island guest in the \(profile.category) lineup. Known for: \(profile.roleSummary).\(seriesLine)
 
-        \(profile.bioSummary)\(autographLine)\(loreLine)
+        \(profile.bioSummary)\(cancellationLine)\(autographLine)\(loreLine)
         """
+    }
+
+    private static func cancellationNote(for guestName: String) -> String? {
+        switch normalize(guestName) {
+        case "louise sorel":
+            "Louise Sorel will not be joining us this year due to a fur baby emergency. All the xoxo to her pup."
+        default:
+            nil
+        }
     }
 
     private static func castingSummary(_ profile: Profile) -> String {
@@ -147,14 +158,13 @@ enum HelloComputerGuestDirectory {
         .init(name: "Jeffrey Combs", category: "Celebrity", roleSummary: "playing multiple Trek roles including Weyoun, Brunt, and Shran", series: "Deep Space Nine and Enterprise", bioSummary: "One of Star Trek's most celebrated recurring actors, known for multiple standout alien roles.", guestAliases: ["jeffrey combs", "jeff combs"], characterAliases: ["weyoun", "brunt", "shran"], autographNote: "Autograph signings and selfies are available at the guest's table."),
         .init(name: "Sachi Parker", category: "Celebrity", roleSummary: "portraying Doctor Tava", series: "The Next Generation", bioSummary: "Appeared in the TNG episode \"First Contact\" as Doctor Tava.", guestAliases: ["sachi parker"], characterAliases: ["doctor tava", "dr tava", "tava"], autographNote: "Autograph signings and selfies are available at the guest's table."),
         .init(name: "Nicole de Boer", category: "Celebrity", roleSummary: "portraying Ezri Dax", series: "Deep Space Nine", bioSummary: "Joined DS9 in its final season as Ezri Dax, the next host of the Dax symbiont.", guestAliases: ["nicole de boer", "nicole deboer"], characterAliases: ["ezri dax", "ezri"], autographNote: "Autograph signings and selfies are available at the guest's table."),
-        .init(name: "Louise Sorel", category: "Celebrity", roleSummary: "portraying Rayna Kapec", series: "The Original Series", bioSummary: "Known in Trek for Rayna Kapec from the TOS episode \"Requiem for Methuselah.\"", guestAliases: ["louise sorel"], characterAliases: ["rayna", "rayna kapec"], autographNote: "Autograph signings and selfies are available at the guest's table."),
+        .init(name: "Louise Sorel", category: "Celebrity", roleSummary: "portraying Rayna Kapec", series: "The Original Series", bioSummary: "Known in Trek for Rayna Kapec from the TOS episode \"Requiem for Methuselah.\"", guestAliases: ["louise sorel"], characterAliases: ["rayna", "rayna kapec"], autographNote: nil),
         .init(name: "Jesse James Keitel", category: "Panelist", roleSummary: "portraying Captain Angel", series: "Strange New Worlds", bioSummary: "Known to Strange New Worlds viewers as the pirate Captain Angel.", guestAliases: ["jesse james keitel", "jesse keitel"], characterAliases: ["captain angel", "angel"], autographNote: nil),
         .init(name: "Tracee Cocco", category: "Panelist", roleSummary: "appearing as a featured Trek panel guest with credits across TNG, DS9, and Voyager", series: "The Next Generation, Deep Space Nine, and Voyager", bioSummary: "A familiar face from background and recurring appearances across multiple Trek series.", guestAliases: ["tracee cocco"], characterAliases: [], autographNote: nil),
-        .init(name: "Paul Michael Adams", category: "Panelist", roleSummary: "appearing as a diversity cohost and featured guest", series: nil, bioSummary: "Part of the IDIC track programming at Trek Long Island.", guestAliases: ["paul michael adams"], characterAliases: [], autographNote: nil),
+        .init(name: "Paul Adams", category: "Panelist", roleSummary: "appearing as a diversity cohost and featured guest", series: nil, bioSummary: "Part of the IDIC track programming at Trek Long Island.", guestAliases: ["paul adams", "paul michael adams"], characterAliases: [], autographNote: nil),
         .init(name: "Heather Wood", category: "Panelist", roleSummary: "appearing as a diversity panelist", series: nil, bioSummary: "Featured as part of the IDIC track guest and panelist lineup.", guestAliases: ["heather wood"], characterAliases: [], autographNote: nil),
         .init(name: "Lucy BlueSkies", category: "Entertainment Guest", roleSummary: "appearing as a performance artist and Slut Trek creator", series: nil, bioSummary: "A performance artist known for Trek-inspired burlesque and live entertainment.", guestAliases: ["lucy blueskies", "lucy blue skies"], characterAliases: [], autographNote: nil),
         .init(name: "Beau Daciuos", category: "Panelist", roleSummary: "appearing as a diversity panelist", series: nil, bioSummary: "Featured in the convention's panelist lineup.", guestAliases: ["beau daciuos"], characterAliases: [], autographNote: nil),
-        .init(name: "Conor Heights", category: "Panelist", roleSummary: "appearing as a diversity panelist", series: nil, bioSummary: "Featured in the IDIC track programming.", guestAliases: ["conor heights"], characterAliases: [], autographNote: nil),
         .init(name: "Matthew Lawrence Jennings", category: "Panelist", roleSummary: "appearing as a diversity panelist", series: nil, bioSummary: "Known for the series \"1701: A Blerd Story\" and participating in the diversity track.", guestAliases: ["matthew lawrence jennings", "matthew jennings"], characterAliases: [], autographNote: nil),
         .init(name: "Adeena Mignogna", category: "Panelist", roleSummary: "appearing as a diversity panelist", series: nil, bioSummary: "A physicist and astronomer working in aerospace as a mission architect.", guestAliases: ["adeena mignogna"], characterAliases: [], autographNote: nil),
         .init(name: "Bonnie Gordon", category: "Guest Speaker", roleSummary: "appearing as a luau performer and Trek guest", series: "Star Trek: Prodigy", bioSummary: "Known for voice and performance work including Star Trek: Prodigy.", guestAliases: ["bonnie gordon"], characterAliases: [], autographNote: nil),

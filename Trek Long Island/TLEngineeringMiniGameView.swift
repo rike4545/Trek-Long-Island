@@ -376,7 +376,7 @@ struct TLEngineeringMiniGameView: View {
     private func statusBadge(_ title: String, value: String, color: Color) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(title)
-                .font(.caption2.bold())
+                .font(.caption.bold())
                 .foregroundStyle(EngineeringPalette.textDim)
             Text(value)
                 .font(.caption.weight(.bold))
@@ -390,7 +390,7 @@ struct TLEngineeringMiniGameView: View {
     private func metricPill(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title.uppercased())
-                .font(.caption2.bold())
+                .font(.caption.bold())
                 .foregroundStyle(EngineeringPalette.textDim)
             Text(value)
                 .font(.subheadline.weight(.bold))

@@ -22,6 +22,7 @@ enum TLIConventionDates {
     }
 
     static let displayRange = "June 12–14, 2026"
+    static let postConventionThankYouDate = date(year: 2026, month: 6, day: 15)
 
     static let launchSplashInterval: DateInterval = {
         let start = date(year: 2026, month: 6, day: 12)
@@ -31,6 +32,11 @@ enum TLIConventionDates {
 
     static func shouldShowLaunchSplash(on date: Date = .now) -> Bool {
         launchSplashInterval.contains(date)
+    }
+
+    static func isCaptainPicardDay(_ date: Date = .now) -> Bool {
+        let components = calendar.dateComponents([.month, .day], from: date)
+        return components.month == 6 && components.day == 16
     }
 
     static let conventionDays: [ConventionDay] = [

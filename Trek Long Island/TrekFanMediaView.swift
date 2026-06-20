@@ -13,6 +13,22 @@ struct TrekFanMediaView: View {
                 )
 
                 TLI_FanMedia_Card(
+                    title: "📺 Risa Takes Over Long Island",
+                    blurb: "Captains Quadrant hosts the Trek Long Island convention runners for a major announcement and a Risa-flavored look at what is coming next.",
+                    whyItMatters: "It gives attendees an easy video entry point into the 2026 convention story, directly from a Trek media show connected to the fan community.",
+                    linkTitle: "Watch on YouTube",
+                    linkURL: "https://www.youtube.com/watch?v=PdEP7mUEkXI"
+                )
+
+                TLI_FanMedia_Card(
+                    title: "🎬 Beam Me Up Sulu",
+                    blurb: "A free Roku Channel watch link for the Sulu-focused feature already highlighted in the Trek Long Island experience.",
+                    whyItMatters: "It gives attendees an easy way to watch the film before or after the convention, especially if they spotted the Sulu feature callout elsewhere in the app.",
+                    linkTitle: "Watch free on The Roku Channel",
+                    linkURL: "https://therokuchannel.roku.com/details/0877697658e59d0f63be13a35581544c/beam-me-up-sulu"
+                )
+
+                TLI_FanMedia_Card(
                     title: "🛠 Fan Films & Projects: Letters4Legacy",
                     blurb: "A community-driven project and outreach initiative connected to Star Trek fan culture.",
                     whyItMatters: "Highlights how fan projects extend beyond media into real-world impact and engagement.",
@@ -91,7 +107,7 @@ private struct TLI_FanMedia_Header: View {
 
             Text(subtitle)
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(.bottom, 6)
     }
@@ -118,7 +134,7 @@ private struct TLI_FanMedia_Card: View {
                     .font(.headline)
                 Text(whyItMatters)
                     .font(.body)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
             .padding(.top, 2)
 
@@ -131,7 +147,7 @@ private struct TLI_FanMedia_Card: View {
             } else {
                 Text("Invalid link URL")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .padding(.top, 2)
             }
         }
@@ -154,7 +170,7 @@ private struct TLI_FanMedia_Callout: View {
 
             Text(message) // <-- IMPORTANT: message, not body
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
         }
         .padding(14)
         .background(

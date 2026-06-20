@@ -2,17 +2,16 @@
 // PresaleWebView.swift
 
 import SwiftUI
-import WebKit
 
-struct PresaleWebView: UIViewRepresentable {
+struct PresaleWebView: View {
+    @Environment(\.openURL) private var openURL
+
     let url: URL
 
-    func makeUIView(context: Context) -> WKWebView {
-        WKWebView()
-    }
-
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
-        webView.load(request)
+    var body: some View {
+        ProgressView("Opening in browser...")
+            .onAppear {
+                openURL(url)
+            }
     }
 }

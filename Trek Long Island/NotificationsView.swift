@@ -369,7 +369,7 @@ struct NotificationsView: View {
                     .font(.caption)
             }
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.primary.opacity(0.72))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -380,7 +380,7 @@ struct NotificationsView: View {
             if manager.unreadCount > 0 {
                 Text("\(manager.unreadCount) unread")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
             Spacer(minLength: 0)
         }
@@ -569,7 +569,7 @@ private struct FilterBar: View {
             // Search
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
 
                 TextField("Search notifications…", text: $searchText)
                     .textInputAutocapitalization(.never)
@@ -580,7 +580,7 @@ private struct FilterBar: View {
                         searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.primary.opacity(0.72))
                     }
                     .accessibilityLabel("Clear search")
                 }
@@ -650,7 +650,7 @@ private struct FilterBar: View {
                 } else {
                     Text("Pending items don’t affect your unread badge.")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.primary.opacity(0.72))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
@@ -837,15 +837,15 @@ private struct EmptyRow: View {
         VStack(spacing: 10) {
             Image(systemName: mode == .pending ? "tray" : "bell.slash")
                 .font(.largeTitle)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
 
             Text(emptyTitle)
                 .font(.headline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
 
             Text(emptySubtitle)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.72))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
         }
@@ -890,13 +890,13 @@ private struct HappeningNowPanel: View {
                 Spacer()
                 Text("\(events.count) live")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             }
 
             if events.isEmpty {
                 Text("No sessions are live right now.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
             } else {
                 ForEach(events.prefix(3), id: \.id) { event in
                     Button {
@@ -910,11 +910,11 @@ private struct HappeningNowPanel: View {
                             Spacer(minLength: 8)
                             Text(event.room)
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                                 .lineLimit(1)
                             Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                     .buttonStyle(.plain)
@@ -925,7 +925,7 @@ private struct HappeningNowPanel: View {
                 Divider().overlay(TLITheme.border(scheme))
                 Text("Starting within 1 hour")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
 
                 ForEach(upcoming, id: \.id) { event in
                     Button {
@@ -939,10 +939,10 @@ private struct HappeningNowPanel: View {
                             Spacer(minLength: 8)
                             Text(event.startDate, style: .time)
                                 .font(.caption.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                             Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.primary.opacity(0.72))
                         }
                     }
                     .buttonStyle(.plain)

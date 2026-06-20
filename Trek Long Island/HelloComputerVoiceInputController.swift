@@ -421,7 +421,7 @@ struct HelloComputerHandsFreeToggle: View {
             if voiceInput.isHandsFreeEnabled {
                 Text("After you speak, silence will auto-submit your question — no tap needed.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.72))
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }

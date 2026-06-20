@@ -15,13 +15,8 @@
 		9333CB522E0AFDA3008D88EB /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB512E0AFDA3008D88EB /* FirebaseMessaging */; };
 		9333CB552E0AFDCE008D88EB /* iCalendarParser in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB542E0AFDCE008D88EB /* iCalendarParser */; };
 		9333CB582E0C1588008D88EB /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 9333CB572E0C1588008D88EB /* SwiftSoup */; };
-		9358A5292ECFE8D000C2E2F4 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5282ECFE8D000C2E2F4 /* FirebaseAnalyticsCore */; };
 		9358A52B2ECFE8D000C2E2F4 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A52A2ECFE8D000C2E2F4 /* FirebaseFirestore */; };
-		9358A52D2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A52C2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community */; };
-		9358A52F2ECFE8D000C2E2F4 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A52E2ECFE8D000C2E2F4 /* FirebaseFunctions */; };
-		9358A5312ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5302ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community */; };
-		9358A5332ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5322ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta */; };
-		9358A5352ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 9358A5342ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community */; };
+		9396E3CE2FD8FCC50069082D /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 9396E3CD2FD8FCC50069082D /* FirebaseAuth */; };
 		93F1A0012FABCDE100AAA001 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 93F1A0022FABCDE100AAA001 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
@@ -76,16 +71,11 @@
 			files = (
 				93F1A0012FABCDE100AAA001 /* GoogleMobileAds in Frameworks */,
 				9333CB522E0AFDA3008D88EB /* FirebaseMessaging in Frameworks */,
-				9358A52D2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community in Frameworks */,
-				9358A5292ECFE8D000C2E2F4 /* FirebaseAnalyticsCore in Frameworks */,
-				9358A5312ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community in Frameworks */,
-				9358A52F2ECFE8D000C2E2F4 /* FirebaseFunctions in Frameworks */,
 				9333CB502E0AFDA3008D88EB /* FirebaseCore in Frameworks */,
-				9358A5332ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta in Frameworks */,
 				9333CB4E2E0AFDA3008D88EB /* FirebaseAnalytics in Frameworks */,
+				9396E3CE2FD8FCC50069082D /* FirebaseAuth in Frameworks */,
 				9333CB552E0AFDCE008D88EB /* iCalendarParser in Frameworks */,
 				9333CB582E0C1588008D88EB /* SwiftSoup in Frameworks */,
-				9358A5352ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community in Frameworks */,
 				9358A52B2ECFE8D000C2E2F4 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -116,6 +106,7 @@
 				933A10F02DE8AEE60087F598 /* Trek Long Island */,
 				933A10FF2DE8AEE70087F598 /* Trek Long IslandTests */,
 				933A11092DE8AEE70087F598 /* Trek Long IslandUITests */,
+				9396E3C22FD8FCC50069082D /* Frameworks */,
 				933A10EF2DE8AEE60087F598 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -128,6 +119,13 @@
 				933A11062DE8AEE70087F598 /* Trek Long IslandUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9396E3C22FD8FCC50069082D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -156,13 +154,8 @@
 				9333CB512E0AFDA3008D88EB /* FirebaseMessaging */,
 				9333CB542E0AFDCE008D88EB /* iCalendarParser */,
 				9333CB572E0C1588008D88EB /* SwiftSoup */,
-				9358A5282ECFE8D000C2E2F4 /* FirebaseAnalyticsCore */,
 				9358A52A2ECFE8D000C2E2F4 /* FirebaseFirestore */,
-				9358A52C2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community */,
-				9358A52E2ECFE8D000C2E2F4 /* FirebaseFunctions */,
-				9358A5302ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community */,
-				9358A5322ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta */,
-				9358A5342ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community */,
+				9396E3CD2FD8FCC50069082D /* FirebaseAuth */,
 			);
 			productName = "Trek Long Island";
 			productReference = 933A10EE2DE8AEE60087F598 /* Trek Long Island.app */;
@@ -455,13 +448,14 @@
 		933A11112DE8AEE70087F598 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APS_ENVIRONMENT = development;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Trek Long Island/Trek_Long_Island.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 74;
 				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = RT25WXR9M5;
@@ -493,13 +487,14 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
-				MARKETING_VERSION = 2026.4.19;
+				MARKETING_VERSION = 2026.6.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-Island";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
+				REGISTER_APP_GROUPS = NO;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Osize";
 				SWIFT_VERSION = 5.0;
@@ -511,12 +506,13 @@
 		933A11122DE8AEE70087F598 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APS_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Trek Long Island/Trek_Long_Island.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 74;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RT25WXR9M5;
 				ENABLE_APP_SANDBOX = YES;
@@ -546,13 +542,14 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
-				MARKETING_VERSION = 2026.4.19;
+				MARKETING_VERSION = 2026.6.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-Island";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
+				REGISTER_APP_GROUPS = NO;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -756,40 +753,15 @@
 			package = 9333CB562E0C1588008D88EB /* XCRemoteSwiftPackageReference "SwiftSoup" */;
 			productName = SwiftSoup;
 		};
-		9358A5282ECFE8D000C2E2F4 /* FirebaseAnalyticsCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalyticsCore;
-		};
 		9358A52A2ECFE8D000C2E2F4 /* FirebaseFirestore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
 		};
-		9358A52C2ECFE8D000C2E2F4 /* FirebaseFirestoreCombine-Community */ = {
+		9396E3CD2FD8FCC50069082D /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = "FirebaseFirestoreCombine-Community";
-		};
-		9358A52E2ECFE8D000C2E2F4 /* FirebaseFunctions */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFunctions;
-		};
-		9358A5302ECFE8D000C2E2F4 /* FirebaseFunctionsCombine-Community */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = "FirebaseFunctionsCombine-Community";
-		};
-		9358A5322ECFE8D000C2E2F4 /* FirebaseInAppMessaging-Beta */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = "FirebaseInAppMessaging-Beta";
-		};
-		9358A5342ECFE8D000C2E2F4 /* FirebaseStorageCombine-Community */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9333CB4C2E0AFDA3008D88EB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = "FirebaseStorageCombine-Community";
+			productName = FirebaseAuth;
 		};
 		93F1A0022FABCDE100AAA001 /* GoogleMobileAds */ = {
 			isa = XCSwiftPackageProductDependency;

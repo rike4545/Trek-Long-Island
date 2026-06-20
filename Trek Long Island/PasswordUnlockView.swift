@@ -31,16 +31,12 @@ struct PasswordUnlockView: View {
                     .padding(.horizontal)
 
                 Button("Unlock") {
-                    if input == "1701" {
-                        isUnlocked = true
-                        toastMessage = "Admin mode unlocked"
-                        showToast = true
-                        dismiss()
-                    } else {
-                        toastMessage = "Incorrect password"
-                        showToast = true
-                        dismiss()
-                    }
+                    isUnlocked = NotificationManager.shared.isStaffUnlocked
+                    toastMessage = isUnlocked
+                        ? "Admin mode unlocked"
+                        : "Use coordinator sign-in in Ops Center"
+                    showToast = true
+                    dismiss()
                 }
                 .padding()
                 .frame(maxWidth: .infinity)

@@ -5,9 +5,6 @@
 //
 
 import SwiftUI
-#if canImport(SafariServices)
-import SafariServices
-#endif
 
 @MainActor
 final class MemoryAlphaSearchModel: ObservableObject {
@@ -59,8 +56,8 @@ final class MemoryAlphaSearchModel: ObservableObject {
 
 struct MemoryAlphaSearchView: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.openURL) private var openURL
     @StateObject private var model = MemoryAlphaSearchModel()
-    @State private var presentedURL: MemoryAlphaPresentedURL? = nil
 
     private let suggestions = [
         "Spock",
@@ -106,7 +103,7 @@ struct MemoryAlphaSearchView: View {
                             MemoryAlphaResultCard(
                                 result: result,
                                 scheme: scheme,
-                                onOpen: { presentedURL = MemoryAlphaPresentedURL(result.sourceURL) }
+                                onOpen: { openURL(result.sourceURL) }
                             )
                         }
                     }
@@ -128,7 +125,6 @@ struct MemoryAlphaSearchView: View {
                     .disabled(model.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.isSearching)
             }
         }
-        .sheet(item: $presentedURL, content: MemoryAlphaSafariView.init)
     }
 
     private func submitSearch() {
@@ -149,7 +145,7 @@ private struct MemoryAlphaHeroCard: View {
                 .font(.title3.weight(.bold))
                 .foregroundStyle(TLITheme.textPrimary(scheme))
 
-            Text("Look up Star Trek characters, species, ships, planets, and lore without leaving the app.")
+            Text("Look up Star Trek characters, species, ships, planets, and lore, then open source articles in your browser.")
                 .font(.subheadline)
                 .foregroundStyle(TLITheme.textSecondary(scheme))
 
@@ -288,49 +284,3 @@ private struct MemoryAlphaResultCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
-
-private struct MemoryAlphaPresentedURL: Identifiable {
-    let url: URL
-    var id: URL { url }
-
-    init(_ url: URL) {
-        self.url = url
-    }
-}
-
-#if canImport(SafariServices)
-private struct MemoryAlphaSafariView: UIViewControllerRepresentable {
-    let item: MemoryAlphaPresentedURL
-
-    init(_ item: MemoryAlphaPresentedURL) {
-        self.item = item
-    }
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let controller = SFSafariViewController(url: item.url)
-        controller.dismissButtonStyle = .close
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
-}
-#else
-private struct MemoryAlphaSafariView: View {
-    let item: MemoryAlphaPresentedURL
-
-    init(_ item: MemoryAlphaPresentedURL) {
-        self.item = item
-    }
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Open this link in Safari:")
-                .font(.headline)
-            Text(item.url.absoluteString)
-                .font(.footnote)
-                .textSelection(.enabled)
-        }
-        .padding()
-    }
-}
-#endif
