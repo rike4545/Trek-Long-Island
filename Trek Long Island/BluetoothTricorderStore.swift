@@ -66,6 +66,21 @@ final class BluetoothTricorderStore: NSObject, ObservableObject {
     private var pendingScanStart = false
     private let staleInterval: TimeInterval = 30
 
+    // Authoritative set of recently seen devices, keyed by identifier. The
+    // central manager delegate is bound to the main queue, so all access stays
+    // on the main thread and needs no extra locking.
+    private var tracked: [UUID: BluetoothTricorderDevice] = [:]
+    // didDiscover fires once per received advertisement, and duplicate
+    // reporting is enabled so RSSI stays fresh. In a crowded hall that is
+    // hundreds of callbacks per second; sorting and publishing on each one
+    // froze the UI. Instead we record the latest reading cheaply and flush a
+    // sorted snapshot at most a few times per second.
+    private var isFlushScheduled = false
+    private let flushInterval: TimeInterval = 0.5
+    // Hard cap on retained devices so memory use and per-flush sort cost stay
+    // flat no matter how dense the environment is.
+    private let maxTrackedDevices = 120
+
     var bluetoothStateLabel: String {
         switch centralManager?.state {
         case .unknown, nil: return "Initializing"
@@ -109,6 +124,7 @@ final class BluetoothTricorderStore: NSObject, ObservableObject {
         }
 
         pendingScanStart = false
+        tracked.removeAll()
         devices.removeAll()
         isScanning = true
         statusMessage = "Scanning for nearby Bluetooth signals."
@@ -128,10 +144,7 @@ final class BluetoothTricorderStore: NSObject, ObservableObject {
     }
 
     func pruneStaleDevices() {
-        let cutoff = Date().addingTimeInterval(-staleInterval)
-        let freshDevices = devices.filter { $0.lastSeen >= cutoff }
-        guard freshDevices.count != devices.count else { return }
-        devices = freshDevices.sorted(by: deviceSort)
+        publishSnapshot()
     }
 
     private func updateStatusForCurrentState() {
@@ -162,7 +175,10 @@ final class BluetoothTricorderStore: NSObject, ObservableObject {
         let serviceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
         let isConnectable = advertisementData[CBAdvertisementDataIsConnectable] as? Bool ?? false
         let displayName = advertisedName ?? peripheral.name ?? "Unnamed Signal"
-        let reading = BluetoothTricorderDevice(
+        // Record the latest reading cheaply (O(1)); the heavy prune/sort/publish
+        // work is coalesced into flushTrackedDevices so a flood of advertisement
+        // callbacks can't block the main thread.
+        tracked[peripheral.identifier] = BluetoothTricorderDevice(
             id: peripheral.identifier,
             name: displayName,
             rssi: rssi.intValue,
@@ -170,16 +186,40 @@ final class BluetoothTricorderStore: NSObject, ObservableObject {
             serviceCount: serviceUUIDs.count,
             isConnectable: isConnectable
         )
+        scheduleFlush()
+    }
 
-        if let index = devices.firstIndex(where: { $0.id == reading.id }) {
-            devices[index] = reading
-        } else {
-            devices.append(reading)
+    private func scheduleFlush() {
+        guard !isFlushScheduled else { return }
+        isFlushScheduled = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + flushInterval) { [weak self] in
+            self?.flushTrackedDevices()
         }
+    }
 
-        pruneStaleDevices()
-        devices.sort(by: deviceSort)
-        statusMessage = "Tracking \(devices.count) Bluetooth signal\(devices.count == 1 ? "" : "s")."
+    private func flushTrackedDevices() {
+        isFlushScheduled = false
+        publishSnapshot()
+    }
+
+    /// Prunes stale entries, enforces the device cap, sorts, and republishes the
+    /// snapshot the UI observes. Safe to call repeatedly and keeps the backing
+    /// store bounded so memory stays flat.
+    private func publishSnapshot() {
+        let cutoff = Date().addingTimeInterval(-staleInterval)
+        var fresh = tracked.values
+            .filter { $0.lastSeen >= cutoff }
+            .sorted(by: deviceSort)
+        if fresh.count > maxTrackedDevices {
+            fresh = Array(fresh.prefix(maxTrackedDevices))
+        }
+        tracked = Dictionary(fresh.map { ($0.id, $0) }, uniquingKeysWith: { current, _ in current })
+        devices = fresh
+
+        guard isScanning else { return }
+        statusMessage = fresh.isEmpty
+            ? "Scanning for nearby Bluetooth signals."
+            : "Tracking \(fresh.count) Bluetooth signal\(fresh.count == 1 ? "" : "s")."
     }
 
     private func deviceSort(_ lhs: BluetoothTricorderDevice, _ rhs: BluetoothTricorderDevice) -> Bool {
@@ -200,6 +240,7 @@ extension BluetoothTricorderStore: CBCentralManagerDelegate {
             startScanning()
         } else if central.state != .poweredOn {
             isScanning = false
+            tracked.removeAll()
             devices.removeAll()
         }
     }

@@ -14,7 +14,9 @@ import UserNotifications
 
 @MainActor
 final class HelloComputerStore: ObservableObject {
-    @Published var messages: [HelloComputerMessage] = []
+    @Published var messages: [HelloComputerMessage] = [] {
+        didSet { trimConversationHistoryIfNeeded() }
+    }
     @Published var inputText: String = ""
     @Published var isThinking: Bool = false
     @Published var lastSource: HelloComputerAnswerSource? = nil
@@ -26,6 +28,18 @@ final class HelloComputerStore: ObservableObject {
     private let aiClient: HelloComputerAIClient
     private let allowAIIfUncertain: Bool
     private let agent: HelloComputerAgent
+
+    // Upper bound on retained transcript entries. A long convention-day
+    // conversation would otherwise grow the array (and every per-send snapshot
+    // copied from it) without limit. Trimming the oldest entries keeps memory
+    // flat while preserving recent context. Assigning inside didSet does not
+    // re-trigger the observer, so there is no recursion.
+    private let maxRetainedMessages = 250
+
+    private func trimConversationHistoryIfNeeded() {
+        guard messages.count > maxRetainedMessages else { return }
+        messages.removeFirst(messages.count - maxRetainedMessages)
+    }
 
     init(aiClient: HelloComputerAIClient = HelloComputerNoAIClient(),
          allowAIIfUncertain: Bool = false,

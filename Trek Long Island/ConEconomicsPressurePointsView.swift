@@ -174,7 +174,19 @@ struct ConEconomicsPressurePointsView: View {
     private var breakEvenTickets: Double {
         max(0, totalCosts - totalNonTicketRevenue) / max(1, netTicketPerAttendee)
     }
-    private var breakEvenTicketsRounded: Int { Int(ceil(breakEvenTickets)) }
+    private var breakEvenTicketsRounded: Int {
+        let value = breakEvenTickets
+        // Int(_:) traps on non-finite or out-of-range Doubles; clamp first.
+        guard value.isFinite, value >= 0, value < Double(Int.max) else { return 0 }
+        return Int(ceil(value))
+    }
+
+    private var venueCostSharePercent: Int {
+        guard subtotalCosts > 0 else { return 0 }
+        let ratio = venueCost / subtotalCosts * 100
+        guard ratio.isFinite else { return 0 }
+        return Int(ratio.rounded())
+    }
 
     private func marginAt(_ count: Int) -> Double {
         Double(count) * netTicketPerAttendee + totalNonTicketRevenue - totalCosts
@@ -826,7 +838,7 @@ struct ConEconomicsPressurePointsView: View {
                     "Every sponsorship package ≥$500 includes a complimentary hallway table. Each sponsor who takes one displaces a paid vendor slot. Vendor and sponsorship revenue are partially linked — don't count both independently.")
 
                 insightBlock("Venue dominates the cost structure",
-                    "At \(fmt(venueCost)), the Hyatt venue represents about \(Int(round(venueCost / subtotalCosts * 100)))% of subtotal costs. Watch for F&B minimums, house AV surcharges, and Wi-Fi fees — these are the most common surprises in hotel convention contracts.")
+                    "At \(fmt(venueCost)), the Hyatt venue represents about \(venueCostSharePercent)% of subtotal costs. Watch for F&B minimums, house AV surcharges, and Wi-Fi fees — these are the most common surprises in hotel convention contracts.")
 
                 insightBlock("What the break-even number means",
                     "With \(fmt(totalNonTicketRevenue)) in non-ticket revenue, tickets only need to cover \(fmt(max(0, totalCosts - totalNonTicketRevenue))). At \(fmt(netTicketPerAttendee)) net per ticket, that's \(breakEvenTicketsRounded) paid attendees to reach zero. Every attendee above that is pure margin.")

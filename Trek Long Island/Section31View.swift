@@ -246,6 +246,12 @@ struct Section31View: View {
             fileName: "App Review - Do Not Download Dangerous Scam Itscowcraft1020",
             fileExtension: "png",
             summary: "Screenshot of a one-star review titled \"DO NOT DOWNLOAD\" dated Jun 9, 2026 by Itscowcraft1020, alleging the app is fake, not connected to Trek LI, unauthorized to use a logo, includes in-app purchases, and is a dangerous scam."
+        ),
+        .init(
+            title: "App Review: Ratings Reset / No Affiliation Claim",
+            fileName: "App Review - Keeps Resetting App To Remove Reviews FaerieBeth",
+            fileExtension: "png",
+            summary: "Screenshot of a one-star review titled \"Keeps Resetting App To Remove Reviews\" dated Jul 2, 2026 by FaerieBeth, alleging the developer reset the app's ratings to remove unfavorable reviews, disputing any affiliation with Trek Long Island, claiming tickets sold through the app will not be honored at the door, alleging use of others' art, alleging harassment of the convention's creator through fake accounts and AI-generated review replies, and alleging an intent to divert charitable proceeds."
         )
     ]
 
@@ -282,6 +288,7 @@ struct Section31View: View {
                     harassmentPolicyCard
                     defamationContextCard
                     reviewDefamationElementsCard
+                    ticketAffiliationResponseCard
                     developerImpactCard
                     developmentPaymentCard
                     intellectualPropertyAndTaxComplaintCard
@@ -492,6 +499,37 @@ struct Section31View: View {
             }
 
             Text("This is not legal advice and does not ask users to reach a legal conclusion.")
+                .font(.footnote)
+                .foregroundStyle(RisaTheme.textMuted(scheme))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(RisaTheme.cardStroke(scheme).opacity(0.45), lineWidth: 1)
+        )
+    }
+
+    private var ticketAffiliationResponseCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            labelRow(title: "Response", systemImage: "checkmark.shield.fill")
+
+            Text("Response: Ticket Sales and Affiliation")
+                .font(.headline)
+                .foregroundStyle(RisaTheme.textPrimary(scheme))
+
+            Text("A Jul 2, 2026 review by FaerieBeth claims this app is unaffiliated with Trek Long Island and that tickets purchased through it will not be honored at the door. This app does not sell tickets or process payments directly. Every ticket button in the app opens the convention's own Square storefront so purchases are made on the organizer's platform, not the developer's.")
+                .font(.body)
+                .foregroundStyle(RisaTheme.textSecondary(scheme))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("The sponsorship and development-payment records preserved elsewhere on this page are included because they document a working relationship with Trek Long Island around this app's development, which this page treats as relevant context to the affiliation claim.")
+                .font(.body)
+                .foregroundStyle(RisaTheme.textSecondary(scheme))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Claims in that review about ratings manipulation, harassment, or charitable proceeds are not addressed here because they are not verifiable from records available to this app; they are preserved as-is in the evidence section above for readers to evaluate.")
                 .font(.footnote)
                 .foregroundStyle(RisaTheme.textMuted(scheme))
                 .fixedSize(horizontal: false, vertical: true)

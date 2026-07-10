@@ -53,7 +53,9 @@ private struct HeroSlide: Identifiable, Hashable {
         .init(imageName: "glass2",        title: "Holodeck Art",               subtitle: "Come enjoy making your own Risian artifact."),
         .init(imageName: "moustache",     title: "Holodeck Fun",               subtitle: "'Mad Libs' and so much more."),
         .init(imageName: "FoodTrucks",     title: "Working Replicators",               subtitle: "'Food, Food, Food."),
-        .init(imageName: "Hanging",     title: "Guest Fun",               subtitle: "'Paradise.")
+        .init(imageName: "Hanging",     title: "Guest Fun",               subtitle: "'Paradise."),
+        .init(imageName: "2027 Tickets Promo 1",     title: "2027 Tickets",               subtitle: "'2027 Tickets."),
+        .init(imageName: "2027 Hotel Promo",     title: "2027 Hotel Block Open",               subtitle: "'2027 Hotel.")
     ]
 }
 
