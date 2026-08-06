@@ -30,6 +30,8 @@ public struct SlideshowView: View {
         }
         .tabViewStyle(PageTabViewStyle())
         .onReceive(timer) { _ in
+            // `%` traps on a zero divisor, so an empty image list must short-circuit.
+            guard images.count > 1 else { return }
             withAnimation {
                 currentIndex = (currentIndex + 1) % images.count
             }

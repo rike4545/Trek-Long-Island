@@ -369,7 +369,7 @@ struct TricorderRecordingPanel: View {
             Spacer()
 
             // Level percentage readout
-            Text(String(format: "SIG  %03d%%", Int(audioLevel * 100)))
+            Text(String(format: "SIG  %03d%%", TLISafeMath.percent(audioLevel)))
                 .font(.system(size: 8, weight: .bold, design: .monospaced))
                 .foregroundStyle(sweepColor.opacity(0.6))
                 .tracking(1.5)

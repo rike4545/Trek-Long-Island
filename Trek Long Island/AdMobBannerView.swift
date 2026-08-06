@@ -33,22 +33,12 @@ enum TLIAdDefaults {
 enum TLIAdExperience {
     private static var hasRecordedLaunch = false
 
-    static let onboardingCompletedKey = "TLI.Onboarding.completed"
-
     static func noteAppLaunch(defaults: UserDefaults = .standard, now: Date = .now) {
         guard !hasRecordedLaunch else { return }
         hasRecordedLaunch = true
         let nextLaunchCount = defaults.integer(forKey: TLIAdSettings.launchCountKey) + 1
         defaults.set(nextLaunchCount, forKey: TLIAdSettings.launchCountKey)
         defaults.set(now, forKey: TLIAdSettings.lastLaunchAtKey)
-    }
-
-    static func markOnboardingCompleted(defaults: UserDefaults = .standard) {
-        defaults.set(true, forKey: onboardingCompletedKey)
-    }
-
-    static func hasCompletedOnboarding(defaults: UserDefaults = .standard) -> Bool {
-        defaults.bool(forKey: onboardingCompletedKey)
     }
 
     static func secondsSinceLaunch(defaults: UserDefaults = .standard, now: Date = .now) -> TimeInterval {

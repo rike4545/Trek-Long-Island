@@ -3,6 +3,12 @@
 //  TLIConventionDates.swift
 //  Trek Long Island
 //
+//  Date helpers for the current convention.
+//
+//  This type no longer owns any dates — it derives everything from
+//  `TLIEventInfo.current` so the year lives in exactly one place. The public API is
+//  unchanged so existing call sites keep working.
+//
 
 import Foundation
 
@@ -21,14 +27,18 @@ enum TLIConventionDates {
         }
     }
 
-    static let displayRange = "June 12–14, 2026"
-    static let postConventionThankYouDate = date(year: 2026, month: 6, day: 15)
+    private static var info: TLIEventInfo { .current }
 
-    static let launchSplashInterval: DateInterval = {
-        let start = date(year: 2026, month: 6, day: 12)
-        let end = date(year: 2026, month: 6, day: 15)
-        return DateInterval(start: start, end: end)
-    }()
+    /// e.g. "June 11–13, 2027"
+    static var displayRange: String { info.displayRange }
+
+    /// The day after the convention ends, when the thank-you notice appears.
+    static var postConventionThankYouDate: Date {
+        calendar.startOfDay(for: info.endDate)
+    }
+
+    /// Runs from the first morning through the end of the final day.
+    static var launchSplashInterval: DateInterval { info.dateInterval }
 
     static func shouldShowLaunchSplash(on date: Date = .now) -> Bool {
         launchSplashInterval.contains(date)
@@ -39,40 +49,36 @@ enum TLIConventionDates {
         return components.month == 6 && components.day == 16
     }
 
-    static let conventionDays: [ConventionDay] = [
-        ConventionDay(
-            id: 1,
-            title: "Day 1",
-            subtitle: "Friday, June 12",
-            date: date(year: 2026, month: 6, day: 12),
-            prompt: "Opening night log, first impressions, and must-hit missions."
-        ),
-        ConventionDay(
-            id: 2,
-            title: "Day 2",
-            subtitle: "Saturday, June 13",
-            date: date(year: 2026, month: 6, day: 13),
-            prompt: "Best panels, guest moments, and discoveries from the busiest day."
-        ),
-        ConventionDay(
-            id: 3,
-            title: "Day 3",
-            subtitle: "Sunday, June 14",
-            date: date(year: 2026, month: 6, day: 14),
-            prompt: "Final memories, last finds, and what you want to remember later."
-        )
+    /// Journal prompts, keyed by position in the run rather than by weekday, so the
+    /// copy survives the convention shifting days year to year.
+    private static let dayPrompts = [
+        "Opening night log, first impressions, and must-hit missions.",
+        "Best panels, guest moments, and discoveries from the busiest day.",
+        "Final memories, last finds, and what you want to remember later."
     ]
 
-    private static func date(year: Int, month: Int, day: Int) -> Date {
-        var components = DateComponents()
-        components.calendar = calendar
-        components.timeZone = .current
-        components.year = year
-        components.month = month
-        components.day = day
-        components.hour = 0
-        components.minute = 0
-        components.second = 0
-        return components.date ?? .distantFuture
+    static var conventionDays: [ConventionDay] {
+        let info = self.info
+        return (0..<info.dayCount).map { offset in
+            let date = info.date(forDayOffset: offset)
+            return ConventionDay(
+                id: offset + 1,
+                title: "Day \(offset + 1)",
+                subtitle: Self.weekdayAndDay(for: date),
+                date: date,
+                prompt: dayPrompts.indices.contains(offset)
+                    ? dayPrompts[offset]
+                    : "Log what you want to remember from today."
+            )
+        }
+    }
+
+    /// "Friday, June 11"
+    private static func weekdayAndDay(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.locale = .current
+        formatter.setLocalizedDateFormatFromTemplate("EEEE MMMM d")
+        return formatter.string(from: date)
     }
 }

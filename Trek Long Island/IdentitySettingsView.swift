@@ -8,11 +8,19 @@ struct IdentitySettingsView: View {
     @Environment(\.colorScheme) private var scheme
     @FocusState private var isNameFocused: Bool
 
-    @AppStorage("TLI.Profile.displayName") private var displayName: String = ""
-    @AppStorage("TLI.Profile.rank") private var rankRaw: String = TLIProfileRank.captain.rawValue
-    @AppStorage("TLI.Profile.division") private var divisionRaw: String = TLIProfileDivision.command.rawValue
-    @AppStorage("TLI.Profile.role") private var roleRaw: String = TLIProfileRole.firstTimer.rawValue
-    @AppStorage("TLI.Profile.objectives") private var objectivesRaw: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.displayName) private var displayName: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.rank) private var rankRaw: String = TLIProfileRank.captain.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.division) private var divisionRaw: String = TLIProfileDivision.command.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.role) private var roleRaw: String = TLIProfileRole.firstTimer.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.objectives) private var objectivesRaw: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.pronouns) private var pronounsRaw: String = TLIProfilePronouns.unspecified.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.pronounsCustom) private var pronounsCustom: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.welcomeStyle) private var welcomeStyleRaw: String = TLIWelcomeMessageStyle.defaultStyle.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.welcomeCustomMessage) private var welcomeCustomMessage: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.showPronounsInWelcome) private var showPronounsInWelcome: Bool = false
+
+    @FocusState private var isPronounsFocused: Bool
+    @FocusState private var isWelcomeMessageFocused: Bool
 
     private var selectedRole: TLIProfileRole {
         get { TLIProfileRole(rawValue: roleRaw) ?? .firstTimer }
@@ -34,6 +42,31 @@ struct IdentitySettingsView: View {
         nonmutating set { objectivesRaw = TLIProfilePreferences.serialize(newValue) }
     }
 
+    private var selectedPronouns: TLIProfilePronouns {
+        get { TLIProfilePreferences.pronouns(from: pronounsRaw) }
+        nonmutating set { pronounsRaw = newValue.rawValue }
+    }
+
+    private var selectedWelcomeStyle: TLIWelcomeMessageStyle {
+        get { TLIProfilePreferences.welcomeStyle(from: welcomeStyleRaw) }
+        nonmutating set { welcomeStyleRaw = newValue.rawValue }
+    }
+
+    private var resolvedPronouns: String {
+        TLIProfilePreferences.pronounsDisplay(selection: selectedPronouns, custom: pronounsCustom)
+    }
+
+    private var welcomePreview: String {
+        TLIProfilePreferences.welcomeGreeting(
+            style: selectedWelcomeStyle,
+            customMessage: welcomeCustomMessage,
+            rank: selectedRank,
+            displayName: displayName,
+            pronouns: resolvedPronouns,
+            showPronouns: showPronounsInWelcome
+        )
+    }
+
     var body: some View {
         ZStack {
             TLITheme.backgroundGradient(scheme)
@@ -53,6 +86,7 @@ struct IdentitySettingsView: View {
                     .padding(.top, 12)
                     .padding(.horizontal, 4)
 
+                    welcomeMessageCard
                     identityCard
                     missionFocusCard
                 }
@@ -81,12 +115,132 @@ struct IdentitySettingsView: View {
         }
     }
 
+    private var welcomeMessageCard: some View {
+        SettingsSectionCard(
+            icon: "hand.wave.fill",
+            iconColor: .yellow,
+            title: "Welcome Message",
+            subtitle: "Choose the greeting shown on the splash screen after the app opens."
+        ) {
+            VStack(alignment: .leading, spacing: 14) {
+                welcomePreviewPanel
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Greeting Style")
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(TLITheme.textPrimary(scheme))
+
+                    ForEach(TLIWelcomeMessageStyle.allCases) { style in
+                        welcomeStyleRow(style)
+                    }
+                }
+
+                if selectedWelcomeStyle == .custom {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your Message")
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(TLITheme.textPrimary(scheme))
+
+                        TextField("Welcome aboard, {name}", text: $welcomeCustomMessage, axis: .vertical)
+                            .foregroundStyle(TLITheme.textPrimary(scheme))
+                            .tint(TLITheme.accent(scheme))
+                            .lineLimit(1...3)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .tliPanelSurface(
+                                cornerRadius: 16,
+                                fillOpacity: scheme == .dark ? 0.94 : 0.98,
+                                borderOpacity: 0.82,
+                                shadowRadius: 4,
+                                shadowY: 2
+                            )
+                            .focused($isWelcomeMessageFocused)
+                            .onChange(of: welcomeCustomMessage) { _, newValue in
+                                let limited = TLIProfilePreferences.sanitizedSingleLine(
+                                    newValue,
+                                    limit: TLIProfilePreferences.customWelcomeMessageLimit
+                                )
+                                if limited != newValue {
+                                    welcomeCustomMessage = limited
+                                }
+                            }
+
+                        Text("Include \(TLIProfilePreferences.welcomeNameToken) anywhere in your message and it becomes your name and rank. Leave it blank to fall back to the time-of-day greeting.")
+                            .font(.system(.footnote, design: .rounded))
+                            .foregroundStyle(TLITheme.textSecondary(scheme))
+                    }
+                }
+
+                Toggle(isOn: $showPronounsInWelcome) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Show pronouns in the welcome message")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundStyle(TLITheme.textPrimary(scheme))
+                        Text(
+                            resolvedPronouns.isEmpty
+                                ? "Pick your pronouns in Captain Profile below to use this."
+                                : "Adds “(\(resolvedPronouns))” after the greeting."
+                        )
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundStyle(TLITheme.textSecondary(scheme))
+                    }
+                }
+                .tint(TLITheme.accent(scheme))
+                .disabled(resolvedPronouns.isEmpty)
+            }
+        }
+    }
+
+    private var welcomePreviewPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Splash preview")
+                .font(.system(.caption, design: .rounded).weight(.bold))
+                .textCase(.uppercase)
+                .foregroundStyle(TLITheme.textTertiary(scheme))
+
+            Text(welcomePreview)
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(TLITheme.textPrimary(scheme))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .tliPanelSurface(
+            cornerRadius: 18,
+            fillOpacity: scheme == .dark ? 0.90 : 0.96,
+            borderOpacity: 0.72,
+            shadowRadius: 4,
+            shadowY: 2
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Splash preview. \(welcomePreview)")
+    }
+
+    private func welcomeStyleRow(_ style: TLIWelcomeMessageStyle) -> some View {
+        let isSelected = selectedWelcomeStyle == style
+
+        return Button {
+            dismissKeyboard()
+            selectedWelcomeStyle = style
+        } label: {
+            preferenceRow(
+                title: style.title,
+                detail: style.description,
+                icon: style.icon,
+                isSelected: isSelected
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
     private var identityCard: some View {
         SettingsSectionCard(
             icon: "person.crop.circle.badge.sparkles",
             iconColor: .orange,
             title: "Captain Profile",
-            subtitle: "Set the name, rank, and mission profile the app uses."
+            subtitle: "Set the name, rank, pronouns, and mission profile the app uses."
         ) {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -115,13 +269,43 @@ struct IdentitySettingsView: View {
                         }
                 }
 
+                // Pronouns sit above the rank list on purpose: there are 30+ ranks,
+                // and anything below them is a very long scroll away.
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Personalized Rank")
+                    Text("Pronouns")
                         .font(.system(.headline, design: .rounded).weight(.bold))
                         .foregroundStyle(TLITheme.textPrimary(scheme))
 
-                    ForEach(TLIProfileRank.allCases) { rank in
-                        rankPreferenceRow(rank)
+                    ForEach(TLIProfilePronouns.allCases) { option in
+                        pronounsPreferenceRow(option)
+                    }
+
+                    if selectedPronouns == .custom {
+                        TextField("Your pronouns", text: $pronounsCustom)
+                            .foregroundStyle(TLITheme.textPrimary(scheme))
+                            .tint(TLITheme.accent(scheme))
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .padding(.horizontal, 14)
+                            .frame(height: 56)
+                            .tliPanelSurface(
+                                cornerRadius: 16,
+                                fillOpacity: scheme == .dark ? 0.94 : 0.98,
+                                borderOpacity: 0.82,
+                                shadowRadius: 4,
+                                shadowY: 2
+                            )
+                            .focused($isPronounsFocused)
+                            .submitLabel(.done)
+                            .onSubmit {
+                                dismissKeyboard()
+                            }
+                            .onChange(of: pronounsCustom) { _, newValue in
+                                let limited = TLIProfilePreferences.sanitizedSingleLine(newValue, limit: 40)
+                                if limited != newValue {
+                                    pronounsCustom = limited
+                                }
+                            }
                     }
                 }
 
@@ -132,6 +316,16 @@ struct IdentitySettingsView: View {
 
                     ForEach(TLIProfileDivision.allCases) { division in
                         divisionPreferenceRow(division)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Personalized Rank")
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(TLITheme.textPrimary(scheme))
+
+                    ForEach(TLIProfileRank.allCases) { rank in
+                        rankPreferenceRow(rank)
                     }
                 }
 
@@ -148,7 +342,7 @@ struct IdentitySettingsView: View {
                 currentSummary(
                     icon: "person.text.rectangle.fill",
                     title: "Current identity",
-                    value: "\(TLIProfilePreferences.commandName(rank: selectedRank, displayName: displayName)) • \(selectedDivision.title) • \(selectedRole.title)"
+                    value: identitySummaryValue
                 )
             }
         }
@@ -186,6 +380,39 @@ struct IdentitySettingsView: View {
                 title: role.title,
                 detail: role.description,
                 icon: role.icon,
+                isSelected: isSelected
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var identitySummaryValue: String {
+        let commandName = TLIProfilePreferences.commandName(rank: selectedRank, displayName: displayName)
+        var parts = [commandName]
+        if !resolvedPronouns.isEmpty {
+            parts.append(resolvedPronouns)
+        }
+        parts.append(selectedDivision.title)
+        parts.append(selectedRole.title)
+        return parts.joined(separator: " • ")
+    }
+
+    private func pronounsPreferenceRow(_ option: TLIProfilePronouns) -> some View {
+        let isSelected = selectedPronouns == option
+
+        return Button {
+            dismissKeyboard()
+            selectedPronouns = option
+            if option == .unspecified {
+                showPronounsInWelcome = false
+            }
+        } label: {
+            preferenceRow(
+                title: option.title,
+                detail: option.description,
+                icon: option.icon,
                 isSelected: isSelected
             )
         }
@@ -339,6 +566,8 @@ struct IdentitySettingsView: View {
 
     private func dismissKeyboard() {
         isNameFocused = false
+        isPronounsFocused = false
+        isWelcomeMessageFocused = false
         #if canImport(UIKit)
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif

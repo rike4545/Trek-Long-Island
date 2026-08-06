@@ -675,7 +675,7 @@ struct LiveOpsView: View {
                 Text("Focused Room: \(snapshot.state.roomName)")
                     .font(.subheadline.weight(.semibold))
                 Spacer(minLength: 8)
-                Text("Risk \(Int((snapshot.riskScore * 100).rounded()))%")
+                Text("Risk \(TLISafeMath.percent(snapshot.riskScore))%")
                     .font(.caption.monospacedDigit().weight(.bold))
                     .foregroundStyle(metricColor(for: snapshot))
             }
@@ -731,10 +731,10 @@ struct LiveOpsView: View {
     private func metricLabel(for snapshot: LiveOpsRoomSnapshot) -> String {
         switch visualMetricFocus {
         case .risk:
-            return "Risk \(Int((snapshot.riskScore * 100).rounded()))%"
+            return "Risk \(TLISafeMath.percent(snapshot.riskScore))%"
         case .occupancy:
             if snapshot.state.occupancyLimit > 0 {
-                return "\(Int((snapshot.occupancyRatio * 100).rounded()))%"
+                return "\(TLISafeMath.rounded(snapshot.occupancyRatio * 100))%"
             }
             return "Unset"
         case .wait:

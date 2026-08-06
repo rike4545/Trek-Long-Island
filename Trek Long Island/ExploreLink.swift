@@ -74,7 +74,7 @@ struct ExploreLink: View {
         "Events": [
             .init(
                 title: "Schedule",
-                url: "https://treklongisland.com/wp-content/uploads/2025/05/Schedule-2025.pdf",
+                url: "https://treklongisland.com/programs/",
                 systemImage: "calendar.circle.fill",
                 category: "Events"
             ),

@@ -77,7 +77,7 @@ final class PanelFeedbackStore: ObservableObject {
     private let attendeeIDKey = "TLI.PanelFeedback.attendeeID.v1"
     private let thresholdKey = "TLI.PanelFeedback.lowScoreThreshold.v1"
     private let minResponsesKey = "TLI.PanelFeedback.minResponses.v1"
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private let db = Firestore.firestore()
     private var listener: ListenerRegistration?
 

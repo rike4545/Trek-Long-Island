@@ -32,7 +32,7 @@ final class AdminAuthService: ObservableObject {
     @Published private(set) var lastError: String?
 
     private let db = Firestore.firestore()
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
 
     #if canImport(FirebaseAuth)
     private var authStateHandle: AuthStateDidChangeListenerHandle?

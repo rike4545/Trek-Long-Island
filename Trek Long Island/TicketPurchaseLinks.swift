@@ -13,10 +13,30 @@ enum TicketPurchaseLinks {
     static let admissionURLString = "https://treklongislandtickets.square.site/s/search?q=2027"
     static let ticketsURLString = admissionURLString
     static let photoOpsURLString = "https://treklongislandtickets.square.site/photo-ops"
-    static let photoOpScheduleURLString = "https://treklongisland.com/photo-op-schedule-2025/"
+    /// The old /photo-op-schedule-2025/ page now 404s and no 2027 photo-op grid has
+    /// been posted yet, so this points at the programming hub that will carry it.
+    static let photoOpScheduleURLString = "https://treklongisland.com/programs/"
+
+    // MARK: - 2027 passes
+
+    static let defiantPassURLString = "https://treklongislandtickets.square.site/product/defiant-pass-2027/X7UOWOGSVXUSEHXKYJY3PL54?cs=true&cst=custom"
+    static let dinnerWithTheStarsURLString = "https://treklongislandtickets.square.site/product/dinner-with-the-stars-2027/X55MYITM74MT2MRYGGPTSHWE?cs=true&cst=custom"
     static let autographPreSalesURLString = "https://theautographconcierge.com/collections/autograph-pre-orders-1/trek-long-island"
     static let vendorTablingURLString = "https://treklongislandtickets.square.site/vendor"
     static let presaleURLString = admissionURLString
+
+    // MARK: - 2026 special events (RETIRED)
+    //
+    // These Square products were sold for the June 2026 convention and are no longer
+    // listed in the store — fetching them returns the generic storefront shell rather
+    // than a product page. They are kept only so the archived 2026 view can name what
+    // ran; `areSpecialEventsAnnounced` gates them out of the live purchase UI.
+    // Delete this block once 2027 special events are announced and replace with the
+    // new product URLs.
+
+    /// Flip to `true` once 2027 special-event products exist in the Square store.
+    static let areSpecialEventsAnnounced = false
+
     static let risaLuauURLString = "https://treklongislandtickets.square.site/product/risa-luau-cocktails-across-the-final-frontier/ASNL2QBQCXUZA23COJZWP77Q?cs=true&cst=custom"
     static let wineCheeseCombsURLString = "https://treklongislandtickets.square.site/product/wine-and-cheese-tasting-with-jeffery-combs/NV5PDEEY4ARO2JMM3PZMSJ43?cs=true&cst=custom"
     static let nanaPaintingURLString = "https://treklongislandtickets.square.site/product/painting-with-nana-visitor-art-of-the-resistance/ZFIE7PX6KOQ4SQ33PCIRBBGE?cs=true&cst=custom"
@@ -30,6 +50,8 @@ enum TicketPurchaseLinks {
     static let musettaGoldenKeyQigongURLString = "https://treklongislandtickets.square.site/product/golden-key-qigong-healing-method-class-with-musetta-vander-saturday/LFZDMRLFFIAMLCQ24B6YZ5UZ?cs=true&cst=custom"
     static let danJeannotteMoustacheURLString = "https://treklongislandtickets.square.site/product/moustache-you-a-question-with-dan-jeannotte-aka-sam-kirk/J5FHRH2FGTFHMG54RQLLR74F?cs=true&cst=custom"
 
+    static var defiantPassURL: URL { URL(string: defiantPassURLString)! }
+    static var dinnerWithTheStarsURL: URL { URL(string: dinnerWithTheStarsURLString)! }
     static var ticketStoreURL: URL { URL(string: ticketStoreURLString)! }
     static var admissionURL: URL { URL(string: admissionURLString)! }
     static var ticketsURL: URL { URL(string: ticketsURLString)! }
@@ -54,8 +76,7 @@ enum TicketPurchaseLinks {
     static var autographPreSalesCutoffDate: Date {
         let calendar = Calendar.current
         let conventionStart = TLIConventionDates.conventionDays.first?.date
-            ?? calendar.date(from: DateComponents(year: 2026, month: 6, day: 12))
-            ?? .distantFuture
+            ?? TLIEventInfo.current.startDate
         return calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: conventionStart))
             ?? conventionStart
     }

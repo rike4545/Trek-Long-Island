@@ -625,16 +625,35 @@ struct ScheduleView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 24)
             } else if mappedEvents.isEmpty {
-                // No events loaded at all (feed issue, offline, or no events in window).
+                // No events loaded at all. Distinguish "the grid isn't published yet"
+                // from "something went wrong" — before the convention the calendars
+                // are legitimately empty, and a warning triangle there reads as an
+                // outage and sends people to support for a non-problem.
+                let isAwaitingPublication = Date() < TLIEventInfo.current.startDate
                 VStack(spacing: 10) {
-                    Image(systemName: "exclamationmark.triangle")
+                    Image(systemName: isAwaitingPublication ? "calendar.badge.clock" : "exclamationmark.triangle")
                         .imageScale(.large)
                         .foregroundStyle(Color.primary.opacity(0.72))
-                    Text(RisaTheme.isLCARSThemeEnabled ? "No mission timeline data is available at the moment." : "No schedule data is available at the moment.")
+
+                    Text(isAwaitingPublication
+                         ? (RisaTheme.isLCARSThemeEnabled
+                            ? "Mission timeline for \(TLIEventInfo.current.displayRange) has not been transmitted yet."
+                            : "Programming for \(TLIEventInfo.current.displayRange) hasn't been published yet.")
+                         : (RisaTheme.isLCARSThemeEnabled
+                            ? "No mission timeline data is available at the moment."
+                            : "No schedule data is available at the moment."))
                         .font(.callout)
                         .foregroundStyle(Color.primary.opacity(0.72))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
+
+                    if isAwaitingPublication {
+                        Text("Panels, photo ops, and events appear here as soon as the schedule is released.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.primary.opacity(0.55))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 32)
@@ -872,7 +891,7 @@ struct ScheduleView: View {
 
     private func relativeStartText(for event: RisaScheduleEvent) -> String {
         if shouldLeaveNow(for: event) {
-            return "Starts in \(max(0, Int(event.startDate.timeIntervalSinceNow / 60))) min • \(event.room)"
+            return "Starts in \(max(0, TLISafeMath.minutes(event.startDate.timeIntervalSinceNow))) min • \(event.room)"
         }
         return "\(scheduleRelativeFormatter.localizedString(for: event.startDate, relativeTo: Date())) • \(event.room)"
     }

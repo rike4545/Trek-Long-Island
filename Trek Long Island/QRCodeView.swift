@@ -277,7 +277,7 @@ struct QRCodeView: View {
         let hasOrders = summary.orderCount > 0
         let scanProgress = summary.totalPurchased == 0
             ? "0%"
-            : "\(Int((Double(summary.totalScanned) / Double(max(1, summary.totalPurchased))) * 100.0))%"
+            : "\(TLISafeMath.int((Double(summary.totalScanned) / Double(max(1, summary.totalPurchased))) * 100.0))%"
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Operator Dashboard")

@@ -115,8 +115,11 @@ struct ConEconomicsPressurePointsView: View {
     ]
 
     // MARK: - Inputs
-    // Defaults reflect Trek Long Island 4 (June 12–14, 2026)
-    // Hyatt Regency Long Island, 1717 Motor Pkwy, Hauppauge NY
+    // HISTORICAL: these defaults model Trek Long Island 4 (June 12–14, 2026) at the
+    // Hyatt Regency Long Island, 1717 Motor Pkwy, Hauppauge NY. The convention has
+    // since moved to the Melville Marriott for 2027 — the venue cost, ballroom
+    // capacity, F&B minimum, and house AV assumptions below all need re-basing
+    // against the new contract before this calculator is used for 2027 planning.
     //
     // Ticket prices: Adult 3-Day $70 · Sat $40 · Fri/Sun $30 · Child $25/$10
     // Blended avg across buyer mix (~55% 3-day, ~30% Sat-only, ~15% child) ≈ $58
@@ -238,6 +241,11 @@ struct ConEconomicsPressurePointsView: View {
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.7))
                     .padding(.top, 2)
+
+                Text("Historical model. Venue, F&B, and AV assumptions below are the 2026 Hyatt contract and have not been re-based for the \(TLIEventInfo.current.venue.name).")
+                    .font(.caption)
+                    .foregroundStyle(TLI.gold.opacity(0.9))
+                    .padding(.top, 4)
 
                 HStack(spacing: 8) {
                     chip("🎟 \(fmt(ticketPrice)) avg ticket", color: TLI.gold)
@@ -424,7 +432,7 @@ struct ConEconomicsPressurePointsView: View {
                 inputRow { PercentField("Contingency buffer",            value: $contingencyPercent,      field: .contingency,         focus: $focusedField) }
 
                 costSummaryRow("Subtotal costs",                value: subtotalCosts,      dimmed: true)
-                costSummaryRow("Contingency (\(Int(contingencyPercent))%)", value: contingencyDollars, dimmed: true)
+                costSummaryRow("Contingency (\(TLISafeMath.int(contingencyPercent))%)", value: contingencyDollars, dimmed: true)
                 costSummaryRow("Total costs",                   value: totalCosts,         dimmed: false)
 
                 Divider().padding(.vertical, 4)

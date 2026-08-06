@@ -22,13 +22,17 @@ struct SettingsView: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Environment(\.accessibilityShowButtonShapes) private var showButtonShapes
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
-    @State private var showOnboardingReplay = false
 
-    @AppStorage("TLI.Profile.displayName") private var displayName: String = ""
-    @AppStorage("TLI.Profile.rank") private var rankRaw: String = TLIProfileRank.captain.rawValue
-    @AppStorage("TLI.Profile.division") private var divisionRaw: String = TLIProfileDivision.command.rawValue
-    @AppStorage("TLI.Profile.role") private var roleRaw: String = TLIProfileRole.firstTimer.rawValue
-    @AppStorage("TLI.Profile.objectives") private var objectivesRaw: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.displayName) private var displayName: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.rank) private var rankRaw: String = TLIProfileRank.captain.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.division) private var divisionRaw: String = TLIProfileDivision.command.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.role) private var roleRaw: String = TLIProfileRole.firstTimer.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.objectives) private var objectivesRaw: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.pronouns) private var pronounsRaw: String = TLIProfilePronouns.unspecified.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.pronounsCustom) private var pronounsCustom: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.welcomeStyle) private var welcomeStyleRaw: String = TLIWelcomeMessageStyle.defaultStyle.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.welcomeCustomMessage) private var welcomeCustomMessage: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.showPronounsInWelcome) private var showPronounsInWelcome: Bool = false
 
     // Appearance (backed by your AppAppearance enum)
     @AppStorage("appVisualPreset") private var appVisualPresetRaw: String = TLIVisualPreset.defaultPreset.rawValue
@@ -113,6 +117,24 @@ struct SettingsView: View {
         nonmutating set { objectivesRaw = TLIProfilePreferences.serialize(newValue) }
     }
 
+    private var resolvedPronouns: String {
+        TLIProfilePreferences.pronounsDisplay(
+            selection: TLIProfilePreferences.pronouns(from: pronounsRaw),
+            custom: pronounsCustom
+        )
+    }
+
+    private var welcomeMessagePreview: String {
+        TLIProfilePreferences.welcomeGreeting(
+            style: TLIProfilePreferences.welcomeStyle(from: welcomeStyleRaw),
+            customMessage: welcomeCustomMessage,
+            rank: selectedRank,
+            displayName: displayName,
+            pronouns: resolvedPronouns,
+            showPronouns: showPronounsInWelcome
+        )
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -181,12 +203,6 @@ struct SettingsView: View {
         .onDisappear {
             dismissKeyboard()
         }
-        .fullScreenCover(isPresented: $showOnboardingReplay) {
-            TLIOnboardingView(canDismiss: true)
-                .onDisappear {
-                    dismissKeyboard()
-                }
-        }
     }
 
     // MARK: - Cards
@@ -250,10 +266,14 @@ struct SettingsView: View {
             icon: "person.crop.circle.badge.sparkles",
             iconColor: .orange,
             title: "Identity",
-            subtitle: "Manage your captain name, rank, role, and mission focus."
+            subtitle: "Manage your welcome message, captain name, rank, pronouns, and mission focus."
         ) {
             VStack(alignment: .leading, spacing: 10) {
+                settingsSummaryRow(title: "Welcome", value: welcomeMessagePreview)
                 settingsSummaryRow(title: "Captain", value: TLIProfilePreferences.commandName(rank: selectedRank, displayName: displayName))
+                if !resolvedPronouns.isEmpty {
+                    settingsSummaryRow(title: "Pronouns", value: resolvedPronouns)
+                }
                 settingsSummaryRow(title: "Division", value: selectedDivision.title)
                 settingsSummaryRow(title: "Profile", value: selectedRole.title)
                 settingsSummaryRow(title: "Focus", value: TLIProfilePreferences.objectivesSummary(from: selectedObjectives))
@@ -275,7 +295,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Open identity settings")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        Text("Update your captain name, rank, role, and mission focus.")
+                        Text("Update your welcome message, captain name, rank, pronouns, role, and mission focus.")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(TLITheme.textSecondary(scheme))
                     }
@@ -1136,7 +1156,7 @@ struct SettingsView: View {
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(TLITheme.textSecondary(scheme))
 
-            Text("Star Trek and all related marks, logos and characters are solely owned by CBS Studios Inc. and Paramount Pictures. This fan production is not endorsed by, sponsored by, nor affiliated with CBS, Paramount Pictures, or any other Star Trek franchise. The term and graphical illustration called, 'Trek Long Island' is copyrighted, 2026, B. Carroll. 1-15133681261. All Rights Reserved.")
+            Text("Star Trek and all related marks, logos and characters are solely owned by CBS Studios Inc. and Paramount Pictures. This fan production is not endorsed by, sponsored by, nor affiliated with CBS, Paramount Pictures, or any other Star Trek franchise. The term and graphical illustration called, 'Trek Long Island' is copyrighted 2026, B. Carroll VAu 1-591-034. All Rights Reserved.")
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(TLITheme.textSecondary(scheme))
 
@@ -1144,18 +1164,9 @@ struct SettingsView: View {
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(TLITheme.textSecondary(scheme))
 
-            Button {
-                dismissKeyboard()
-                showOnboardingReplay = true
-            } label: {
-                HStack {
-                    Image(systemName: "sparkles.rectangle.stack.fill")
-                    Text("Replay Onboarding")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                    Spacer()
-                }
-            }
-            .buttonStyle(SettingsGhostButtonStyle())
+            Text("Photo Credit: Kevin Socola Films (Sponsored by PMA Consulting)")
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(TLITheme.textSecondary(scheme))
         }
     }
 

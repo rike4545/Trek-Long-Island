@@ -48,36 +48,36 @@ extension HelloComputerFAQBank {
         // ─────────────────────────────────────────────────────────
 
         .init(
-            question: "Where can I park at the Hyatt Regency Long Island?",
-            answer: "The Hyatt Regency Long Island (1717 Motor Parkway, Hauppauge, NY 11788) has an on-site parking lot. Parking availability and any fees are managed by the hotel — confirm current details at:\\nhttps://treklongisland.com/hotel/\\n\\nTip: Arriving early on busy days (especially Saturday) is recommended.",
-            tags: ["parking", "park", "car", "lot", "garage", "hyatt", "hauppauge"],
+            question: "Where can I park at the \(TLIEventInfo.current.venue.name)?",
+            answer: "The \(TLIEventInfo.current.venue.name) (\(TLIEventInfo.current.venue.singleLineAddress)) has on-site parking, and the hotel also offers valet for a fee. Parking availability and any charges are set by the hotel — confirm current details at:\\nhttps://treklongisland.com/hotel/\\n\\nTip: Arriving early on busy days (especially Saturday) is recommended.",
+            tags: ["parking", "park", "car", "lot", "garage", "valet", "marriott", "melville"],
             source: .officialFAQ
         ),
 
         .init(
             question: "How do I get to Trek Long Island by public transit?",
-            answer: "The venue is at the Hyatt Regency Long Island, 1717 Motor Parkway, Hauppauge, NY 11788.\\n\\nTransit options:\\n• Long Island Rail Road (LIRR) to Ronkonkoma or Central Islip, then a taxi or rideshare to the hotel.\\n• Suffolk County Transit buses serve the Hauppauge area — check schedules at sct.suffolkcountyny.gov.\\n• Rideshare (Uber/Lyft) from any LIRR stop is the most reliable option.\\n\\nFull hotel and directions info:\\nhttps://treklongisland.com/hotel/",
-            tags: ["transit", "train", "lirr", "bus", "subway", "public", "rail", "directions", "how to get there", "rideshare"],
+            answer: "The venue is the \(TLIEventInfo.current.venue.name), \(TLIEventInfo.current.venue.singleLineAddress).\\n\\nThere is no train station in Melville itself, so plan on a short rideshare or taxi for the last leg:\\n• LIRR to Farmingdale (Ronkonkoma Branch) — closest station, roughly 3.5 miles / about 10 minutes by car.\\n• LIRR to Huntington (Port Jefferson Branch) — roughly 5 miles / about 10–15 minutes by car.\\n• Suffolk County Transit buses serve the Route 110 corridor the hotel sits on — check schedules at sct.suffolkcountyny.gov.\\n• Rideshare (Uber/Lyft) from either station is the most reliable option.\\n\\nFull hotel and directions info:\\nhttps://treklongisland.com/hotel/",
+            tags: ["transit", "train", "lirr", "bus", "subway", "public", "rail", "directions", "how to get there", "rideshare", "farmingdale", "huntington"],
             source: .officialFAQ
         ),
 
         .init(
             question: "Is there a hotel room block for Trek Long Island?",
-            answer: "A hotel block may be available at the Hyatt Regency Long Island. Check current booking details and any group rate at:\\nhttps://treklongisland.com/hotel/\\n\\nBook early — convention hotel blocks tend to fill quickly.",
-            tags: ["hotel", "room", "block", "booking", "stay", "overnight", "hyatt", "rate"],
+            answer: "Yes. Trek Long Island has a discounted group rate at the \(TLIEventInfo.current.venue.name) — the convention venue itself.\\n\\nThe group rate is available for reservations made through \(TLIEventInfo.current.hotelGroupRateDeadline). Book directly here:\\n\(TLIEventInfo.current.hotelBookingURLString)\\n\\nBook early — convention room blocks tend to fill well before the deadline.",
+            tags: ["hotel", "room", "block", "booking", "stay", "overnight", "marriott", "rate", "group rate"],
             source: .officialFAQ
         ),
 
         .init(
             question: "How far is the venue from major airports?",
-            answer: "The Hyatt Regency Long Island is in Hauppauge, NY:\\n• JFK Airport: approx. 45–60 min by car.\\n• LaGuardia (LGA): approx. 50–65 min by car.\\n• MacArthur Airport (ISP): approx. 15–20 min by car — closest option.\\n\\nRideshare and car rental are available at all three airports. Full venue info:\\nhttps://treklongisland.com/hotel/",
+            answer: "The \(TLIEventInfo.current.venue.name) is in Melville, NY:\\n• MacArthur Airport (ISP): approx. 17 miles, 25–30 min by car — closest option.\\n• JFK Airport: approx. 45–60 min by car, traffic depending.\\n• LaGuardia (LGA): approx. 50–70 min by car, traffic depending.\\n\\nRideshare and car rental are available at all three airports. Full venue info:\\nhttps://treklongisland.com/hotel/",
             tags: ["airport", "jfk", "laguardia", "macarthur", "isp", "fly", "travel", "drive"],
             source: .officialFAQ
         ),
 
         .init(
             question: "Is there accessible parking or drop-off?",
-            answer: "The Hyatt Regency Long Island has ADA-compliant parking and accessible entrances. For specific accessibility needs, contact the hotel directly or ask staff at the Information Desk on arrival.\\n\\nAccessibility info:\\nhttps://treklongisland.com/hotel/",
+            answer: "The \(TLIEventInfo.current.venue.name) has ADA-compliant parking and accessible entrances. For specific accessibility needs, contact the hotel directly at \(TLIEventInfo.current.venue.phone) or ask staff at the Information Desk on arrival.\\n\\nAccessibility info:\\nhttps://treklongisland.com/hotel/",
             tags: ["accessible", "ada", "parking", "drop-off", "wheelchair", "mobility", "handicap"],
             source: .officialFAQ
         ),
@@ -95,14 +95,14 @@ extension HelloComputerFAQBank {
 
         .init(
             question: "Is there food available at the convention?",
-            answer: "The Hyatt Regency Long Island has on-site restaurant and bar options. Convention-specific food vendors or concessions may also be present — check the schedule or Announcements for details.\\n\\nFor dietary concerns or special requests, the hotel restaurant staff can usually accommodate.\\n\\nVenue info:\\nhttps://treklongisland.com/hotel/",
+            answer: "The \(TLIEventInfo.current.venue.name) has on-site restaurant and bar options. Convention-specific food vendors or concessions may also be present — check the schedule or Announcements for details.\\n\\nFor dietary concerns or special requests, the hotel restaurant staff can usually accommodate.\\n\\nVenue info:\\nhttps://treklongisland.com/hotel/",
             tags: ["food", "eat", "restaurant", "lunch", "dinner", "snack", "hungry", "meal"],
             source: .officialFAQ
         ),
 
         .init(
             question: "Are there vegetarian, vegan, or allergen-friendly food options?",
-            answer: "The Hyatt Regency typically offers vegetarian and allergy-friendly options — speak with hotel restaurant staff directly for the current menu and allergen details.\\n\\nIf you have a severe allergy, it is always safest to ask hotel staff directly rather than relying on convention signage.",
+            answer: "The hotel restaurant typically offers vegetarian and allergy-friendly options — speak with staff directly for the current menu and allergen details.\\n\\nIf you have a severe allergy, it is always safest to ask hotel staff directly rather than relying on convention signage.",
             tags: ["vegetarian", "vegan", "allergy", "allergen", "gluten", "dairy", "nut", "dietary", "kosher", "halal"],
             source: .generalGuidance
         ),
@@ -116,14 +116,14 @@ extension HelloComputerFAQBank {
 
         .init(
             question: "Is there coffee or a café at the venue?",
-            answer: "The Hyatt Regency typically has a café or coffee bar in the lobby area. Hours can vary — check with hotel staff on arrival.\\n\\nTip: Saturday tends to be the busiest day; peak times around 10 AM and post-panel rushes can mean longer waits.",
+            answer: "The hotel typically has a café or coffee bar in the lobby area. Hours can vary — check with hotel staff on arrival.\\n\\nTip: Saturday tends to be the busiest day; peak times around 10 AM and post-panel rushes can mean longer waits.",
             tags: ["coffee", "café", "cafe", "starbucks", "tea", "espresso", "latte", "caffeine"],
             source: .generalGuidance
         ),
 
         .init(
-            question: "Are there restaurants nearby the Hyatt Regency Long Island?",
-            answer: "The Hauppauge/Motor Parkway area has several dining options within a 5–10 minute drive, including chains and local restaurants. Your rideshare app or Maps app will show current options closest to the hotel.\\n\\nNote: on busy convention days, nearby restaurants can fill up — especially Saturday lunch.",
+            question: "Are there restaurants nearby the \(TLIEventInfo.current.venue.name)?",
+            answer: "The hotel sits on the Route 110 corridor in Melville, which has a large number of dining options within a 5–10 minute drive, including chains and local restaurants. The Walt Whitman Shops are close by as well. Your rideshare app or Maps app will show current options nearest the hotel.\\n\\nNote: on busy convention days, nearby restaurants can fill up — especially Saturday lunch.",
             tags: ["restaurants", "nearby", "outside", "dinner", "off-site", "local food"],
             source: .generalGuidance
         ),

@@ -228,7 +228,9 @@ struct SpecialEventsView: View {
         VStack(alignment: .leading, spacing: 10) {
             sectionLabel("Admission Note", systemImage: "info.circle.fill")
 
-            Text("Some special events may also require a convention admission badge. Use the individual event links above for the special-event purchase, and this link for 2027 tickets.")
+            Text(TicketPurchaseLinks.areSpecialEventsAnnounced
+                 ? "Some special events may also require a convention admission badge. Use the individual event links above for the special-event purchase, and this link for 2027 tickets."
+                 : "Special events are sold separately from admission, and most also require a convention badge. Admission for \(TLIEventInfo.current.displayRange) is on sale now:")
                 .font(.body)
                 .foregroundStyle(RisaTheme.textSecondary(scheme))
                 .fixedSize(horizontal: false, vertical: true)
@@ -255,49 +257,55 @@ struct SpecialEventsView: View {
 
     private var purchaseLinksCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionLabel("Purchase Special Events", systemImage: "ticket.fill")
+            if TicketPurchaseLinks.areSpecialEventsAnnounced {
+                sectionLabel("Purchase Special Events", systemImage: "ticket.fill")
 
-            Text("Choose the event you want and the app will open that exact Square purchase page.")
-                .font(.subheadline)
-                .foregroundStyle(RisaTheme.textSecondary(scheme))
-                .fixedSize(horizontal: false, vertical: true)
+                Text("Choose the event you want and the app will open that exact Square purchase page.")
+                    .font(.subheadline)
+                    .foregroundStyle(RisaTheme.textSecondary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
 
-            ForEach(purchaseLinks) { event in
-                Button {
-                    openURL(event.url)
-                } label: {
-                    HStack(alignment: .center, spacing: 12) {
-                        Image(event.imageName)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 58, height: 58)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(event.title)
-                                .font(.headline)
-                                .foregroundStyle(RisaTheme.textPrimary(scheme))
-                                .lineLimit(3)
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            Text(event.detail)
-                                .font(.subheadline)
-                                .foregroundStyle(RisaTheme.textSecondary(scheme))
-                        }
-
-                        Spacer(minLength: 0)
-
-                        Image(systemName: "arrow.up.right.square.fill")
-                            .font(.title3)
-                            .foregroundStyle(RisaTheme.accent(scheme))
-                            .accessibilityHidden(true)
+                ForEach(purchaseLinks) { event in
+                    Button {
+                        openURL(event.url)
+                    } label: {
+                        eventRow(event, isPurchasable: true)
                     }
-                    .padding(12)
-                    .background(RisaTheme.chipBackground(scheme).opacity(0.92), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Purchase \(event.title)")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Purchase \(event.title)")
+            } else {
+                sectionLabel("2027 Lineup Coming Soon", systemImage: "clock.badge.questionmark")
+
+                Text("Special events for \(TLIEventInfo.current.displayRange) have not been announced yet. Watch Announcements, or check the official special-events page for the lineup as it is confirmed.")
+                    .font(.subheadline)
+                    .foregroundStyle(RisaTheme.textSecondary(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    openURL(eventsURL)
+                } label: {
+                    Label("Check Official Page", systemImage: "arrow.up.right.square")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+
+                Divider()
+                    .padding(.vertical, 4)
+
+                Text("Previously at Trek Long Island 2026")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(RisaTheme.textSecondary(scheme))
+
+                Text("These sold out with the 2026 convention and are no longer on sale. Listed so you know the kind of programming to expect.")
+                    .font(.caption)
+                    .foregroundStyle(RisaTheme.textSecondary(scheme).opacity(0.85))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                ForEach(purchaseLinks) { event in
+                    eventRow(event, isPurchasable: false)
+                        .accessibilityLabel("\(event.title), 2026 event, no longer on sale")
+                }
             }
         }
         .padding(16)
@@ -306,6 +314,42 @@ struct SpecialEventsView: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(RisaTheme.cardStroke(scheme).opacity(0.45), lineWidth: 1)
         )
+    }
+
+    private func eventRow(_ event: SpecialEventPurchaseLink, isPurchasable: Bool) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(event.imageName)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 58, height: 58)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .saturation(isPurchasable ? 1 : 0)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(event.title)
+                    .font(.headline)
+                    .foregroundStyle(RisaTheme.textPrimary(scheme))
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(isPurchasable ? event.detail : "\(event.detail) · 2026")
+                    .font(.subheadline)
+                    .foregroundStyle(RisaTheme.textSecondary(scheme))
+            }
+
+            Spacer(minLength: 0)
+
+            if isPurchasable {
+                Image(systemName: "arrow.up.right.square.fill")
+                    .font(.title3)
+                    .foregroundStyle(RisaTheme.accent(scheme))
+                    .accessibilityHidden(true)
+            }
+        }
+        .padding(12)
+        .opacity(isPurchasable ? 1 : 0.55)
+        .background(RisaTheme.chipBackground(scheme).opacity(0.92), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var highlightsCard: some View {

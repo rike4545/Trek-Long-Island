@@ -40,7 +40,7 @@ final class OpsAuditStore: ObservableObject {
     private let key = "TLI.OpsAudit.entries.v1"
     private let maxEntries = 250
     private let db = Firestore.firestore()
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private var listener: ListenerRegistration?
     private var isApplyingRemoteSnapshot = false
     private var lastSyncedBlob = ""

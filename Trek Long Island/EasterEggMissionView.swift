@@ -96,7 +96,7 @@ struct EasterEggMissionView: View {
             MissionItem(
                 id: "nasa-signal",
                 title: "Orbital Science Relay",
-                detail: "Convention-only NASA transmission on Home during June 12–14.",
+                detail: "Convention-only NASA transmission on Home during \(TLIEventInfo.current.displayRange).",
                 found: foundNASASignal,
                 binding: $foundNASASignal
             ),

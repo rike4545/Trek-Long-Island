@@ -38,24 +38,18 @@ private struct HeroSlide: Identifiable, Hashable {
     let title: String
     let subtitle: String
 
+    /// Captions describe what is actually in each photo. Keep them evergreen — these
+    /// run year-round, so avoid naming specific guests or ticketed events that may not
+    /// return. Titles are `lineLimit(1)`; keep them short.
     static let sample: [HeroSlide] = [
-        .init(imageName: "Slide3",        title: "Main Stage Moments",        subtitle: "Panels, Q&A, and live podcast recordings."),
-        .init(imageName: "Slide4",        title: "Breakout Sessions",          subtitle: "Explore Trek, STEM, art, and more."),
-        .init(imageName: "Slide1",        title: "Cadets & Families",          subtitle: "Family-friendly Starfleet Academies."),
-        .init(imageName: "khan",          title: "Deep Space Frequencies",     subtitle: "Live podcasts, interviews, and surprises."),
-        .init(imageName: "SuluMovie",          title: "Holodeck Features",     subtitle: "Join the Directors for a special screening"),
-        .init(imageName: "painting",      title: "Painting With a Celebrity",  subtitle: "A creative session with your favorite crew."),
-        .init(imageName: "healing",       title: "Yoga With a Celebrity",      subtitle: "A calm reset between missions."),
-        .init(imageName: "cheeseandwine", title: "Cheese & Wine With a Celebrity", subtitle: "Relaxed social time—off duty."),
-        .init(imageName: "twomoons",      title: "Exclusive Experiences",      subtitle: "Upgrades, add-ons, and unique moments."),
-        .init(imageName: "yoga",          title: "Holodeck Wellness",          subtitle: "Stretch, breathe, and return to duty refreshed."),
-        .init(imageName: "glass1",        title: "Holodeck Art",               subtitle: "Come enjoy making your own Risian artifact."),
-        .init(imageName: "glass2",        title: "Holodeck Art",               subtitle: "Come enjoy making your own Risian artifact."),
-        .init(imageName: "moustache",     title: "Holodeck Fun",               subtitle: "'Mad Libs' and so much more."),
-        .init(imageName: "FoodTrucks",     title: "Working Replicators",               subtitle: "'Food, Food, Food."),
-        .init(imageName: "Hanging",     title: "Guest Fun",               subtitle: "'Paradise."),
-        .init(imageName: "2027 Tickets Promo 1",     title: "2027 Tickets",               subtitle: "'2027 Tickets."),
-        .init(imageName: "2027 Hotel Promo",     title: "2027 Hotel Block Open",               subtitle: "'2027 Hotel.")
+        .init(imageName: "NewGallery1", title: "Panels & Discussions", subtitle: "Candid conversations with creators, authors, and fans."),
+        .init(imageName: "NewGallery2", title: "The Vendor Hall",      subtitle: "Artists, collectibles, and finds you weren't looking for."),
+        .init(imageName: "NewGallery3", title: "Cosplay & Connection", subtitle: "Bring your best build and find your crew."),
+        .init(imageName: "NewGallery4", title: "Social Events",        subtitle: "Themed dinners and after-hours hangouts."),
+        .init(imageName: "NewGallery5", title: "Comics & Creators",    subtitle: "Meet the writers and artists behind the books."),
+        .init(imageName: "NewGallery6", title: "Main Stage",           subtitle: "Guest panels, Q&A, and live podcast recordings."),
+        .init(imageName: "NewGallery7", title: "Live Performances",    subtitle: "Cabaret, drag, and shows that bring the house down."),
+        .init(imageName: "NewGallery8", title: "The Dance Floor",      subtitle: "Live music and a floor that fills up fast."),
     ]
 }
 
@@ -93,25 +87,36 @@ private struct ConventionDayContext {
     let label: String
     let detail: String
 
+    /// Day-of copy, keyed by position in the run rather than by weekday.
+    private static let dayDetails = [
+        "Opening ceremonies & evening programming.",
+        "Full schedule of panels & events.",
+        "Closing panels & final photo ops."
+    ]
+
     static func forToday(reference: Date = .now) -> ConventionDayContext {
+        let info = TLIEventInfo.current
         let cal = Calendar.current
-        let comps = cal.dateComponents([.year, .month, .day], from: reference)
-        guard let year = comps.year, let month = comps.month, let day = comps.day else {
-            return .init(label: "Convention", detail: "Schedule not available.")
+
+        // During the convention: label the specific day.
+        for (index, day) in TLIConventionDates.conventionDays.enumerated()
+        where cal.isDate(reference, inSameDayAs: day.date) {
+            let formatter = DateFormatter()
+            formatter.locale = .current
+            formatter.setLocalizedDateFormatFromTemplate("EEEE")
+            let weekday = formatter.string(from: day.date)
+            let detail = dayDetails.indices.contains(index)
+                ? dayDetails[index]
+                : "Panels, guests, and events."
+            return .init(label: "\(day.title) • \(weekday)", detail: detail)
         }
-        if year == 2026, month == 6 {
-            switch day {
-            case 12: return .init(label: "Day 1 • Friday",  detail: "Opening ceremonies & evening programming.")
-            case 13: return .init(label: "Day 2 • Saturday", detail: "Full schedule of panels & events.")
-            case 14: return .init(label: "Day 3 • Sunday",  detail: "Closing panels & final photo ops.")
-            default: break
-            }
-        }
-        let start = cal.date(from: DateComponents(timeZone: .current, year: 2026, month: 6, day: 12)) ?? reference
-        if reference < start {
+
+        // `endDate` is midnight after the final day, so this stays in the "before"
+        // branch for the whole run and only flips once the convention is genuinely over.
+        if reference < info.endDate {
             return .init(label: "Convention schedule", detail: "Browse panels, guests, and events.")
         } else {
-            return .init(label: "After the con",  detail: "Thanks for joining us at Trek Long Island!")
+            return .init(label: "After the con", detail: "Thanks for joining us at Trek Long Island!")
         }
     }
 }
@@ -272,6 +277,10 @@ struct HomeView: View {
             .prefix(3)
             .map { $0 }
     }
+    /// DEAD BANNER — the cutoff is June 9, 2025, so this has returned `false` since
+    /// before the 2026 convention and the presale banner never renders. Either give it
+    /// a real 2027 presale cutoff or delete the banner and its call sites; leaving it
+    /// as an always-false branch just hides the decision.
     private var shouldShowTicketPresaleBanner: Bool {
         let calendar = Calendar.current
         let cutoff = calendar.date(from: DateComponents(year: 2025, month: 6, day: 9)) ?? .distantPast
@@ -365,7 +374,9 @@ struct HomeView: View {
         }
         .onAppear {
             isCarouselRunning = true
-            missionDirective = activeMissionPresets.randomElement() ?? activeMissionPresets[0]
+            // `randomElement()` returns nil only when the list is empty, so the
+            // fallback must not index into it.
+            missionDirective = activeMissionPresets.randomElement() ?? missionDirective
             recomputeReadiness()
             if scheduleLoader.events.isEmpty {
                 scheduleLoader.load()
@@ -1033,7 +1044,7 @@ private extension HomeView {
                 .foregroundStyle(textPrimary)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("\(selectedRank.title) • \(selectedDivision.title) • \(selectedRole.title) • Hyatt Regency Long Island • June 12–14")
+            Text("\(selectedRank.title) • \(selectedDivision.title) • \(selectedRole.title) • \(TLIEventInfo.current.venue.name) • \(TLIEventInfo.current.displayRange)")
                 .font(
                     RisaTheme.isLCARSThemeEnabled
                         ? .system(size: 13, weight: .semibold, design: .monospaced)

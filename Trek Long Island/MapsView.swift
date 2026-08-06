@@ -35,13 +35,12 @@ struct MapsView: View {
 
     // MARK: - Hotel area map (MapKit)
 
-    private static let hyattCoordinate = CLLocationCoordinate2D(
-        latitude: 40.81319,
-        longitude: -73.17255
-    )
+    private static var venueCoordinate: CLLocationCoordinate2D {
+        TLIEventInfo.current.venue.coordinate
+    }
     @State private var hotelMapPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
-            center: MapsView.hyattCoordinate,
+            center: MapsView.venueCoordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
         )
     )
@@ -53,10 +52,13 @@ struct MapsView: View {
     }
 
     private let hotelPin = HotelPin(
-        coordinate: MapsView.hyattCoordinate,
-        title: "Hyatt Regency Long Island"
+        coordinate: MapsView.venueCoordinate,
+        title: TLIEventInfo.current.venue.name
     )
 
+    // NOTE (2027 move): Hyatt-era room names — "Windwatch" is a Hyatt room that does
+    // not exist at the Melville Marriott. Update alongside `ICSLoader.labeledRoomURLs`
+    // once 2027 room assignments are confirmed.
     private var routeRooms: [String] {
         ["Main Hall", "Panel B", "Panel C", "Panel D", "Windwatch", "Kids Track", "Photo Sessions", "Vendor Hall Announcements", "Special Events", "Trustees Board Room"]
     }
@@ -211,10 +213,10 @@ struct MapsView: View {
         .shadow(color: TLITheme.cardShadowColor(scheme), radius: 10, y: 4)
         .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Hyatt Regency Long Island")
+                Text(TLIEventInfo.current.venue.name)
                     .font(.system(.footnote, design: .rounded).weight(.semibold))
                     .foregroundColor(RisaTheme.textPrimary(scheme))
-                Text("1717 Motor Pkwy, Hauppauge, NY 11788")
+                Text(TLIEventInfo.current.venue.singleLineAddress)
                     .font(.system(.caption2, design: .rounded))
                     .foregroundColor(RisaTheme.textSecondary(scheme))
             }
@@ -231,7 +233,7 @@ struct MapsView: View {
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Hotel area map")
-        .accessibilityHint("Shows the Hyatt Regency Long Island and surrounding area")
+        .accessibilityHint("Shows the \(TLIEventInfo.current.venue.name) and surrounding area")
     }
 
     private var offlineStatusCard: some View {
@@ -255,7 +257,7 @@ struct MapsView: View {
         hotelMapReloadToken = UUID()
         hotelMapPosition = .region(
             MKCoordinateRegion(
-                center: MapsView.hyattCoordinate,
+                center: MapsView.venueCoordinate,
                 span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
             )
         )

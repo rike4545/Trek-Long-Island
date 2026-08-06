@@ -343,7 +343,7 @@ private struct WhatShouldIDoNextQueryTool: AgentQueryTool {
             )
         }
 
-        let minutesUntil = max(0, Int(next.startDate.timeIntervalSince(now) / 60))
+        let minutesUntil = max(0, TLISafeMath.minutes(next.startDate.timeIntervalSince(now)))
         let urgency: String
         if minutesUntil <= 10 {
             urgency = "Leave now so you arrive on time."
@@ -494,8 +494,8 @@ private struct VenueRoutingQueryTool: AgentQueryTool {
         HelloComputerAnswer(
             text: """
             Venue routing:
-            Hyatt Regency Long Island
-            1717 Motor Pkwy, Hauppauge, NY 11788
+            \(TLIEventInfo.current.venue.name)
+            \(TLIEventInfo.current.venue.singleLineAddress)
 
             Fast path:
             1) Open the Map tab for live orientation.

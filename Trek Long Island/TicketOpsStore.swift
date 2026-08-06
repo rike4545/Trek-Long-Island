@@ -101,7 +101,7 @@ final class TicketOpsStore: ObservableObject {
     private let ordersKey = "TLI.TicketOps.orders.v1"
     private let generationEnabledKey = "TLI.TicketOps.generationEnabled.v1"
     private let scanningEnabledKey = "TLI.TicketOps.scanningEnabled.v1"
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private let analytics = TLIAnalyticsStore.shared
     private let db = Firestore.firestore()
     private var ordersListener: ListenerRegistration?

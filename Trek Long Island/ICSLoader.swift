@@ -41,6 +41,13 @@ final class ICSLoader: ObservableObject {
     @Published var lastLoadErrorMessage: String?
 
     // Track/room label → ICS URL
+    //
+    // NOTE (2027 move): these labels are the Hyatt Regency Hauppauge room names —
+    // "Windwatch" in particular is a Hyatt room and does not exist at the Melville
+    // Marriott. Re-label these (and `MapsView.routeRooms`) once the 2027 room
+    // assignments are confirmed, and repoint any calendar whose room changes.
+    // The feeds themselves currently hold 2025 and 2026 events only; the Schedule
+    // tab will stay in its "not published yet" state until 2027 events are added.
     let labeledRoomURLs: [String: String] = [
         "Main Hall": "https://calendar.google.com/calendar/ical/4b61397c9c164adc781268eab68ca1b91cc419c5b0db15109103ec96cc07a054%40group.calendar.google.com/public/basic.ics",
         "Panel B": "https://calendar.google.com/calendar/ical/84a23e4aaf90f48c9f08b27bbf0f48da69c4597af7aba03d0c20afd7c7bb70e3%40group.calendar.google.com/public/basic.ics",

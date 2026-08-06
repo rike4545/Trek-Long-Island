@@ -73,15 +73,15 @@ enum HelloComputerFAQBank {
 
         .init(
             question: "What are the convention dates and hours?",
-            answer: "Trek Long Island is June 12–14, 2026.\\n\\nConvention hours (confirm on the official site in case anything changes):\\n• Friday: 5:00 PM – 11:00 PM\\n• Saturday: 10:00 AM – 12:00 AM\\n• Sunday: 10:00 AM – 6:00 PM\\n\\nOfficial schedule hub:\\nhttps://treklongisland.com/programs/",
-            tags: ["dates", "hours", "when", "time", "june", "2026", "friday", "saturday", "sunday"],
+            answer: "Trek Long Island is \(TLIEventInfo.current.displayRange).\\n\\nConvention hours (confirm on the official site in case anything changes):\\n\(TLIEventInfo.current.conventionHoursBulletList)\\n\\nOfficial schedule hub:\\nhttps://treklongisland.com/programs/",
+            tags: ["dates", "hours", "when", "time", "june", "2027", "friday", "saturday", "sunday"],
             source: .officialFAQ
         ),
 
         .init(
             question: "Where is the venue?",
-            answer: "Trek Long Island is hosted at the Hyatt Regency Long Island:\\n1717 Motor Parkway, Hauppauge, NY 11788\\n\\nHotel / venue details:\\nhttps://treklongisland.com/hotel/",
-            tags: ["venue", "location", "address", "hotel", "hyatt", "hauppauge", "parking", "directions"],
+            answer: "Trek Long Island is hosted at the \(TLIEventInfo.current.venue.name):\\n\(TLIEventInfo.current.venue.multiLineAddress)\\nPhone: \(TLIEventInfo.current.venue.phone)\\n\\nHotel / venue details:\\nhttps://treklongisland.com/hotel/",
+            tags: ["venue", "location", "address", "hotel", "marriott", "melville", "parking", "directions"],
             source: .officialFAQ
         ),
 

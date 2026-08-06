@@ -134,7 +134,7 @@ final class SquareIntegrationStore: ObservableObject {
     @Published private(set) var connection: SquareMerchantConnection = .empty
 
     private let db = Firestore.firestore()
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private var listener: ListenerRegistration?
 
     private init() {

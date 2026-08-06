@@ -16,8 +16,13 @@ private enum SplashStage {
 
 struct SplashScreenView: View {
     @Environment(\.colorScheme) private var scheme
-    @AppStorage("TLI.Profile.displayName") private var displayName: String = ""
-    @AppStorage("TLI.Profile.rank") private var rankRaw: String = TLIProfileRank.captain.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.displayName) private var displayName: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.rank) private var rankRaw: String = TLIProfileRank.captain.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.pronouns) private var pronounsRaw: String = TLIProfilePronouns.unspecified.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.pronounsCustom) private var pronounsCustom: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.welcomeStyle) private var welcomeStyleRaw: String = TLIWelcomeMessageStyle.defaultStyle.rawValue
+    @AppStorage(TLIProfilePreferences.StorageKey.welcomeCustomMessage) private var welcomeCustomMessage: String = ""
+    @AppStorage(TLIProfilePreferences.StorageKey.showPronounsInWelcome) private var showPronounsInWelcome: Bool = false
 
     @State private var stage: SplashStage = .trek
     @State private var cardOpacity: Double = 0
@@ -191,8 +196,9 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
                 Text(greeting())
                     .font(.system(isCompactHeight ? .subheadline : .headline, design: .rounded))
                     .foregroundColor(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
 
                 HStack(spacing: 12) {
                     Capsule()
@@ -222,7 +228,7 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
 
-                Text("Hauppauge, New York · Sector 001")
+                Text("\(TLIEventInfo.current.venue.cityState) · Sector 001")
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.80))
                     .lineLimit(1)
@@ -306,14 +312,15 @@ Star Trek and all related marks, logos and characters are solely owned by CBS St
     }
 
     private func greeting() -> String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        let rank = TLIProfileRank(rawValue: rankRaw) ?? .captain
-        let commandName = TLIProfilePreferences.commandName(rank: rank, displayName: displayName)
-        switch hour {
-        case 5..<12:  return "Good morning, \(commandName)"
-        case 12..<17: return "Good afternoon, \(commandName)"
-        default:      return "Good evening, \(commandName)"
-        }
+        let selection = TLIProfilePreferences.pronouns(from: pronounsRaw)
+        return TLIProfilePreferences.welcomeGreeting(
+            style: TLIProfilePreferences.welcomeStyle(from: welcomeStyleRaw),
+            customMessage: welcomeCustomMessage,
+            rank: TLIProfileRank(rawValue: rankRaw) ?? .captain,
+            displayName: displayName,
+            pronouns: TLIProfilePreferences.pronounsDisplay(selection: selection, custom: pronounsCustom),
+            showPronouns: showPronounsInWelcome
+        )
     }
 }
 

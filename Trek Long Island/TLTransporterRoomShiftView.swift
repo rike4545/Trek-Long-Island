@@ -364,12 +364,12 @@ fileprivate final class TLTRTransporterVM: ObservableObject {
 
     var sassLevelDouble: Double {
         get { Double(sassLevel) }
-        set { sassLevel = Int(newValue.rounded()) }
+        set { sassLevel = TLISafeMath.rounded(newValue, fallback: sassLevel) }
     }
 
     var bufferSecondsDouble: Double {
         get { Double(bufferSeconds) }
-        set { bufferSeconds = Int(newValue.rounded()) }
+        set { bufferSeconds = TLISafeMath.rounded(newValue, fallback: bufferSeconds) }
     }
 
     var bufferTimeLabel: String {

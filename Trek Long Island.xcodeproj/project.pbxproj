@@ -100,7 +100,6 @@
 		933A10E52DE8AEE60087F598 = {
 			isa = PBXGroup;
 			children = (
-				931A07FC2F2EE37F000E374C /* bridge_hum_soft.wav */,
 				931A07A32F2ECADD000E374C /* lcars_tap_soft.wav */,
 				931A07A12F2ECADD000E374C /* quiet_roomtone.wav */,
 				933A10F02DE8AEE60087F598 /* Trek Long Island */,
@@ -108,6 +107,7 @@
 				933A11092DE8AEE70087F598 /* Trek Long IslandUITests */,
 				9396E3C22FD8FCC50069082D /* Frameworks */,
 				933A10EF2DE8AEE60087F598 /* Products */,
+				931A07FC2F2EE37F000E374C /* bridge_hum_soft.wav */,
 			);
 			sourceTree = "<group>";
 		};
@@ -455,14 +455,14 @@
 				CODE_SIGN_ENTITLEMENTS = "Trek Long Island/Trek_Long_Island.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 77;
+				CURRENT_PROJECT_VERSION = 80;
 				DEAD_CODE_STRIPPING = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = RT25WXR9M5;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_TESTABILITY = NO;
+				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Trek-Long-Island-Info.plist";
@@ -487,7 +487,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
-				MARKETING_VERSION = 2026.07.10;
+				MARKETING_VERSION = 2026.08.03;
 				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-Island";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
@@ -512,7 +512,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Trek Long Island/Trek_Long_Island.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 77;
+				CURRENT_PROJECT_VERSION = 80;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RT25WXR9M5;
 				ENABLE_APP_SANDBOX = YES;
@@ -542,7 +542,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
-				MARKETING_VERSION = 2026.07.10;
+				MARKETING_VERSION = 2026.08.03;
 				PRODUCT_BUNDLE_IDENTIFIER = "Me.Trek-Long-Island";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;

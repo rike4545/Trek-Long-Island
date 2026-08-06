@@ -25,7 +25,7 @@ struct SquareSetupWizardView: View {
 
     private let projectID = "trek-long-island"
     private let region = "us-central1"
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
 
     private var functionsRootURL: String {
         let configured = squareIntegration.connection.backendBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)

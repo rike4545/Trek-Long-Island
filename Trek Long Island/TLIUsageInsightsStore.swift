@@ -93,7 +93,7 @@ final class TLIUsageInsightsStore: ObservableObject {
     // Lazily resolved so the store can be constructed before FirebaseApp.configure();
     // Firestore is only accessed once remote sync starts (well after launch).
     private lazy var db = Firestore.firestore()
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

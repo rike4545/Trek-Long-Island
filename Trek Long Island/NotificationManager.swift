@@ -142,7 +142,7 @@ final class NotificationManager: ObservableObject {
     private var allNotifications: [RisaNotification] = []
 
     /// Which convention's notifications we are reading.
-    private(set) var conventionID: String = "trekli-2026"
+    private(set) var conventionID: String = TLIEventInfo.current.conventionID
 
     /// Live Firestore vs sample/local mode.
     private(set) var backendMode: BackendMode = .live
@@ -1114,9 +1114,7 @@ final class NotificationManager: ObservableObject {
     }
 
     private func isConventionDay(_ date: Date) -> Bool {
-        let comps = rotatingCalendar.dateComponents([.year, .month, .day], from: date)
-        guard comps.year == 2026, comps.month == 6, let day = comps.day else { return false }
-        return (12...14).contains(day)
+        TLIEventInfo.current.isDuringConvention(date)
     }
 
     /// Format: tli-<role>-<8char>, where suffix rotates daily.

@@ -338,6 +338,127 @@ enum TLIProfileDivision: String, CaseIterable, Identifiable {
     }
 }
 
+enum TLIProfilePronouns: String, CaseIterable, Identifiable {
+    case unspecified
+    case sheHer
+    case heHim
+    case theyThem
+    case sheThey
+    case heThey
+    case askMe
+    case custom
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .unspecified:
+            "Not shown"
+        case .sheHer:
+            "she / her"
+        case .heHim:
+            "he / him"
+        case .theyThem:
+            "they / them"
+        case .sheThey:
+            "she / they"
+        case .heThey:
+            "he / they"
+        case .askMe:
+            "ask me"
+        case .custom:
+            "Custom"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .unspecified:
+            "eye.slash"
+        case .askMe:
+            "questionmark.circle"
+        case .custom:
+            "square.and.pencil"
+        default:
+            "person.text.rectangle"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .unspecified:
+            "Leave pronouns off your badge and welcome message."
+        case .custom:
+            "Type exactly what you want shown."
+        case .askMe:
+            "Shown as “ask me” wherever pronouns appear."
+        default:
+            "Shown alongside your name on your badge and welcome message."
+        }
+    }
+
+    /// The literal text shown for the preset options. `custom` and `unspecified`
+    /// resolve through `TLIProfilePreferences.pronounsDisplay(...)` instead.
+    var presetDisplayValue: String? {
+        switch self {
+        case .unspecified, .custom:
+            nil
+        default:
+            title
+        }
+    }
+}
+
+enum TLIWelcomeMessageStyle: String, CaseIterable, Identifiable {
+    case timeOfDay
+    case welcomeAboard
+    case hailing
+    case custom
+
+    static let defaultStyle: TLIWelcomeMessageStyle = .timeOfDay
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .timeOfDay:
+            "Time of day"
+        case .welcomeAboard:
+            "Welcome aboard"
+        case .hailing:
+            "Bridge hail"
+        case .custom:
+            "Custom message"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .timeOfDay:
+            "clock.badge.checkmark"
+        case .welcomeAboard:
+            "hand.wave.fill"
+        case .hailing:
+            "dot.radiowaves.left.and.right"
+        case .custom:
+            "square.and.pencil"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .timeOfDay:
+            "Greets you with good morning, afternoon, or evening."
+        case .welcomeAboard:
+            "A steady “Welcome aboard” greeting at every launch."
+        case .hailing:
+            "Opens like an incoming bridge hail."
+        case .custom:
+            "Write your own line. Use {name} where your name should go."
+        }
+    }
+}
+
 enum TLIProfileObjective: String, CaseIterable, Identifiable {
     case neverMissPanels
     case meetGuests
@@ -411,6 +532,23 @@ enum TLIProfileObjective: String, CaseIterable, Identifiable {
 }
 
 enum TLIProfilePreferences {
+    enum StorageKey {
+        static let displayName = "TLI.Profile.displayName"
+        static let rank = "TLI.Profile.rank"
+        static let division = "TLI.Profile.division"
+        static let role = "TLI.Profile.role"
+        static let objectives = "TLI.Profile.objectives"
+        static let pronouns = "TLI.Profile.pronouns"
+        static let pronounsCustom = "TLI.Profile.pronounsCustom"
+        static let welcomeStyle = "TLI.Profile.welcomeStyle"
+        static let welcomeCustomMessage = "TLI.Profile.welcomeCustomMessage"
+        static let showPronounsInWelcome = "TLI.Profile.showPronounsInWelcome"
+    }
+
+    /// The token users can drop into a custom welcome message to place their name.
+    static let welcomeNameToken = "{name}"
+    static let customWelcomeMessageLimit = 90
+
     static func objectives(from rawValue: String) -> Set<TLIProfileObjective> {
         Set(
             rawValue
@@ -444,5 +582,91 @@ enum TLIProfilePreferences {
             .sorted { $0.title < $1.title }
             .map(\.title)
             .joined(separator: ", ")
+    }
+
+    // MARK: - Pronouns
+
+    static func pronouns(from rawValue: String) -> TLIProfilePronouns {
+        TLIProfilePronouns(rawValue: rawValue) ?? .unspecified
+    }
+
+    /// Resolved pronoun text, or an empty string when there is nothing to show.
+    static func pronounsDisplay(selection: TLIProfilePronouns, custom: String) -> String {
+        switch selection {
+        case .unspecified:
+            return ""
+        case .custom:
+            return sanitizedSingleLine(custom, limit: 40)
+        default:
+            return selection.presetDisplayValue ?? ""
+        }
+    }
+
+    // MARK: - Welcome message
+
+    static func welcomeStyle(from rawValue: String) -> TLIWelcomeMessageStyle {
+        TLIWelcomeMessageStyle(rawValue: rawValue) ?? .defaultStyle
+    }
+
+    /// Builds the greeting shown on the splash screen after launch.
+    ///
+    /// Everything here is driven by Settings › Identity; there is no first-run flow
+    /// that can set these values, so each input is treated as untrusted and clamped.
+    static func welcomeGreeting(
+        style: TLIWelcomeMessageStyle,
+        customMessage: String,
+        rank: TLIProfileRank,
+        displayName: String,
+        pronouns: String,
+        showPronouns: Bool,
+        date: Date = .now,
+        calendar: Calendar = .current
+    ) -> String {
+        let name = commandName(rank: rank, displayName: displayName)
+        let base: String
+
+        switch style {
+        case .custom:
+            let template = sanitizedSingleLine(customMessage, limit: customWelcomeMessageLimit)
+            if template.isEmpty {
+                base = timeOfDayGreeting(name: name, date: date, calendar: calendar)
+            } else if template.contains(welcomeNameToken) {
+                base = template.replacingOccurrences(of: welcomeNameToken, with: name)
+            } else {
+                base = template
+            }
+        case .timeOfDay:
+            base = timeOfDayGreeting(name: name, date: date, calendar: calendar)
+        case .welcomeAboard:
+            base = "Welcome aboard, \(name)"
+        case .hailing:
+            base = "Bridge to \(name)"
+        }
+
+        let trimmedPronouns = sanitizedSingleLine(pronouns, limit: 40)
+        guard showPronouns, !trimmedPronouns.isEmpty else { return base }
+        return "\(base) (\(trimmedPronouns))"
+    }
+
+    private static func timeOfDayGreeting(name: String, date: Date, calendar: Calendar) -> String {
+        switch calendar.component(.hour, from: date) {
+        case 5..<12:
+            return "Good morning, \(name)"
+        case 12..<17:
+            return "Good afternoon, \(name)"
+        default:
+            return "Good evening, \(name)"
+        }
+    }
+
+    /// Collapses newlines and runaway whitespace and caps the length, so a pasted
+    /// paragraph can't blow out the single-line splash greeting.
+    static func sanitizedSingleLine(_ value: String, limit: Int) -> String {
+        let collapsed = value
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        guard collapsed.count > limit else { return collapsed }
+        return String(collapsed.prefix(limit))
     }
 }

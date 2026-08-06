@@ -108,12 +108,12 @@ enum TLIAutographPricing2026 {
         var id: String { name }
         var priceLabel: String { "$\(autographPrice)" }
         var detailNote: String {
-            "Autograph: \(priceLabel). Combo prices available at table."
+            "2026 autograph price: \(priceLabel). 2027 pricing has not been announced."
         }
     }
 
     static let sourceURL = URL(string: "https://treklongisland.com/autograph-pricing-2026/")!
-    static let sourceDescription = "Official autograph pricing posted June 12, 2026. Combo prices will be available at table."
+    static let sourceDescription = "Autograph pricing from the June 2026 convention, kept for reference. Pricing for \(TLIEventInfo.current.displayRange) has not been posted yet."
 
     static let entries: [Entry] = [
         .init(name: "Nana Visitor", autographPrice: 50),
@@ -657,6 +657,7 @@ private extension Animation {
 @MainActor
 struct GuestsView: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var networkMonitor = TLINetworkMonitor.shared
     @ObservedObject private var guestStatusStore = GuestStatusStore.shared
     @ObservedObject private var guestStatusSync = GuestStatusSyncService.shared
@@ -717,6 +718,11 @@ struct GuestsView: View {
 
                     if shouldShowOfflineStatusCard {
                         offlineStatusCard
+                            .padding(.horizontal)
+                    }
+
+                    if !TLIEventInfo.current.isGuestRosterAnnounced {
+                        rosterArchiveNotice
                             .padding(.horizontal)
                     }
 
@@ -915,6 +921,43 @@ struct GuestsView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(TLITheme.border(scheme).opacity(0.38), lineWidth: TLITheme.hairline)
+        )
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Shown while `isGuestRosterAnnounced` is false. The roster below this notice is
+    /// last year's lineup — without this banner the tab reads as the current guest
+    /// list, which is the single most misleading thing the app could show.
+    private var rosterArchiveNotice: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("\(TLIEventInfo.current.yearText) Guest List Coming Soon", systemImage: "sparkles")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(TLITheme.textPrimary(scheme))
+
+            Text("Guests for \(TLIEventInfo.current.displayRange) have not been announced yet. The names below are the **\(TLIEventInfo.current.archivedRosterYearText) lineup**, kept for reference — they are not confirmed for \(TLIEventInfo.current.yearText).")
+                .font(.footnote)
+                .lineSpacing(2)
+                .foregroundStyle(TLITheme.textSecondary(scheme))
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let mailingListURL = URL(string: TLIEventInfo.current.mailingListURLString) {
+                Button {
+                    openURL(mailingListURL)
+                } label: {
+                    Label("Get notified when guests are announced", systemImage: "envelope.fill")
+                        .font(.footnote.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(14)
+        .background(
+            TLITheme.cardBackground(scheme).opacity(scheme == .dark ? 0.86 : 0.94),
+            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(TLITheme.accent(scheme).opacity(0.55), lineWidth: 1.5)
         )
         .accessibilityElement(children: .combine)
     }

@@ -208,7 +208,7 @@ actor SquareCustomersClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = try encoder.encode(
             SquareCRMContactSyncRequest(
-                conventionID: "trekli-2026",
+                conventionID: TLIEventInfo.current.conventionID,
                 contact: SquareCRMContactPayload(contact: contact)
             )
         )

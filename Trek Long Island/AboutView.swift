@@ -19,8 +19,11 @@ struct AboutView: View {
     // MARK: - Links (update as needed)
 
     private let websiteURL        = URL(string: "https://www.treklongisland.com")!
-    private let scheduleURL       = URL(string: "https://www.treklongisland.com/schedule")!
-    private let codeOfConductURL  = URL(string: "https://www.treklongisland.com/code-of-conduct")!
+    // /schedule and /code-of-conduct both 404 — the live site uses /programs/ for
+    // programming and a /policies/ hub that links harassment, refund, children's,
+    // and weapon-and-prop policy pages.
+    private let scheduleURL       = URL(string: "https://treklongisland.com/programs/")!
+    private let codeOfConductURL  = URL(string: "https://treklongisland.com/policies/")!
     private let feedbackURL       = URL(string: "https://qualtricsxmm8q5gxrhq.qualtrics.com/jfe/form/SV_1TvkCrIKgaEYHPM")!
     private let shopURL           = URL(string: "https://made-in-ny-shop.fourthwall.com/")!
     private let conventionBundleURL = URL(string: "https://made-in-ny-shop.fourthwall.com/products/convention-bundle")!
@@ -199,8 +202,8 @@ struct AboutView: View {
 
                     linkButton(
                         icon: "hand.raised.fill",
-                        title: "Code of Conduct",
-                        subtitle: "Community expectations and policies",
+                        title: "Policies",
+                        subtitle: "Harassment, refunds, children's, and weapon/prop policies",
                         url: codeOfConductURL
                     )
 

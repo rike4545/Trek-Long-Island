@@ -9,8 +9,6 @@ import SwiftUI
 import FirebaseCore
 import UserNotifications
 
-private let tliForceOnboardingForTesting = false
-
 private struct TLISmoothScrollModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -87,12 +85,10 @@ struct TrekLIApp: App {
     @StateObject private var networkMonitor = TLINetworkMonitor.shared
     @StateObject private var nearbyRoomCountStore = NearbyRoomCountStore.shared
     @StateObject private var usageInsightsStore = TLIUsageInsightsStore.shared
-    @State private var isShowingSplash = !TLIAppFeatureFlags.isCustomSplashDisabled
-    @State private var isShowingOnboarding = false
+    @State private var isShowingSplash = TrekLIApp.initialSplashPresentationState()
     @State private var isShowingWelcomeNotice = false
     @State private var hasPresentedWelcomeNoticeThisSession = false
     @State private var hasStartedPostLaunchServices = false
-    @State private var shouldRequestNotificationsAfterOnboarding = false
     @State private var deepLinkDestination: TLIDeepLinkDestination?
 
     // Appearance preference
@@ -103,7 +99,6 @@ struct TrekLIApp: App {
 
     // First-launch tracking
     @AppStorage("hasLaunchedBefore") private var hasLaunchedBefore = false
-    @AppStorage("TLI.Onboarding.completed") private var hasCompletedOnboarding = false
     @AppStorage("TLI.Accessibility.largeTypeBoost") private var largeTypeBoost = false
     @AppStorage("TLI.Accessibility.largeTapTargets") private var largeTapTargets = false
     @AppStorage("TLI.Accessibility.reduceAnimations") private var reduceAnimations = false
@@ -122,7 +117,6 @@ struct TrekLIApp: App {
                     trackAnalytics(name: "app_opened", domain: "app")
                     usageInsightsStore.noteLaunch()
                     usageInsightsStore.noteScenePhase(.active)
-                    syncOnboardingPresentation()
                     syncWelcomeNoticePresentation()
                     startPostLaunchServicesIfNeeded()
 
@@ -146,17 +140,11 @@ struct TrekLIApp: App {
                     normalizeStoredTypographyIfNeeded()
                     UIKitAppearance.configure(for: resolvedUIKitColorScheme, typography: selectedTypography)
                 }
-                .onChange(of: hasCompletedOnboarding) { _, _ in
-                    // Dismiss the onboarding cover; the welcome notice is presented
-                    // from the cover's onDismiss so the two never overlap.
-                    syncOnboardingPresentation()
-                }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {
                         UIKitAppearance.configure(for: resolvedUIKitColorScheme, typography: selectedTypography)
                         startPostLaunchServicesIfNeeded()
                         trackAnalytics(name: "app_became_active", domain: "app")
-                        syncOnboardingPresentation()
                         syncWelcomeNoticePresentation()
                     }
                     nearbyRoomCountStore.handleScenePhase(phase)
@@ -194,14 +182,6 @@ struct TrekLIApp: App {
                     MainTabView()
                 }
             }
-                .fullScreenCover(isPresented: $isShowingOnboarding, onDismiss: {
-                    handleOnboardingDismissed()
-                }) {
-                    TLIOnboardingView {
-                        shouldRequestNotificationsAfterOnboarding = true
-                    }
-                    .id("onboarding")
-                }
                 .fullScreenCover(isPresented: $isShowingSplash, onDismiss: {
                     handleSplashDismissed()
                 }) {
@@ -210,7 +190,7 @@ struct TrekLIApp: App {
                     }
                 }
                 .sheet(isPresented: $isShowingWelcomeNotice, onDismiss: {
-                    hasPresentedWelcomeNoticeThisSession = true
+                    handleWelcomeNoticeDismissed()
                 }) {
                     TLIWelcomeNoticeView {
                         hasPresentedWelcomeNoticeThisSession = true
@@ -271,23 +251,10 @@ struct TrekLIApp: App {
         deepLinkDestination = destination
     }
 
-    private var shouldPresentOnboarding: Bool {
-        !isShowingSplash &&
-        !hasCompletedOnboarding &&
-        (tliForceOnboardingForTesting || isOnOrAfterOnboardingStartDate)
-    }
-
-    private var isOnOrAfterOnboardingStartDate: Bool {
-        let calendar = Calendar.current
-        let onboardingStartDate = DateComponents(
-            calendar: calendar,
-            timeZone: .current,
-            year: 2026,
-            month: 6,
-            day: 11
-        ).date ?? .distantFuture
-
-        return calendar.startOfDay(for: .now) >= calendar.startOfDay(for: onboardingStartDate)
+    // The splash is now the only thing standing between launch and the app, so
+    // it presents on every launch unless the build disables it outright.
+    private static func initialSplashPresentationState() -> Bool {
+        !TLIAppFeatureFlags.isCustomSplashDisabled
     }
 
     private var currentColorScheme: ColorScheme? {
@@ -327,21 +294,13 @@ struct TrekLIApp: App {
         currentColorScheme ?? resolvedUIKitColorScheme
     }
 
-    private func requestNotificationPermissionIfNeeded() async {
-        _ = await NotificationPermissionCoordinator.requestAuthorizationIfNeeded()
-    }
-
-    private func syncOnboardingPresentation() {
-        isShowingOnboarding = shouldPresentOnboarding
-    }
-
     private func syncWelcomeNoticePresentation() {
         guard !TLIAppFeatureFlags.isWelcomePopupDisabled else {
             isShowingWelcomeNotice = false
             hasPresentedWelcomeNoticeThisSession = true
             return
         }
-        let shouldShow = !isShowingSplash && !isShowingOnboarding && !hasPresentedWelcomeNoticeThisSession
+        let shouldShow = !isShowingSplash && !hasPresentedWelcomeNoticeThisSession
         isShowingWelcomeNotice = shouldShow
     }
 
@@ -350,6 +309,11 @@ struct TrekLIApp: App {
         hasStartedPostLaunchServices = true
 
         Task { @MainActor in
+            // Attach ahead of the settle delay: dates and venue drive the splash,
+            // the map pin, and every assistant answer, so a corrected event document
+            // should land as early in the launch as possible.
+            TLIEventInfoRemoteStore.shared.start()
+
             try? await Task.sleep(for: .seconds(1.25))
             guard !Task.isCancelled else { return }
 
@@ -371,26 +335,21 @@ struct TrekLIApp: App {
     }
 
     private func handleSplashDismissed() {
-        syncOnboardingPresentation()
-        // Only consider the welcome notice if onboarding isn't taking over.
-        if !isShowingOnboarding {
-            syncWelcomeNoticePresentation()
-        }
+        syncWelcomeNoticePresentation()
     }
 
-    private func handleOnboardingDismissed() {
-        guard shouldRequestNotificationsAfterOnboarding else {
-            syncWelcomeNoticePresentation()
-            return
-        }
-
-        shouldRequestNotificationsAfterOnboarding = false
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(350))
-            await requestNotificationPermissionIfNeeded()
-            syncWelcomeNoticePresentation()
-        }
+    private func handleWelcomeNoticeDismissed() {
+        hasPresentedWelcomeNoticeThisSession = true
     }
+
+    // NOTE: launch deliberately never asks for notification permission.
+    //
+    // The system permission alert is a modal presented over the app, and firing it
+    // during launch -- while the splash cover is dismissing or the welcome sheet is
+    // animating -- left the app looking frozen. Enabling notifications is now
+    // entirely user-initiated from Settings > Notification Access, which shows the
+    // live permission state and drives the same request. Nothing on the launch path
+    // presents a modal on top of the app.
 }
 
 // MARK: - Appearance Options

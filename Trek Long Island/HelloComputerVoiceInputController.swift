@@ -237,7 +237,9 @@ final class HelloComputerVoiceInputController: NSObject, ObservableObject {
 
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let level = min(rms * 25.0, 1.0)
+            // A non-finite sample would poison every downstream `Int(audioLevel * …)`
+            // conversion, so normalise it here at the source.
+            let level = rms.isFinite ? min(max(rms * 25.0, 0), 1.0) : 0
             audioLevel = level
 
             if level < silenceLevelFloor {

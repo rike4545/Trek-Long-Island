@@ -100,7 +100,7 @@ final class AmbientAudioManager: ObservableObject {
 
         guard let player else { return }
 
-        let steps = max(1, Int(duration / 0.05))
+        let steps = max(1, min(600, TLISafeMath.int(duration / 0.05, fallback: 1)))
         let start = player.volume
         let delta = target - start
 

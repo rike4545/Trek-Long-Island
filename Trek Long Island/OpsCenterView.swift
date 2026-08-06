@@ -387,7 +387,7 @@ struct OpsCenterView: View {
                 metricChip(title: "Actors", value: "\(analyticsSnapshot.uniqueActors24h)", systemImage: "person.3")
                 metricChip(
                     title: "Failures",
-                    value: "\(analyticsSnapshot.failures24h) (\(Int((analyticsSnapshot.failureRate24h * 100).rounded()))%)",
+                    value: "\(analyticsSnapshot.failures24h) (\(TLISafeMath.percent(analyticsSnapshot.failureRate24h))%)",
                     systemImage: "exclamationmark.triangle.fill"
                 )
             }

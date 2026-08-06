@@ -13,7 +13,7 @@ final class ConventionOpsStore: ObservableObject {
     private let roomStatesKey = "TLI.Ops.roomStates.v1"
     private let supportTicketsKey = "TLI.Ops.supportTickets.v1"
     private let waitTimesEnabledKey = "TLI.Ops.waitTimesEnabled.v1"
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private let analytics = TLIAnalyticsStore.shared
     private let db = Firestore.firestore()
     private var roomStatesListener: ListenerRegistration?

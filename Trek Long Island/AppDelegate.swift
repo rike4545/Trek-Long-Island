@@ -7,7 +7,7 @@ import FirebaseMessaging
 import UserNotifications
 
 final class TLIAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
-    private let pushTopic = "trekli_2026"
+    private let pushTopic = TLIPushTopicManager.broadcastTopic
     private func trackAnalytics(
         name: String,
         domain: String,
@@ -70,6 +70,7 @@ final class TLIAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationC
     // APNs -> FCM
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        guard FirebaseApp.app() != nil else { return }
         Messaging.messaging().apnsToken = deviceToken
         trackAnalytics(name: "apns_registered", domain: "push")
     }

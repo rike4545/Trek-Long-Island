@@ -389,7 +389,7 @@ struct TricorderMiniGameView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Signal strength \(Int(signalStrengthRatio * 100)) percent, scan usage \(Int(scanUsageRatio * 100)) percent, mission progress \(Int(missionProgressRatio * 100)) percent")
+        .accessibilityLabel("Signal strength \(TLISafeMath.percent(signalStrengthRatio)) percent, scan usage \(TLISafeMath.percent(scanUsageRatio)) percent, mission progress \(TLISafeMath.percent(missionProgressRatio)) percent")
     }
 
     private var telemetryStatusGrid: some View {

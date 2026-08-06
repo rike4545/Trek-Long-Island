@@ -3,12 +3,16 @@ import FirebaseFirestore
 
 private struct TLISyncedPreferencesPayload: Equatable {
     var appVisualPresetRaw: String = TLIVisualPreset.defaultPreset.rawValue
-    var hasCompletedOnboarding: Bool = false
     var displayName: String = ""
     var rankRaw: String = TLIProfileRank.captain.rawValue
     var divisionRaw: String = TLIProfileDivision.command.rawValue
     var roleRaw: String = TLIProfileRole.firstTimer.rawValue
     var objectivesRaw: String = ""
+    var pronounsRaw: String = TLIProfilePronouns.unspecified.rawValue
+    var pronounsCustom: String = ""
+    var welcomeStyleRaw: String = TLIWelcomeMessageStyle.defaultStyle.rawValue
+    var welcomeCustomMessage: String = ""
+    var showPronounsInWelcome: Bool = false
     var appAppearanceRaw: String = AppAppearance.system.rawValue
     var appColorThemeRaw: String = TLIColorTheme.defaultTheme.rawValue
     var digestMode: Bool = false
@@ -33,12 +37,16 @@ private struct TLISyncedPreferencesPayload: Equatable {
         [
             "profileID": profileID,
             "appVisualPresetRaw": appVisualPresetRaw,
-            "hasCompletedOnboarding": hasCompletedOnboarding,
             "displayName": displayName,
             "rankRaw": rankRaw,
             "divisionRaw": divisionRaw,
             "roleRaw": roleRaw,
             "objectivesRaw": objectivesRaw,
+            "pronounsRaw": pronounsRaw,
+            "pronounsCustom": pronounsCustom,
+            "welcomeStyleRaw": welcomeStyleRaw,
+            "welcomeCustomMessage": welcomeCustomMessage,
+            "showPronounsInWelcome": showPronounsInWelcome,
             "appAppearanceRaw": appAppearanceRaw,
             "appColorThemeRaw": appColorThemeRaw,
             "digestMode": digestMode,
@@ -65,12 +73,16 @@ private struct TLISyncedPreferencesPayload: Equatable {
     static func from(_ data: [String: Any]) -> TLISyncedPreferencesPayload {
         var payload = TLISyncedPreferencesPayload()
         payload.appVisualPresetRaw = data["appVisualPresetRaw"] as? String ?? TLIVisualPreset.defaultPreset.rawValue
-        payload.hasCompletedOnboarding = data["hasCompletedOnboarding"] as? Bool ?? false
         payload.displayName = data["displayName"] as? String ?? ""
         payload.rankRaw = data["rankRaw"] as? String ?? TLIProfileRank.captain.rawValue
         payload.divisionRaw = data["divisionRaw"] as? String ?? TLIProfileDivision.command.rawValue
         payload.roleRaw = data["roleRaw"] as? String ?? TLIProfileRole.firstTimer.rawValue
         payload.objectivesRaw = data["objectivesRaw"] as? String ?? ""
+        payload.pronounsRaw = data["pronounsRaw"] as? String ?? TLIProfilePronouns.unspecified.rawValue
+        payload.pronounsCustom = data["pronounsCustom"] as? String ?? ""
+        payload.welcomeStyleRaw = data["welcomeStyleRaw"] as? String ?? TLIWelcomeMessageStyle.defaultStyle.rawValue
+        payload.welcomeCustomMessage = data["welcomeCustomMessage"] as? String ?? ""
+        payload.showPronounsInWelcome = data["showPronounsInWelcome"] as? Bool ?? false
         payload.appAppearanceRaw = data["appAppearanceRaw"] as? String ?? AppAppearance.system.rawValue
         payload.appColorThemeRaw = data["appColorThemeRaw"] as? String ?? TLIColorTheme.defaultTheme.rawValue
         payload.digestMode = data["digestMode"] as? Bool ?? false
@@ -102,17 +114,21 @@ final class TLIPreferencesSyncStore: ObservableObject {
     // Lazily resolved so the store can be constructed before FirebaseApp.configure()
     // has run; Firestore is only touched once remote sync actually starts.
     private lazy var db = Firestore.firestore()
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private let profileIDKey = "TLI.Profile.syncProfileID.v1"
     private let legacyFeedbackAttendeeIDKey = "TLI.PanelFeedback.attendeeID.v1"
 
-    private let onboardingCompletedKey = "TLI.Onboarding.completed"
     private let appVisualPresetKey = "appVisualPreset"
-    private let displayNameKey = "TLI.Profile.displayName"
-    private let rankKey = "TLI.Profile.rank"
-    private let divisionKey = "TLI.Profile.division"
-    private let roleKey = "TLI.Profile.role"
-    private let objectivesKey = "TLI.Profile.objectives"
+    private let displayNameKey = TLIProfilePreferences.StorageKey.displayName
+    private let rankKey = TLIProfilePreferences.StorageKey.rank
+    private let divisionKey = TLIProfilePreferences.StorageKey.division
+    private let roleKey = TLIProfilePreferences.StorageKey.role
+    private let objectivesKey = TLIProfilePreferences.StorageKey.objectives
+    private let pronounsKey = TLIProfilePreferences.StorageKey.pronouns
+    private let pronounsCustomKey = TLIProfilePreferences.StorageKey.pronounsCustom
+    private let welcomeStyleKey = TLIProfilePreferences.StorageKey.welcomeStyle
+    private let welcomeCustomMessageKey = TLIProfilePreferences.StorageKey.welcomeCustomMessage
+    private let showPronounsInWelcomeKey = TLIProfilePreferences.StorageKey.showPronounsInWelcome
     private let appAppearanceKey = "appAppearance"
     private let appColorThemeKey = "appColorTheme"
     private let digestModeKey = "TLI.NotificationPrefs.digestMode"
@@ -212,8 +228,8 @@ final class TLIPreferencesSyncStore: ObservableObject {
         }
     }
 
-    /// Coalesces the burst of UserDefaults writes that happens during onboarding
-    /// (and any rapid settings changes) into a single payload rebuild + write.
+    /// Coalesces the burst of UserDefaults writes that happens during rapid
+    /// settings changes into a single payload rebuild + write.
     private func scheduleSync() {
         guard hasStartedListening else { return }
         guard !isApplyingRemoteSnapshot else { return }
@@ -227,13 +243,17 @@ final class TLIPreferencesSyncStore: ObservableObject {
 
     private func currentPayload() -> TLISyncedPreferencesPayload {
         var payload = TLISyncedPreferencesPayload()
-        payload.hasCompletedOnboarding = defaults.bool(forKey: onboardingCompletedKey)
         payload.appVisualPresetRaw = defaults.string(forKey: appVisualPresetKey) ?? TLIVisualPreset.defaultPreset.rawValue
         payload.displayName = defaults.string(forKey: displayNameKey) ?? ""
         payload.rankRaw = defaults.string(forKey: rankKey) ?? TLIProfileRank.captain.rawValue
         payload.divisionRaw = defaults.string(forKey: divisionKey) ?? TLIProfileDivision.command.rawValue
         payload.roleRaw = defaults.string(forKey: roleKey) ?? TLIProfileRole.firstTimer.rawValue
         payload.objectivesRaw = defaults.string(forKey: objectivesKey) ?? ""
+        payload.pronounsRaw = defaults.string(forKey: pronounsKey) ?? TLIProfilePronouns.unspecified.rawValue
+        payload.pronounsCustom = defaults.string(forKey: pronounsCustomKey) ?? ""
+        payload.welcomeStyleRaw = defaults.string(forKey: welcomeStyleKey) ?? TLIWelcomeMessageStyle.defaultStyle.rawValue
+        payload.welcomeCustomMessage = defaults.string(forKey: welcomeCustomMessageKey) ?? ""
+        payload.showPronounsInWelcome = defaults.bool(forKey: showPronounsInWelcomeKey)
         payload.appAppearanceRaw = defaults.string(forKey: appAppearanceKey) ?? AppAppearance.system.rawValue
         payload.appColorThemeRaw = defaults.string(forKey: appColorThemeKey) ?? TLIColorTheme.defaultTheme.rawValue
         payload.digestMode = defaults.bool(forKey: digestModeKey)
@@ -257,22 +277,18 @@ final class TLIPreferencesSyncStore: ObservableObject {
     }
 
     private func apply(_ payload: TLISyncedPreferencesPayload) {
-        var payload = payload
-        // Onboarding completion is a one-way latch. Once this device has finished
-        // onboarding, never let a stale or empty remote document set it back to
-        // false (which would re-trigger onboarding on every launch).
-        let remoteCompleted = payload.hasCompletedOnboarding
-        let localCompleted = defaults.bool(forKey: onboardingCompletedKey)
-        payload.hasCompletedOnboarding = localCompleted || remoteCompleted
-
         isApplyingRemoteSnapshot = true
-        defaults.set(payload.hasCompletedOnboarding, forKey: onboardingCompletedKey)
         defaults.set(payload.appVisualPresetRaw, forKey: appVisualPresetKey)
         defaults.set(payload.displayName, forKey: displayNameKey)
         defaults.set(payload.rankRaw, forKey: rankKey)
         defaults.set(payload.divisionRaw, forKey: divisionKey)
         defaults.set(payload.roleRaw, forKey: roleKey)
         defaults.set(payload.objectivesRaw, forKey: objectivesKey)
+        defaults.set(payload.pronounsRaw, forKey: pronounsKey)
+        defaults.set(payload.pronounsCustom, forKey: pronounsCustomKey)
+        defaults.set(payload.welcomeStyleRaw, forKey: welcomeStyleKey)
+        defaults.set(payload.welcomeCustomMessage, forKey: welcomeCustomMessageKey)
+        defaults.set(payload.showPronounsInWelcome, forKey: showPronounsInWelcomeKey)
         defaults.set(payload.appAppearanceRaw, forKey: appAppearanceKey)
         defaults.set(payload.appColorThemeRaw, forKey: appColorThemeKey)
         defaults.set(payload.digestMode, forKey: digestModeKey)

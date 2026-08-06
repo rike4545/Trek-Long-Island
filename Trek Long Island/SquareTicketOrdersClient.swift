@@ -77,7 +77,7 @@ actor SquareTicketOrdersClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = try encoder.encode(
             SyncRequest(
-                conventionID: "trekli-2026",
+                conventionID: TLIEventInfo.current.conventionID,
                 daysBack: max(1, min(daysBack, 90))
             )
         )

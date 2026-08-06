@@ -287,7 +287,7 @@ final class CRMStore: ObservableObject {
     private let interactionsKey = "TLI.CRM.interactions.v1"
     private let analytics = TLIAnalyticsStore.shared
     private let db = Firestore.firestore()
-    private let conventionID = "trekli-2026"
+    private let conventionID = TLIEventInfo.current.conventionID
     private var listener: ListenerRegistration?
     private var isApplyingRemoteSnapshot = false
     private var lastContactsBlob = ""
