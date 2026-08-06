@@ -305,6 +305,9 @@ struct HomeView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: TLILayout.sectionSpacing(for: layoutWidth)) {
                 headerSection
+                // Replaces the launch-time permission prompt: asks nothing until
+                // tapped, and hides itself once answered or dismissed.
+                TLIAnnouncementsOptInCard()
                 if shouldShowPicardDayBanner {
                     picardDaySection
                 }
